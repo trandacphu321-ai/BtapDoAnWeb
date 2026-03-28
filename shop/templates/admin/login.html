@@ -1,0 +1,52 @@
+{% extends "admin/layout.html"%}
+{% block content %}
+<div
+        class="hold-transition login-page"
+        style="
+    background-image: url('../../static/images/bg.jpg');
+    background-repeat: no-repeat;
+    background-attachment: fixed;
+    background-size: 100% 100%;"
+>
+    {% include '_messages.html'%}
+    <div class="login-box">
+        <div class="login-logo">
+            <a href="{{ url_for('home') }}" class="text-white"><b>Mobile Shop</b> ONLINE</a>
+        </div>
+        <!-- /.login-logo -->
+        <div class="card">
+            <div class="card-body login-card-body">
+                <p class="login-box-msg">Đăng nhập để bắt đầu tài khoản Quản trị viên</p>
+                <form method=post enctype="multipart/form-data">
+                    {{form.csrf_token}}
+                    <div class="input-group mb-3">
+                        <input type="email" class="form-control" placeholder="Email" name='email' required>
+                        <div class="input-group-append">
+                            <div class="input-group-text">
+                                <span class="fas fa-envelope"></span>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="input-group mb-3">
+                        <input type="password" class="form-control" placeholder="Password" name='password' required>
+                        <div class="input-group-append">
+                            <div class="input-group-text">
+                                <span class="fas fa-lock"></span>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="row mb-2">
+                        <div class="col-4">
+                            <button type="submit" class="btn btn-primary btn-block">Login   </button>
+                        </div>
+                        <div class="col-8 align-self-end">
+                            <a href="{{ url_for('home') }}" style="margin-left: 127px;"> Trang chủ</a>
+                        </div>
+                    </div>
+
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock  content%}

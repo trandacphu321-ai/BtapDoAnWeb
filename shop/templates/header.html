@@ -1,0 +1,103 @@
+<!-- top-header-->
+<div class="top-header">
+    <div class="container">
+        <div class="row">
+            <div class="col-lg-8 col-md-7 col-sm-6 hidden-xs">
+                <p class="top-text">Website đặt hàng sản phẩm điện thoại.</p>
+            </div>
+            <div class="col-lg-4 col-md-5 col-sm-6 col-xs-12">
+                <ul>
+                    <li><a href="mailto:lexuanmanh101199@gmail.com">Hỗ trợ</a></li>
+                </ul>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- header-section-->
+<div class="header-wrapper">
+    <div class="container">
+        <div class="row">
+
+            <!-- logo -->
+            <div class="col-lg-3 col-md-3 col-sm-3 col-xs-8">
+                <div class="logo">
+                    <!-- <a href="{{ url_for('home') }}"><img src="{{ url_for('static', filename='images/name.png') }}" alt=""></a> -->
+                </div>
+            </div>
+
+            <!-- search -->
+            <div class="col-lg-6 col-md-6 col-sm-6 col-xs-12">
+                <div class="search-bg">
+                    <form action="{{ url_for('search')}}" method="post">
+                        <input type="text" class="form-control" name="search" placeholder="Search Here">
+                        <button type="Submit" style="margin-bottom: 6px;"><i class="fa fa-search"></i></button>
+                    </form>
+                </div>
+            </div>
+
+            <!-- account -->
+            <div class="col-lg-3 col-md-3 col-sm-3 col-xs-12">
+                <div class="account-section">
+                    <ul>
+                        {% if current_user.is_authenticated %}
+                        <li><a href="{{ url_for('update_account') }}" class="title hidden-xs">Tài khoản</a></li>
+                        <li class="hidden-xs">|</li>
+                        <li><a href="{{ url_for('customer_logout') }}" class="title hidden-xs">Đăng xuất</a></li>
+                        {% else %}
+                        <li><a href="{{ url_for('login') }}" class="title hidden-xs">Đăng nhập</a></li>
+                        <li class="hidden-xs">|</li>
+                        <li><a href="{{ url_for('customer_admin_register') }}" class="title hidden-xs">Đăng ký</a></li>
+                        {% endif %}
+
+                        <li>
+                            <a href="{{ url_for('getCart') }}" class="title">
+                                <i class="fa fa-shopping-cart"></i>
+                                <sup class="cart-quantity">{{ session['Shoppingcart']|length }}</sup>
+                            </a>
+                        </li>
+                    </ul>
+                </div>
+            </div>
+
+        </div>
+    </div>
+
+    <!-- navigation -->
+    <div class="navigation">
+        <div class="container">
+            <div class="row">
+                <div class="col-lg-12 col-md-12 col-sm-12 col-xs-12">
+
+                    <div id="navigation">
+                        <ul>
+                            <li class="active"><a href="{{ url_for('home') }}">Trang chủ</a></li>
+
+                            {% for category in categories %}
+                            <li class="has-sub">
+                                <!-- FIX LỖI BuildError: dùng đường dẫn trực tiếp -->
+                                <a href="/categories/{{ category.name }}">{{ category.name }}</a>
+
+                                <ul>
+                                    {% for brand in brands %}
+                                    {% if brand.category_id == category.id %}
+                                    <li>
+                                        <a href="{{ url_for('get_brand', name=brand.name) }}">
+                                            {{ brand.name }}
+                                        </a>
+                                    </li>
+                                    {% endif %}
+                                    {% endfor %}
+                                </ul>
+                            </li>
+                            {% endfor %}
+                        </ul>
+                    </div>
+
+                </div>
+            </div>
+        </div>
+    </div>
+
+</div>
+<!-- /. header-section-->

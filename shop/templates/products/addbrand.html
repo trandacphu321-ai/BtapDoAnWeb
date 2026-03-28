@@ -1,0 +1,97 @@
+{% extends "admin/layout.html" %}
+{%block content %}
+{%include 'admin/header.html'%}
+<!-- Content Wrapper. Contains page content -->
+<div class="content-wrapper">
+    <section class="content-header">
+        <div class="container-fluid">
+            <div class="row mb-2">
+                <div class="col-sm-6">
+                </div>
+                <div class="col-sm-6">
+                    <ol class="breadcrumb float-sm-right">
+                        <li class="breadcrumb-item"><a href="{{url_for('admin_manager')}}">Trang chủ</a></li>
+                        {%if brands %}
+                        <li class="breadcrumb-item active">Nhãn hàng</li>
+                        {% else %}
+                        <li class="breadcrumb-item active">Phân loại</li>
+                        {%endif %}
+
+                    </ol>
+                </div>
+            </div>
+        </div><!-- /.container-fluid -->
+    </section>
+    <!-- Main content -->
+    <section class="content">
+        <!-- Default box -->
+        <div class="container">
+            <div class="row">
+                <div class="col-md-3"></div>
+                <div class="col-md-6" style=" margin-top: 35px; ">
+                    <div class="card card-primary">
+                        <div class="card-header">
+                            {%if brands %}
+                            <h3 class="card-title">Thêm nhãn hàng mới</h3>
+                            {% else %}
+                            <h3 class="card-title">Thêm danh mục mới</h3>
+                            {%endif %}
+                        </div>
+
+                        <div class="card">
+                            <div class="card-body">
+                                {% include "_messages.html" %}
+                                {%if brands %}
+                                <form action="" method='POST'>
+                                    <div class="form-group">
+                                        <div>
+                                            <span>Danh mục đã chọn</span>
+                                        </div>
+                                        <div class="row">
+                                            <div class="col-sm-8">
+                                                <select name="category" id="category" class="form-control" required>
+                                                    <option value=""> Chọn một danh mục</option>
+                                                    {% for category in categories %}
+                                                    <option value="{{category.id}}">{{category.name}}</option>
+                                                    {% endfor %}
+                                                </select>
+                                            </div>
+                                            <div class="col ml-auto">
+                                                <button class="btn btn-block bg-gradient-info" onclick="window.location.href='{{url_for('addcat')}}'">New Category
+                                                </button>
+                                            </div>
+                                        </div>
+
+                                    </div>
+                                    <div class="form-group">
+                                        <span>Tên brand</span>
+                                        <input type="text" name="brand" class="form-control">
+                                    </div>
+                                    <div class="form-group">
+                                        <input type="submit" value="Add Brand" class="btn btn-primary">
+
+                                    </div>
+                                </form>
+                                {% else %}
+                                <form action="" method='POST'>
+                                    <div class="form-group">
+                                        <span>Tên loại sản phẩm</span>
+                                        <input type="text" name="category" class="form-control">
+                                    </div>
+                                    <input type="submit" value="Add category" class="btn btn-primary">
+                                </form>
+                                {% endif %}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-3"></div>
+            </div>
+        </div>
+
+        <!-- /.card -->
+    </section>
+    <!-- /.content -->
+</div>
+{%include 'admin/footer.html'%}
+{% endblock content %}

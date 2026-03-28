@@ -1,0 +1,134 @@
+{% extends "base.html" %}
+{% block content%}
+{% include 'header.html' %}
+<div id="page-content" class="single-page">
+    <div class="container">
+        <div class="row">
+            <div class="col-lg-12">
+                <ul class="breadcrumb">
+                    <li><a href="{{url_for('home')}}">Trang chủ</a></li>
+                    <li><a href="{{url_for('getCart')}}">Giỏ hàng</a></li>
+                    <li><a href="#">Phương thức thanh toán</a></li>
+                </ul>
+            </div>
+        </div>
+        <div class="row ">
+            <div class="container mt-4">
+                {% include '_messages.html' %}
+                <div class="row">
+                    <div class="col-md-12">
+                        <table class="table table-sm" style="margin-bottom: 0px;">
+                            <thead>
+                            <th>No</th>
+                            <th>Tên sản phẩm</th>
+                            <th>Màu</th>
+                            <th>Giá</th>
+                            <th>Số lượng</th>
+                            <th>Giảm giá</th>
+                            <th>Tổng cộng</th>
+                            </thead>
+                            <tbody>
+                            <tr>
+                                {% for i in range(invoices|length) %}
+                                {% for key, product in orders[i].orders.items() %}
+                                {% set discount =(product.discount/100) * product.price |float %}
+                            <tr>
+                                <td>{{ i+1 }}</td>
+                                <td>{{product.name}}</td>
+                                <form action="{{url_for('updatecart', code=key)}}" method="post">
+                                    <td>
+                                        {{product.color|capitalize}}
+                                    </td>
+                                    <td>${{"%.2f"|format(product.price)}}</td>
+                                    <td> {{product.quantity}}</td>
+                                    {% if product.discount %}
+                                    <td>{{product.discount}} %</td>
+                                    {% else %}
+                                    <td></td>
+                                    {% endif %}
+                                    {% set subtotal = product.quantity|int * product.price|float %}
+                                    <td>${{"%.2f"|format(subtotal - discount|round(1,'floor')) }}</td>
+                                </form>
+                            </tr>
+                            {% endfor %}
+                            {% endfor %}
+                            <tr>
+                                <td colspan="5"></td>
+                                <td>Total:</td>
+                                <td>${{subtotals}}</td>
+                            </tr>
+                            </tbody>
+                        </table>
+                        </table>
+                        <h2>Chọn phương thức thanh toán</h2>
+                        <table class="table table-sm">
+                            <tr>
+                                <td>
+                                    {% set amount = subtotals %}
+                                    <!--                <input type="button" name="CashOn",onclick="openPaymentForm()">Cash on delivery-->
+                                    <button class="open-button btn-info" onclick="openForm()">Tiền mặt khi giao hàng
+                                    </button>
+                                    <div class="form-popup" id="myForm" style="display: none;">
+                                        <h4 style="margin-top:12px; color:red">Thông tin khách hàng</h4>
+                                        <form action="{{ url_for('submit_order') }}" method="POST" class="form-group" onsubmit="return confirmForm();"  >
+                                            <input type="hidden" name="invoice_customer" value="{{','.join(invoices)}}">
+                                            <div class="form-group">
+                                                <label><b>Tên khách hàng</b></label>
+                                                <input type="text" class="form-control" id="customer_name"
+                                                       name="CustomerName"
+                                                       value="{{customer.username}}" readonly>
+                                            </div>
+                                            <div class="form-group">
+                                                <label><b>Email</b></label>
+                                                <input type="text" class="form-control" id="customer_email"
+                                                       name="CustomerEmail"
+                                                       value="{{customer.email}}" readonly>
+                                            </div>
+                                            <div class="form-group">
+                                                <label><b>SĐT</b></label>
+                                                <input type="text" class="form-control" id="customer_phone"
+                                                       name="CustomerPhone"
+                                                       value="{{customer.phone_number}}" readonly>
+                                            </div>
+                                            <div class="form-group">
+                                                <label><b>Địa chỉ</b></label>
+                                                <input type="text" class="form-control" placeholder="Enter Address"
+                                                       name="CustomerAddress" required>
+                                            </div>
+                                            <div class="form-group">
+                                                <button type="submit" class="btn btn-info"
+                                                        style="padding: 3px 26px;background: #D9534F;">Thanh toán</button>
+                                            </div>
+                                        </form>
+                                    </div>
+                                    <script src="{{ url_for('static', filename='js/checkout.js')}}"
+                                            class="stripe-button"
+                                            data-key="pk_test_MaILxTYQ15v5Uhd6NKI9wPdD00qdL0QZSl"
+                                            data-name="{{current_user.username}}"
+                                            data-description="Payment"
+                                            data-amount="{{amount}}"
+                                            data-currency="USD">
+                                    </script>
+
+                                </td>
+                                <td width="35%"></td>
+
+
+                            </tr>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+    </div>
+</div>
+<script>
+  function openForm() {
+     document.getElementById("myForm").style.display = "block";
+  }
+  function confirmForm(){
+    return confirm("Are you confirm information payment!");
+  }
+</script>
+{% endblock content %}

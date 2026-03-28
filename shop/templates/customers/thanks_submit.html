@@ -1,0 +1,35 @@
+{% extends 'base.html' %}
+{% block content %}
+{% include 'header.html' %}
+<br>
+<br>
+<table class="table table-sm">
+    <thead>
+    <th>Invoice Code</th>
+    <th>Product</th>
+    <th>Quantity</th>
+    <th>Total</th>
+    <th>Status</th>
+
+    </thead>
+    <tbody>
+    {% for order in orders %}
+    {% for key, product in order.orders.items() %}
+    {% set discount =(product.discount/100) * product.price |float %}
+    {% set subtotal = product.quantity|int * product.price|float %}
+    <tr>
+        <td> {{order.invoice}}</td>
+        <td>{{product.name}}</td>
+        <td>
+            {{product.quantity}}
+        </td>
+        <td>${{"%.2f"|format(subtotal - discount|round(1,'floor')) }}</td>
+        <td>{{order.status}}</td>
+    </tr>
+    {% endfor %}
+    {% endfor %}
+    </tbody>
+</table>
+
+
+{% endblock content %}

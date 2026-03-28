@@ -1,0 +1,108 @@
+{% extends 'admin/layout.html' %}
+{% block content %}
+{%include 'admin/header.html'%}
+<div class="content-wrapper">
+    <section class="content-header">
+        <div class="container-fluid">
+            <div class="row mb-2">
+                <div class="col-sm-6">
+                </div>
+                <div class="col-sm-6">
+                    <ol class="breadcrumb float-sm-right">
+                        <li class="breadcrumb-item"><a href="{{url_for('admin_manager')}}">Trang chủ</a></li>
+                        <li class="breadcrumb-item active">Các sản phẩm</li>
+                    </ol>
+                </div>
+            </div>
+        </div><!-- /.container-fluid -->
+    </section>
+    <!-- Main content -->
+    <section class="content">
+        <div class="container-fluid">
+            <div class="row">
+                <div class="col-md-2"></div>
+                <!-- left column -->
+                <div class="col-md-8">
+                    <!-- general form elements -->
+                    <div class="card card-primary">
+                        <div class="card-header">
+                            <h3 class="card-title">Thêm sản phẩm mới</h3>
+                        </div>
+                        <!-- /.card-header -->
+                        <!-- form start -->
+                        {% from "_formhelpers.html" import render_field %}
+
+                        <form method="post" enctype="multipart/form-data">
+                            {{ form.csrf_token }}
+                            <div class="card">
+                                <div class="card-body">
+                                    {% include '_messages.html'%}
+                                    <div>
+                                        {{ render_field(form.name, class="form-control") }}
+                                        {{ render_field(form.price, class="form-control") }}
+                                        {{ render_field(form.discount, class="form-control") }}
+                                        {{ render_field(form.stock, class="form-control") }}
+                                        <label for="category">Thêm sản phẩm</label>
+                                        <select name="category" id="category" class="form-control"
+                                                onchange='myFunction()' required>
+                                            <option value=""> Chọn một danh mục</option>
+                                            {% for category in categories %}
+                                            <option value="{{category.id}}">{{category.name}}
+                                            </option>
+                                            {% endfor %}
+                                        </select>
+                                        <label for="brand">Thêm brand</label>
+                                        <select name="brand" id="brand" class="form-control" required>
+                                            <option value="">Chọn một brand</option>
+                                        </select>
+
+                                        {{ render_field(form.colors, class="form-control") }}
+                                        {{ render_field(form.description, class="form-control", rows="10") }}
+
+                                        <div class="container">
+                                            <div class="row">
+                                                <div class="col-md-4" aria-required="true">{{ render_field(form.image_1,
+                                                    class='form-control')}}
+                                                </div>
+                                                <div class="col-md-4">{{ render_field(form.image_2,
+                                                    class='form-control')}}
+                                                </div>
+                                                <div class="col-md-4">{{ render_field(form.image_3,
+                                                    class='form-control')}}
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div><!-- /.card -->
+                            <div class="card-footer">
+                                <button type="submit" class="btn btn-primary">Thêm một sản phẩm</button>
+                            </div>
+                        </form>
+                        <!-- /.form-box -->
+
+                    </div>
+                    <!-- /.card -->
+                </div>
+            </div>
+        </div>
+    </section>
+</div>
+{%include 'admin/footer.html'%}
+<script>
+function myFunction() {
+     $("#brand option").remove();
+     var newoptions = "";
+     {% for brand in brands %}
+     if(document.getElementById("category").value == {{brand.category_id}}){
+        newoptions+="<option value='{{brand.id}}'>{{brand.name}}</option>";
+     }
+     {% endfor %}
+     $("#brand").append(newoptions);
+     }
+
+
+
+
+</script>
+{% endblock content %}

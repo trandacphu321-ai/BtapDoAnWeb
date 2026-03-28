@@ -1,0 +1,355 @@
+{% extends 'admin/layout.html' %}
+{% block content  %}
+{% include 'admin/header.html' %}
+<!-- Content Wrapper. Contains page content -->
+<div class="content-wrapper">
+    <!-- Main content -->
+    <section class="content">
+        <div class="container-fluid">
+            <div class="row mb-2">
+                <div class="col-sm-6">
+                    <h1></h1>
+                </div>
+                <div class="col-sm-6">
+                    <ol class="breadcrumb float-sm-right">
+                        <li class="breadcrumb-item"><a href="{{ url_for('admin_manager') }}">Trang chủ</a></li>
+                        <li class="breadcrumb-item active">Đơn Hàng</li>
+                    </ol>
+                </div>
+            </div>
+        </div><!-- /.container-fluid -->
+    </section>
+    <section class="content">
+        <div class="container-fluid">
+            <div class="row">
+                <div class="col-12">
+                    <div class="card card-primary card-tabs">
+                        <div class="card-header p-0 pt-1">
+                            <ul class="nav nav-tabs" id="custom-tabs-one-tab" role="tablist">
+                                <li class="nav-item">
+                                    <a class="nav-link active" id="custom-tabs-one-home-tab" data-toggle="pill"
+                                       href="#custom-tabs-one-home" role="tab" aria-controls="custom-tabs-one-home"
+                                       aria-selected="true">Chấp nhận đơn hàng</a>
+                                </li>
+                                <li class="nav-item">
+                                    <a class="nav-link" id="custom-tabs-one-profile-tab" data-toggle="pill"
+                                       href="#custom-tabs-one-profile" role="tab"
+                                       aria-controls="custom-tabs-one-profile"
+                                       aria-selected="false">Hủy đơn hàng</a>
+                                </li>
+                                <li class="nav-item">
+                                    <a class="nav-link" id="custom-tabs-one-messages-tab" data-toggle="pill"
+                                       href="#custom-tabs-one-messages" role="tab"
+                                       aria-controls="custom-tabs-one-messages"
+                                       aria-selected="false">Doanh Thu</a>
+                                </li>
+                            </ul>
+                        </div>
+                        <div class="card-body">
+                            <div class="tab-content" id="custom-tabs-one-tabContent">
+
+                                {# ================= TAB 1: PENDING ================= #}
+                                <div class="tab-pane fade show active" id="custom-tabs-one-home" role="tabpanel"
+                                     aria-labelledby="custom-tabs-one-home-tab">
+                                    <div>
+                                        <div class="card">
+                                            <div class="row justify-content-center">
+                                                <div style="margin-top: 20px; margin-bottom: -45px;">
+                                                    {% include '_messages.html' %}
+                                                </div>
+                                            </div>
+                                            <div class="card-body">
+                                                <table id="example1" class="table table-bordered table-striped">
+                                                    <thead>
+                                                    <tr>
+                                                        <th>Stt</th>
+                                                        <th>Tên khách hàng</th>
+                                                        <th>Hóa đơn</th>
+                                                        <th>Tên sản phẩm</th>
+                                                        <th>Trạng thái</th>
+                                                        <th>Ngày tạo</th>
+                                                        <th>Đơn hàng</th>
+                                                        <th>Chấp Nhận</th>
+                                                        <th>Xóa</th>
+                                                    </tr>
+                                                    </thead>
+                                                    <tbody>
+                                                    {% for order in orders %}
+                                                      {% if order.status == "Pending" %}
+                                                        <tr>
+                                                            <td>{{ loop.index }}</td>
+
+                                                            {# tìm tên khách #}
+                                                            {% for customer in customers %}
+                                                              {% if customer.id == order.customer_id %}
+                                                                {% set customer_name =
+                                                                      (customer.first_name or '') ~ ' ' ~ (customer.last_name or '') %}
+                                                                <td>{{ customer_name }}</td>
+                                                              {% endif %}
+                                                            {% endfor %}
+
+                                                            <td>{{ order.invoice }}</td>
+
+                                                            {% for key, product in order.orders.items() %}
+                                                              <td>{{ product.name }}</td>
+                                                            {% endfor %}
+
+                                                            <td>{{ order.status }}</td>
+                                                            <td>{{ order.date_created }}</td>
+                                                            <td>
+                                                                <button type="button" class="btn btn-info"
+                                                                        data-toggle="modal"
+                                                                        data-target="#details-{{ order.id }}">
+                                                                    Chi tiết
+                                                                </button>
+                                                            </td>
+                                                            <td>
+                                                                <button type="button" class="btn btn-success"
+                                                                        data-toggle="modal"
+                                                                        data-target="#accept-{{ order.id }}"
+                                                                        style="margin-left: -5px;">
+                                                                    chấp nhận
+                                                                </button>
+                                                            </td>
+                                                            <td>
+                                                                <button type="button" class="btn btn-danger"
+                                                                        data-toggle="modal"
+                                                                        data-target="#delete-{{ order.id }}">
+                                                                    Xóa
+                                                                </button>
+                                                            </td>
+                                                        </tr>
+
+                                                        {# ===== Modal Accept ===== #}
+                                                        <div class="modal fade" id="accept-{{ order.id }}"
+                                                             data-backdrop="static"
+                                                             data-keyboard="false"
+                                                             tabindex="-1" aria-labelledby="staticBackdropLabel"
+                                                             aria-hidden="true">
+                                                            <div class="modal-dialog">
+                                                                <div class="modal-content">
+                                                                    <div class="modal-header">
+                                                                        <h5 class="modal-title" id="staticBackdropLabel">
+                                                                            {{ 'Order invoice ' ~ (order.invoice or '') }}
+                                                                        </h5>
+                                                                        <button type="button" class="close"
+                                                                                data-dismiss="modal"
+                                                                                aria-label="Close">
+                                                                            <span aria-hidden="true">&times;</span>
+                                                                        </button>
+                                                                    </div>
+                                                                    <div class="modal-body">
+                                                                        <span class="text-danger">
+                                                                           Bạn có muốn chấp nhận đơn hàng này ?
+                                                                        </span>
+                                                                    </div>
+                                                                    <div class="modal-footer">
+                                                                        <button type="button"
+                                                                                class="btn btn-warning btn-secondary"
+                                                                                data-dismiss="modal">
+                                                                            hủy
+                                                                        </button>
+
+                                                                        <form action="{{ url_for('customer_accept_order', id=order.id) }}"
+                                                                              method="POST">
+                                                                            <button type="submit" class="btn btn-success">
+                                                                                chấp nhận
+                                                                            </button>
+                                                                        </form>
+                                                                    </div>
+                                                                </div>
+                                                            </div>
+                                                        </div>
+
+                                                        {# ===== Modal Delete ===== #}
+                                                        <div class="modal fade" id="delete-{{ order.id }}"
+                                                             data-backdrop="static"
+                                                             data-keyboard="false"
+                                                             tabindex="-1" aria-labelledby="staticBackdropLabel"
+                                                             aria-hidden="true">
+                                                            <div class="modal-dialog">
+                                                                <div class="modal-content">
+                                                                    <div class="modal-header">
+                                                                        <h5 class="modal-title">
+                                                                            {{ 'Order invoice ' ~ (order.invoice or '') }}
+                                                                        </h5>
+                                                                        <button type="button" class="close"
+                                                                                data-dismiss="modal"
+                                                                                aria-label="Close">
+                                                                            <span aria-hidden="true">&times;</span>
+                                                                        </button>
+                                                                    </div>
+                                                                    <div class="modal-body">
+                                                                        <span class="text-danger">
+                                                                            Bạn có muốn xóa đơn hàng này ?
+                                                                        </span>
+                                                                    </div>
+                                                                    <div class="modal-footer">
+                                                                        <button type="button"
+                                                                                class="btn btn-warning btn-secondary"
+                                                                                data-dismiss="modal">
+                                                                            hủy
+                                                                        </button>
+                                                                        <form action="{{ url_for('delete_order', id=order.id) }}"
+                                                                              method="POST">
+                                                                            <button type="submit" class="btn btn-danger">
+                                                                                xóa
+                                                                            </button>
+                                                                        </form>
+                                                                    </div>
+                                                                </div>
+                                                            </div>
+                                                        </div>
+
+                                                        {# ===== Modal Details ===== #}
+                                                        <div class="modal fade" id="details-{{ order.id }}"
+                                                             data-backdrop="static"
+                                                             data-keyboard="false"
+                                                             tabindex="-1" aria-labelledby="staticBackdropLabel"
+                                                             aria-hidden="true">
+                                                            <div class="modal-dialog">
+                                                                <div class="modal-content">
+                                                                    <div class="modal-header">
+                                                                        <h5 class="modal-title">
+                                                                            {{ 'Order invoice ' ~ (order.invoice or '') }}
+                                                                        </h5>
+                                                                        <button type="button" class="close"
+                                                                                data-dismiss="modal"
+                                                                                aria-label="Close">
+                                                                            <span aria-hidden="true">&times;</span>
+                                                                        </button>
+                                                                    </div>
+                                                                    <div class="modal-body">
+                                                                        {% for key, product in order.orders.items() %}
+                                                                            <h5>{{ 'Name: ' ~ (product.name or '') }}</h5>
+                                                                            <h5>{{ 'Brand: ' ~ (product.brand or '') }}</h5>
+                                                                            <h5>Giá: {{ product.price }}</h5>
+                                                                            <h5>Giảm giá: {{ product.discount }}%</h5>
+                                                                            <h5>Số lượng: {{ product.quantity }}</h5>
+                                                                            <h5>{{ 'Colors: ' ~ (product.color or '') }}</h5>
+                                                                        {% endfor %}
+                                                                        <h5>Day: {{ order.date_created }}</h5>
+                                                                        <h5>{{ 'Delivery address: ' ~ (order.address or '') }}</h5>
+                                                                    </div>
+                                                                    <div class="modal-footer"></div>
+                                                                </div>
+                                                            </div>
+                                                        </div>
+                                                      {% endif %}
+                                                    {% endfor %}
+                                                    </tbody>
+                                                </table>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                {# ================= TAB 2: CANCELLED ================= #}
+                                <div class="tab-pane fade" id="custom-tabs-one-profile" role="tabpanel"
+                                     aria-labelledby="custom-tabs-one-profile-tab">
+                                    <div>
+                                        <div class="card">
+                                            <div class="card-body">
+                                                <table id="example2" class="table table-bordered table-striped">
+                                                    <thead>
+                                                    <tr>
+                                                        <th>Stt</th>
+                                                        <th>Tên khách hàng</th>
+                                                        <th>Hóa đơn</th>
+                                                        <th>Tên Sản phẩm</th>
+                                                        <th>Trạng thái</th>
+                                                        <th>Ngày tạo</th>
+                                                    </tr>
+                                                    </thead>
+                                                    <tbody>
+                                                    {% for order in orders %}
+                                                      {% if order.status == "Cancelled" %}
+                                                        <tr>
+                                                            <td>{{ loop.index }}</td>
+                                                            {% for customer in customers %}
+                                                              {% if customer.id == order.customer_id %}
+                                                                {% set customer_name =
+                                                                      (customer.first_name or '') ~ ' ' ~ (customer.last_name or '') %}
+                                                                <td>{{ customer_name }}</td>
+                                                              {% endif %}
+                                                            {% endfor %}
+                                                            <td>{{ order.invoice }}</td>
+                                                            {% for key, product in order.orders.items() %}
+                                                              <td>{{ product.name }}</td>
+                                                            {% endfor %}
+                                                            <td>{{ order.status }}</td>
+                                                            <td>{{ order.date_created }}</td>
+                                                        </tr>
+                                                      {% endif %}
+                                                    {% endfor %}
+                                                    </tbody>
+                                                </table>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                {# ================= TAB 3: REVENUE ================= #}
+                                <div class="tab-pane fade" id="custom-tabs-one-messages" role="tabpanel"
+                                     aria-labelledby="custom-tabs-one-messages-tab">
+                                    <div>
+                                        <div class="card">
+                                            <div class="card-body">
+                                                <table id="example3" class="table table-bordered table-striped">
+                                                    <thead>
+                                                    <tr>
+                                                        <th>Stt</th>
+                                                        <th>Tên khách hàng</th>
+                                                        <th>Đơn Hàng</th>
+                                                        <th>Trạng Thái</th>
+                                                        <th>Ngày tạo    </th>
+                                                        <th>Tên Sản Phẩm</th>
+                                                        <th>Số lượng</th>
+                                                        <th>Doanh thu</th>
+                                                    </tr>
+                                                    </thead>
+                                                    <tbody>
+                                                    {% for order in orders %}
+                                                      {% if order.status == "Accepted" %}
+                                                        <tr>
+                                                            <td>{{ loop.index }}</td>
+                                                            {% for customer in customers %}
+                                                              {% if customer.id == order.customer_id %}
+                                                                {% set customer_name =
+                                                                      (customer.first_name or '') ~ ' ' ~ (customer.last_name or '') %}
+                                                                <td>{{ customer_name }}</td>
+                                                              {% endif %}
+                                                            {% endfor %}
+                                                            <td>{{ order.invoice }}</td>
+                                                            <td>{{ order.status }}</td>
+                                                            <td>{{ order.date_created }}</td>
+                                                            {% for key, product in order.orders.items() %}
+                                                                <td>{{ product.name }}</td>
+                                                                <td>{{ product.quantity }}</td>
+                                                                <td>
+                                                                    {{
+                                                                      (product.quantity|int * product.price|float)
+                                                                      - (product.discount|int * product.price|float / 100)
+                                                                    }}
+                                                                </td>
+                                                            {% endfor %}
+                                                        </tr>
+                                                      {% endif %}
+                                                    {% endfor %}
+                                                    </tbody>
+                                                </table>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+
+                            </div>  {# /.tab-content #}
+                        </div>      {# /.card-body #}
+                    </div>          {# /.card #}
+                </div>
+            </div>
+        </div>
+    </section>
+</div>
+{% include 'admin/footer.html' %}
+{% endblock content %}
