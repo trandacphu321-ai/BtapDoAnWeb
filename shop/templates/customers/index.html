@@ -57,35 +57,104 @@
                                 </div>
                                 Sản Phẩm Được Yêu Thích Nhất
                             </h3>
-                            <a href="{{ url_for('get_all_category') }}" style="font-size: 13px; font-weight: 800; color: var(--clr-primary); text-decoration: none; background: #eff6ff; padding: 6px 16px; border-radius: 20px;">
-                                Xem tất cả
-                            </a>
+                            <div style="display: flex; gap: 10px; align-items: center;">
+                                <button id="btnScrollLeft" style="background: #fff; border: 2px solid #e2e8f0; border-radius: 50%; width: 36px; height: 36px; display: flex; align-items: center; justify-content: center; cursor: pointer; color: #64748b; transition: all 0.2s; box-shadow: 0 2px 5px rgba(0,0,0,0.05);"><i class="fa fa-chevron-left"></i></button>
+                                <button id="btnScrollRight" style="background: #fff; border: 2px solid #e2e8f0; border-radius: 50%; width: 36px; height: 36px; display: flex; align-items: center; justify-content: center; cursor: pointer; color: #64748b; transition: all 0.2s; box-shadow: 0 2px 5px rgba(0,0,0,0.05);"><i class="fa fa-chevron-right"></i></button>
+                                <a href="{{ url_for('get_all_category') }}" style="font-size: 13px; font-weight: 800; color: var(--clr-primary); text-decoration: none; background: #eff6ff; padding: 6px 16px; border-radius: 20px; margin-left: 10px;">
+                                    Xem tất cả
+                                </a>
+                            </div>
                         </div>
                         
-                        <div class="row" style="display: flex; overflow-x: auto; scrollbar-width: none; gap: 15px; padding-top: 15px; padding-left: 15px; padding-bottom: 15px; margin-left: -15px; margin-top: -15px;">
+                        <div id="topRatedContainer" class="row top-rated-scroll-container" style="display: flex; overflow-x: auto; scrollbar-width: none; gap: 15px; padding-top: 15px; padding-left: 15px; padding-bottom: 15px; margin-left: -15px; margin-top: -15px; cursor: grab;">
                             {% for p in products['top_rated'] %}
-                            <div style="min-width: 220px; max-width: 220px; flex: 0 0 auto; background: #fff; border-radius: 16px; border: 2px solid #f1f5f9; padding: 20px; text-align: center; transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275); position: relative; user-select: none; -webkit-user-select: none;" class="top-rated-card">
-                                <div style="position: absolute; top: -12px; left: -12px; background: #ef4444; color: #fff; width: 32px; height: 32px; display: flex; align-items: center; justify-content: center; font-weight: 900; font-size: 14px; border-radius: 50%; border: 3px solid #fff; box-shadow: 0 4px 10px rgba(239, 68, 68, 0.4); z-index: 10;">
+                            <div style="min-width: 220px; max-width: 220px; flex: 0 0 auto; background: #fff; border-radius: 16px; border: 2px solid #f1f5f9; padding: 20px; text-align: center; transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275); position: relative; user-select: none; -webkit-user-select: none;" class="top-rated-card" draggable="false">
+                                <div style="position: absolute; top: -12px; left: -12px; background: #ef4444; color: #fff; width: 32px; height: 32px; display: flex; align-items: center; justify-content: center; font-weight: 900; font-size: 14px; border-radius: 50%; border: 3px solid #fff; box-shadow: 0 4px 10px rgba(239, 68, 68, 0.4); z-index: 10; pointer-events: none;">
                                     {{ loop.index }}
                                 </div>
-                                <a href="{{url_for('detail', id=p.id)}}" style="display: block; text-decoration: none; color: inherit; outline: none;">
-                                    <div style="height: 140px; display: flex; align-items: center; justify-content: center; margin-bottom: 15px;">
-                                        <img src="{{ url_for('static', filename='images/'+p.image_1) }}" style="max-height: 100%; max-width: 100%; object-fit: contain; transition: transform 0.3s;">
+                                <a href="{{url_for('detail', id=p.id)}}" style="display: block; text-decoration: none; color: inherit; outline: none;" class="no-drag-link">
+                                    <div style="height: 140px; display: flex; align-items: center; justify-content: center; margin-bottom: 15px; pointer-events: none;">
+                                        <img src="{{ url_for('static', filename='images/'+p.image_1) }}" style="max-height: 100%; max-width: 100%; object-fit: contain; transition: transform 0.3s; pointer-events: none;">
                                     </div>
-                                    <div style="font-size: 14px; font-weight: 800; color: #334155; margin-bottom: 8px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">{{p.name}}</div>
-                                    <div style="color: var(--clr-primary); font-weight: 900; font-size: 16px; margin-bottom: 8px;">{{ (p.price - p.price*p.discount/100) | vnd }}</div>
+                                    <div style="font-size: 14px; font-weight: 800; color: #334155; margin-bottom: 8px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; pointer-events: none;">{{p.name}}</div>
+                                    <div style="color: var(--clr-primary); font-weight: 900; font-size: 16px; margin-bottom: 8px; pointer-events: none;">{{ (p.price - p.price*p.discount/100) | vnd }}</div>
                                     
                                     {% set avg = products['average'][p.id].average if p.id in products['average'] else 5.0 %}
                                     {% set cnt = products['average'][p.id].count if p.id in products['average'] else 0 %}
-                                    <div style="color: #fbbf24; font-size: 12px; display: flex; justify-content: center; align-items: center; gap: 4px;">
+                                    <div style="color: #fbbf24; font-size: 12px; display: flex; justify-content: center; align-items: center; gap: 4px; pointer-events: none;">
                                         {% for i in range(avg|int) %} <i class="fa fa-star"></i> {% endfor %}
                                         {% if avg % 1 >= 0.5 %} <i class="fa fa-star"></i> {% endif %}
-                                        <span style="color: #94a3b8; font-weight: 700; margin-left: 2px;">({{ cnt }})</span>
+                                        <span style="color: #94a3b8; font-weight: 700; margin-left: 2px; pointer-events: none;">({{ cnt }})</span>
                                     </div>
                                 </a>
                             </div>
                             {% endfor %}
                         </div>
+
+                        <script>
+                            document.addEventListener('DOMContentLoaded', function() {
+                                const container = document.getElementById('topRatedContainer');
+                                const btnLeft = document.getElementById('btnScrollLeft');
+                                const btnRight = document.getElementById('btnScrollRight');
+                                
+                                // Scroll by buttons
+                                const scrollAmount = 250;
+                                btnLeft.addEventListener('click', () => {
+                                    container.scrollBy({ left: -scrollAmount, behavior: 'smooth' });
+                                });
+                                btnRight.addEventListener('click', () => {
+                                    container.scrollBy({ left: scrollAmount, behavior: 'smooth' });
+                                });
+
+                                // Drag to scroll functionality
+                                let isDown = false;
+                                let startX;
+                                let scrollLeft;
+                                let isDragging = false; // to distinguish click from drag
+
+                                container.addEventListener('mousedown', (e) => {
+                                    isDown = true;
+                                    isDragging = false;
+                                    container.style.cursor = 'grabbing';
+                                    startX = e.pageX - container.offsetLeft;
+                                    scrollLeft = container.scrollLeft;
+                                });
+
+                                container.addEventListener('mouseleave', () => {
+                                    isDown = false;
+                                    container.style.cursor = 'grab';
+                                });
+
+                                container.addEventListener('mouseup', () => {
+                                    isDown = false;
+                                    container.style.cursor = 'grab';
+                                    // setTimeout to allow click event to fire first before resetting isDragging
+                                    setTimeout(() => { isDragging = false; }, 50);
+                                });
+
+                                container.addEventListener('mousemove', (e) => {
+                                    if (!isDown) return;
+                                    e.preventDefault();
+                                    const x = e.pageX - container.offsetLeft;
+                                    const walk = (x - startX) * 2; // scroll-fast
+                                    if (Math.abs(walk) > 5) { // if moved more than 5px, it's a drag
+                                        isDragging = true;
+                                    }
+                                    container.scrollLeft = scrollLeft - walk;
+                                });
+
+                                // Prevent clicking links if we were dragging
+                                const links = container.querySelectorAll('.no-drag-link');
+                                links.forEach(link => {
+                                    link.addEventListener('click', function(e) {
+                                        if (isDragging) {
+                                            e.preventDefault();
+                                            e.stopPropagation();
+                                        }
+                                    });
+                                });
+                            });
+                        </script>
                     </div>
                 </div>
             </div>
