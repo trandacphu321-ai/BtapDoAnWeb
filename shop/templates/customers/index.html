@@ -58,14 +58,43 @@
                                 Sản Phẩm Được Yêu Thích Nhất
                             </h3>
                             <div style="display: flex; gap: 10px; align-items: center;">
-                                <button id="btnScrollLeft" style="background: #fff; border: 2px solid #e2e8f0; border-radius: 50%; width: 36px; height: 36px; display: flex; align-items: center; justify-content: center; cursor: pointer; color: #64748b; transition: all 0.2s; box-shadow: 0 2px 5px rgba(0,0,0,0.05);"><i class="fa fa-chevron-left"></i></button>
-                                <button id="btnScrollRight" style="background: #fff; border: 2px solid #e2e8f0; border-radius: 50%; width: 36px; height: 36px; display: flex; align-items: center; justify-content: center; cursor: pointer; color: #64748b; transition: all 0.2s; box-shadow: 0 2px 5px rgba(0,0,0,0.05);"><i class="fa fa-chevron-right"></i></button>
+                                <button id="btnScrollLeft" class="custom-scroll-btn"><i class="fa fa-chevron-left"></i></button>
+                                <button id="btnScrollRight" class="custom-scroll-btn"><i class="fa fa-chevron-right"></i></button>
                                 <a href="{{ url_for('get_all_category') }}" style="font-size: 13px; font-weight: 800; color: var(--clr-primary); text-decoration: none; background: #eff6ff; padding: 6px 16px; border-radius: 20px; margin-left: 10px;">
                                     Xem tất cả
                                 </a>
                             </div>
                         </div>
                         
+                        <style>
+                            .custom-scroll-btn {
+                                background: #fff;
+                                border: 2px solid #e2e8f0;
+                                border-radius: 50%;
+                                width: 36px;
+                                height: 36px;
+                                display: flex;
+                                align-items: center;
+                                justify-content: center;
+                                cursor: pointer;
+                                color: #64748b;
+                                transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+                                box-shadow: 0 2px 5px rgba(0,0,0,0.05);
+                                outline: none;
+                            }
+                            .custom-scroll-btn:hover {
+                                background: var(--clr-primary);
+                                color: #fff;
+                                border-color: var(--clr-primary);
+                                box-shadow: 0 4px 12px var(--clr-primary-glow);
+                                transform: translateY(-2px);
+                            }
+                            .custom-scroll-btn:active {
+                                transform: translateY(1px) scale(0.9);
+                                box-shadow: 0 1px 2px rgba(0,0,0,0.1);
+                            }
+                        </style>
+
                         <div id="topRatedContainer" class="row top-rated-scroll-container" style="display: flex; overflow-x: auto; scrollbar-width: none; gap: 15px; padding-top: 15px; padding-left: 15px; padding-bottom: 15px; margin-left: -15px; margin-top: -15px; cursor: grab;">
                             {% for p in products['top_rated'] %}
                             <div style="min-width: 220px; max-width: 220px; flex: 0 0 auto; background: #fff; border-radius: 16px; border: 2px solid #f1f5f9; padding: 20px; text-align: center; transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275); position: relative; user-select: none; -webkit-user-select: none;" class="top-rated-card" draggable="false">
@@ -97,20 +126,71 @@
                                 const btnLeft = document.getElementById('btnScrollLeft');
                                 const btnRight = document.getElementById('btnScrollRight');
                                 
-                                // Scroll by buttons
-                                const scrollAmount = 250;
+                                // Premium Custom Ease-Out Scroll
+                                function smoothScroll(element, target, duration) {
+                                    target = Math.round(target);
+                                    duration = Math.round(duration);
+                                    if (duration < 0) {
+                                        return Promise.reject("bad duration");
+                                    }
+                                    if (duration === 0) {
+                                        element.scrollLeft = target;
+                                        return Promise.resolve();
+                                    }
+                                    
+                                    const start_time = Date.now();
+                                    const end_time = start_time + duration;
+                                    const start_top = element.scrollLeft;
+                                    const distance = target - start_top;
+                                    
+                                    // Custom easing function: cubic-bezier easeOut
+                                    const smoothStep = function(start, end, point) {
+                                        if(point <= start) { return 0; }
+                                        if(point >= end) { return 1; }
+                                        const x = (point - start) / (end - start);
+                                        return x * (2 - x); // easeOutQuad
+                                    }
+                                    
+                                    return new Promise(function(resolve, reject) {
+                                        let previous_top = element.scrollLeft;
+                                        const scroll_frame = function() {
+                                            if(element.scrollLeft != previous_top) {
+                                                return reject("interrupted");
+                                            }
+                                            const now = Date.now();
+                                            const point = smoothStep(start_time, end_time, now);
+                                            const frameTop = Math.round(start_top + (distance * point));
+                                            element.scrollLeft = frameTop;
+                                            
+                                            if(now >= end_time) {
+                                                return resolve();
+                                            }
+                                            
+                                            if(element.scrollLeft === previous_top && element.scrollLeft !== frameTop) {
+                                                return resolve(); // reached boundary
+                                            }
+                                            previous_top = element.scrollLeft;
+                                            window.requestAnimationFrame(scroll_frame);
+                                        }
+                                        window.requestAnimationFrame(scroll_frame);
+                                    });
+                                }
+
+                                const scrollAmount = 280; // Distance to scroll
+                                const scrollDuration = 450; // Milliseconds for the animation
+                                
                                 btnLeft.addEventListener('click', () => {
-                                    container.scrollBy({ left: -scrollAmount, behavior: 'smooth' });
+                                    smoothScroll(container, container.scrollLeft - scrollAmount, scrollDuration).catch(e => {});
                                 });
                                 btnRight.addEventListener('click', () => {
-                                    container.scrollBy({ left: scrollAmount, behavior: 'smooth' });
+                                    smoothScroll(container, container.scrollLeft + scrollAmount, scrollDuration).catch(e => {});
                                 });
 
                                 // Drag to scroll functionality
                                 let isDown = false;
                                 let startX;
                                 let scrollLeft;
-                                let isDragging = false; // to distinguish click from drag
+                                let isDragging = false; 
 
                                 container.addEventListener('mousedown', (e) => {
                                     isDown = true;
@@ -128,7 +208,6 @@
                                 container.addEventListener('mouseup', () => {
                                     isDown = false;
                                     container.style.cursor = 'grab';
-                                    // setTimeout to allow click event to fire first before resetting isDragging
                                     setTimeout(() => { isDragging = false; }, 50);
                                 });
 
@@ -136,8 +215,8 @@
                                     if (!isDown) return;
                                     e.preventDefault();
                                     const x = e.pageX - container.offsetLeft;
-                                    const walk = (x - startX) * 2; // scroll-fast
-                                    if (Math.abs(walk) > 5) { // if moved more than 5px, it's a drag
+                                    const walk = (x - startX) * 1.5; 
+                                    if (Math.abs(walk) > 5) { 
                                         isDragging = true;
                                     }
                                     container.scrollLeft = scrollLeft - walk;
