@@ -1,0 +1,191 @@
+{% extends "base.html" %}
+{% block content %}
+{% include 'header.html' %}
+
+<div class="db-wrapper">
+    <div class="container">
+        <div class="row">
+            <!-- ===== SIDEBAR ===== -->
+            <div class="col-lg-3 col-md-4">
+                <div class="db-sidebar">
+                    <!-- Avatar & Info -->
+                    <div class="db-user-block">
+                        <div class="db-avatar">
+                            <img src="https://ui-avatars.com/api/?name={{ current_user.username }}&background=6366f1&color=fff&size=80&bold=true&font-size=0.4" alt="Avatar">
+                        </div>
+                        <h5 class="db-user-name">{{ current_user.username }}</h5>
+                        <span class="db-user-email">{{ current_user.email }}</span>
+                    </div>
+
+                    <!-- Nav -->
+                    <nav class="db-nav">
+                        <a href="{{ url_for('customer_dashboard') }}" class="db-nav-link {% if request.endpoint == 'customer_dashboard' %}active{% endif %}">
+                            <i class="fa fa-th-large"></i>Tổng quan
+                        </a>
+                        <a href="{{ url_for('customer_dashboard_orders') }}" class="db-nav-link {% if request.endpoint == 'customer_dashboard_orders' %}active{% endif %}">
+                            <i class="fa fa-shopping-bag"></i>Lịch sử mua hàng
+                        </a>
+                        <a href="{{ url_for('customer_dashboard_profile') }}" class="db-nav-link {% if request.endpoint == 'customer_dashboard_profile' %}active{% endif %}">
+                            <i class="fa fa-user"></i>Thông tin cá nhân
+                        </a>
+                        <a href="{{ url_for('customer_dashboard_warranty') }}" class="db-nav-link {% if request.endpoint == 'customer_dashboard_warranty' %}active{% endif %}">
+                            <i class="fa fa-shield"></i>Chính sách bảo hành
+                        </a>
+                        <a href="{{ url_for('customer_dashboard_support') }}" class="db-nav-link {% if request.endpoint == 'customer_dashboard_support' %}active{% endif %}">
+                            <i class="fa fa-comments"></i>Góp ý & Hỗ trợ
+                        </a>
+                        <div class="db-nav-sep"></div>
+                        <a href="{{ url_for('logout') }}" class="db-nav-link db-logout">
+                            <i class="fa fa-sign-out"></i>Đăng xuất
+                        </a>
+                    </nav>
+                </div>
+            </div>
+
+            <!-- ===== CONTENT ===== -->
+            <div class="col-lg-9 col-md-8">
+                <div class="db-content">
+                    {% include '_messages.html' %}
+                    {% block dashboard_content %}{% endblock %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% include 'footer.html' %}
+<style>
+/* ============================================
+   DASHBOARD DESIGN SYSTEM
+   Indigo Theme · Inter · FA 4.7 compatible
+============================================ */
+.db-wrapper {
+    background: #f1f5f9;
+    min-height: 100vh;
+    padding: 40px 0 60px;
+}
+
+/* --- Sidebar --- */
+.db-sidebar {
+    background: #fff;
+    border-radius: 20px;
+    box-shadow: 0 1px 3px rgba(0,0,0,.06);
+    padding: 0;
+    overflow: hidden;
+    position: sticky;
+    top: 20px;
+}
+
+.db-user-block {
+    text-align: center;
+    padding: 32px 20px 24px;
+    background: linear-gradient(135deg, #6366f1 0%, #818cf8 100%);
+    color: #fff;
+}
+
+.db-avatar {
+    width: 72px;
+    height: 72px;
+    border-radius: 50%;
+    margin: 0 auto 14px;
+    overflow: hidden;
+    border: 3px solid rgba(255,255,255,.35);
+}
+
+.db-avatar img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    display: block;
+}
+
+.db-user-name {
+    color: #fff !important;
+    font-weight: 700;
+    font-size: 1.05rem;
+    margin-bottom: 2px;
+}
+
+.db-user-email {
+    color: rgba(255,255,255,.7);
+    font-size: .82rem;
+}
+
+/* Nav links */
+.db-nav {
+    padding: 12px 0;
+}
+
+.db-nav-link {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    padding: 13px 24px;
+    color: #475569 !important;
+    font-weight: 500;
+    font-size: .93rem;
+    text-decoration: none !important;
+    transition: all .25s ease;
+    border-left: 3px solid transparent;
+}
+
+.db-nav-link i {
+    width: 20px;
+    text-align: center;
+    font-size: 1rem;
+    color: #94a3b8;
+    transition: color .25s ease;
+}
+
+.db-nav-link:hover {
+    background: #f8fafc;
+    color: #6366f1 !important;
+    border-left-color: #e0e7ff;
+}
+
+.db-nav-link:hover i {
+    color: #6366f1;
+}
+
+.db-nav-link.active {
+    background: #eef2ff;
+    color: #4f46e5 !important;
+    font-weight: 600;
+    border-left-color: #6366f1;
+}
+
+.db-nav-link.active i {
+    color: #6366f1;
+}
+
+.db-nav-sep {
+    height: 1px;
+    background: #f1f5f9;
+    margin: 8px 20px;
+}
+
+.db-nav-link.db-logout:hover {
+    background: #fef2f2;
+    color: #dc2626 !important;
+    border-left-color: #fecaca;
+}
+.db-nav-link.db-logout:hover i {
+    color: #dc2626;
+}
+
+/* --- Content Area --- */
+.db-content {
+    background: #fff;
+    border-radius: 20px;
+    box-shadow: 0 1px 3px rgba(0,0,0,.06);
+    padding: 30px;
+    min-height: 400px;
+}
+
+/* --- Responsive --- */
+@media (max-width: 991px) {
+    .db-wrapper { padding: 20px 0 40px; }
+    .db-sidebar { margin-bottom: 24px; position: static; }
+    .db-content { padding: 24px; }
+}
+</style>
+{% endblock content %}

@@ -1,4 +1,4 @@
-<html lang="en">
+<html lang="vi" data-theme="light">
 <head>
     <meta charset="utf-8">
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
@@ -14,8 +14,11 @@
 
     <link href="{{ url_for('static', filename='css/style.css')}}" rel="stylesheet">
 
-    <!-- Google Fonts -->
-    <link href="https://fonts.googleapis.com/css?family=Roboto+Condensed:300,300i,400,400i,700,700i" rel="stylesheet">
+    <!-- Google Fonts: Inter -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
     <!-- owl-carousel -->
     <link href="{{ url_for('static', filename='css/owl.carousel.css')}}" rel="stylesheet">
     <link href="{{ url_for('static', filename='css/owl.theme.default.css')}}" rel="stylesheet">
@@ -27,72 +30,963 @@
     <script src="https://oss.maxcdn.com/html5shiv/3.7.3/html5shiv.min.js"></script>
     <script src="https://oss.maxcdn.com/respond/1.4.2/respond.min.js"></script>
     <![endif]-->
+    <style>
+        /* ============================================
+           DESIGN SYSTEM — CSS VARIABLES
+        ============================================ */
+        :root, [data-theme="light"] {
+            /* === PRIMARY PALETTE === */
+            --clr-primary:       #2563eb;
+            --clr-primary-light: #3b82f6;
+            --clr-primary-dark:  #1d4ed8;
+            --clr-primary-glow:  rgba(37,99,235,0.20);
+
+            /* === ACCENT COLORS === */
+            --clr-accent-teal:    #06b6d4;
+            --clr-accent-violet:  #7c3aed;
+            --clr-accent-pink:    #ec4899;
+            --clr-accent-orange:  #f97316;
+            --clr-accent-green:   #10b981;
+
+            /* === SURFACE === */
+            --clr-bg:            #f1f5f9;
+            --clr-surface:       #ffffff;
+            --clr-surface-2:     #f8fafc;
+            --clr-border:        #e2e8f0;
+            --clr-border-light:  #f8fafc;
+
+            /* === TEXT === */
+            --clr-text:          #0f172a;
+            --clr-text-muted:    #64748b;
+            --clr-text-light:    #94a3b8;
+
+            /* === NAVIGATION === */
+            --clr-nav-bg:        linear-gradient(135deg, #2563eb 0%, #7c3aed 100%);
+            --clr-nav-hover:     rgba(255,255,255,0.18);
+            --clr-nav-text:      #ffffff;
+
+            /* === TOP BAR === */
+            --clr-topbar-bg:     linear-gradient(90deg, #1d4ed8 0%, #4f46e5 50%, #7c3aed 100%);
+
+            /* === HEADER === */
+            --clr-header-bg:     #ffffff;
+            --clr-header-shadow: 0 2px 20px rgba(37,99,235,0.10);
+
+            /* === FOOTER === */
+            --clr-footer-bg:     #0f1729;
+            --clr-footer-text:   #94a3b8;
+            --clr-footer-border: rgba(255,255,255,0.07);
+            --clr-footer-link:   #63b3ed;
+
+            /* === PRODUCT CARDS === */
+            --clr-card-bg:       transparent;
+            --clr-card-shadow:   0 4px 24px rgba(37,99,235,0.08);
+            --clr-card-hover:    0 12px 40px rgba(37,99,235,0.18);
+
+            /* === STATUS === */
+            --clr-success:       #10b981;
+            --clr-danger:        #ef4444;
+            --clr-warning:       #f59e0b;
+            --clr-price:         #2563eb;
+            --clr-price-old:     #94a3b8;
+
+            /* === PRODUCT TAGS & COMPONENTS === */
+            --tag-installment-bg: #ecfdf5;
+            --tag-installment-clr: #10b981;
+            --tag-delivery-bg: #ecfeff;
+            --tag-delivery-clr: #0891b2;
+            --clr-star: #FFC107;
+            --clr-section-body: #f9fafb;
+
+            /* === MISC === */
+            --radius-sm:  8px;
+            --radius-md:  12px;
+            --radius-lg:  20px;
+            --radius-xl:  28px;
+            --transition: 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            --transition-bounce: 0.6s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        }
+
+        /* ============================================
+           SMOOTH ANIMATIONS & TRANSITIONS (UI/UX)
+        ============================================ */
+        /* 1. Page Load Transition */
+        body {
+            animation: fadeInPage 0.8s cubic-bezier(0.22, 1, 0.36, 1) forwards;
+        }
+        @keyframes fadeInPage {
+            0% { opacity: 0; transform: translateY(15px); }
+            100% { opacity: 1; transform: translateY(0); }
+        }
+
+        /* 2. Scroll Reveal Animations */
+        .reveal-up {
+            opacity: 0;
+            transform: translateY(40px);
+            transition: all 0.8s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            will-change: transform, opacity;
+        }
+        .reveal-up.is-visible {
+            opacity: 1;
+            transform: translateY(0);
+        }
+
+        .reveal-left {
+            opacity: 0;
+            transform: translateX(-40px);
+            transition: all 0.8s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            will-change: transform, opacity;
+        }
+        .reveal-left.is-visible {
+            opacity: 1;
+            transform: translateX(0);
+        }
+
+        .reveal-scale {
+            opacity: 0;
+            transform: scale(0.9);
+            transition: all 0.6s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            will-change: transform, opacity;
+        }
+        .reveal-scale.is-visible {
+            opacity: 1;
+            transform: scale(1);
+        }
+
+        /* Micro-interactions */
+        a, button, .btn, .top-rated-card, .product-block, .brand-pill {
+            transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
+        }
+        button:active, .btn:active, .brand-pill:active {
+            transform: scale(0.95) !important;
+        }
+        
+        .brand-pill:hover, .brand-pill.active {
+            border-color: var(--clr-primary) !important;
+            color: var(--clr-primary) !important;
+        }
+        .brand-pill:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 10px rgba(37,99,235,0.1);
+        }
+        .brand-pill.active {
+            background: var(--clr-primary-glow) !important;
+        }
+
+
+        /* ============================================
+           GLOBAL BASE STYLES
+        ============================================ */
+        html {
+            scroll-behavior: smooth;
+            background-color: var(--clr-bg) !important;
+        }
+        body {
+            font-family: 'Inter', 'Roboto Condensed', sans-serif !important;
+            background-color: var(--clr-bg) !important;
+            color: var(--clr-text) !important;
+            transition: background-color 0.3s ease, color 0.22s ease;
+        }
+
+        /* Force dark mode on html+body — cần đồ specificity cao hơn Bootstrap */
+        html[data-theme="dark"],
+        html[data-theme="dark"] body {
+            background-color: #0b1120 !important;
+            color: #e2e8f0 !important;
+        }
+        html[data-theme="light"],
+        html[data-theme="light"] body {
+            background-color: #ffffff !important;
+            color: #0f172a !important;
+        }
+
+        h1,h2,h3,h4,h5,h6 { color: var(--clr-text) !important; }
+        a { color: var(--clr-primary); transition: color 0.28s ease; }
+        a:hover { color: var(--clr-primary-light); }
+
+        /* Page fade-in (Removed transform because it breaks position: fixed children) */
+        @keyframes ms-fadeIn {
+            from { opacity: 0; }
+            to   { opacity: 1; }
+        }
+        body { animation: ms-fadeIn 0.5s ease forwards; }
+
+        /* Universal micro-transitions */
+        a, button, .btn, input, select, textarea,
+        .product-block, .thumbnail-list li, .nav-arrow {
+            transition: all var(--transition) !important;
+        }
+        .btn:active, button:active { transform: scale(0.95) !important; }
+
+        /* ============================================
+           SURFACE & CARD THEMING
+        ============================================ */
+        /* Transparent wrappers for modern seamless look */
+        .box, .box-head, .box-body {
+            background-color: transparent !important;
+            border: none !important;
+            box-shadow: none !important;
+            padding-left: 0 !important;
+            padding-right: 0 !important;
+            margin-bottom: 0 !important;
+        }
+        .box-head { padding-bottom: 12px !important; }
+        [data-theme="dark"] .head-title { color: var(--clr-text) !important; }
+
+        .widget, .well, .feature-box,
+        .highlights, .product-related {
+            background-color: var(--clr-card-bg) !important;
+            border-color: var(--clr-border) !important;
+        }
+
+        /* Make product cards completely seamless with background */
+        .product-block {
+            background-color: transparent !important;
+            border: none !important;
+            box-shadow: none !important;
+        }
+        .product-content {
+            border-top: none !important;
+            background-color: transparent !important;
+        }
+
+        .product-block:hover {
+            box-shadow: var(--clr-card-hover) !important;
+            transform: translateY(-6px) !important;
+            background-color: var(--clr-surface) !important; /* Slight highlight on hover */
+            border-radius: 16px !important;
+        }
+
+        .form-control, .input-text, .qty {
+            background-color: var(--clr-surface-2) !important;
+            border-color: var(--clr-border) !important;
+            color: var(--clr-text) !important;
+        }
+        .form-control:focus {
+            border-color: var(--clr-primary) !important;
+            box-shadow: 0 0 0 3px var(--clr-primary-glow) !important;
+        }
+
+        /* Theming tables in dark mode */
+        [data-theme="dark"] .table thead th,
+        [data-theme="dark"] .table > thead > tr > th,
+        [data-theme="dark"] .cart .table > thead:first-child > tr:first-child > th {
+            background-color: var(--clr-surface-2) !important;
+            color: var(--clr-text) !important;
+            border-color: var(--clr-border) !important;
+        }
+        [data-theme="dark"] .cart .table > tbody > tr > td,
+        [data-theme="dark"] .pay-amount .table > tbody > tr > td {
+            background-color: var(--clr-surface) !important;
+            color: var(--clr-text) !important;
+            border-color: var(--clr-border) !important;
+        }
+
+        .favorite-card-btn {
+            color: var(--clr-text-light);
+            font-size: 13px;
+            font-weight: 600;
+            text-decoration: none;
+        }
+        .favorite-card-btn:hover {
+            color: var(--clr-danger) !important;
+            text-decoration: none;
+        }
+    </style>
 </head>
 <body>
+<!-- Dark Mode is now in header -->
 {%block content%}
 {% endblock content%}
-<div class="scrollToTop"
-     style="display: none;position: fixed;z-index: 999999;bottom: 60px;right: 10px;cursor: pointer; margin-bottom: 24px;margin-right: 21px;">
-    <i class="icons ico-scrolltop" title="ScrollToTop"></i>
+
+
+<!-- ==================== AI CHATBOT ==================== -->
+<!-- Hình tròn to nổi bật ở góc trái -->
+<div id="chatbot-toggle" onclick="toggleChatbot()" title="Chat với AI">
+    <div class="chatbot-toggle-inner">
+        <i class="fa fa-comments"></i>
+    </div>
+    <span class="chatbot-badge" id="chatbot-badge" style="display:none;">1</span>
 </div>
-<div>
-    <div id="fb-root"></div>
-    <script>
-        window.fbAsyncInit = function() {
-          FB.init({
-            xfbml            : true,
-            version          : 'v8.0'
-          });
-        };
 
-        (function(d, s, id) {
-        var js, fjs = d.getElementsByTagName(s)[0];
-        if (d.getElementById(id)) return;
-        js = d.createElement(s); js.id = id;
-        js.src = 'https://connect.facebook.net/vi_VN/sdk/xfbml.customerchat.js';
-        fjs.parentNode.insertBefore(js, fjs);
-      }(document, 'script', 'facebook-jssdk'));
-
-    </script>
-    <!-- Your Chat Plugin code -->
-    <div class="fb-customerchat"
-         attribution=setup_tool
-         page_id="104526048140046"
-         logged_in_greeting="Chào mừng bạn đến với cửa hàng điện thoai. Bạn cần chúng tôi giúp gì?"
-         logged_out_greeting="Chào mừng bạn đến với cửa hàng điện thoai. Bạn cần chúng tôi giúp gì?">
+<div id="chatbot-window" style="display:none;">
+    <div class="chatbot-header">
+        <div class="chatbot-header-info">
+            <div class="chatbot-avatar-sm">
+                <i class="fa fa-robot"></i>
+            </div>
+            <div>
+                <div class="chatbot-header-title">MobileStore AI</div>
+                <div class="chatbot-header-status"><span class="status-dot"></span> Đang hoạt động</div>
+            </div>
+        </div>
+        <button class="chatbot-close" onclick="toggleChatbot()" title="Đóng">&times;</button>
+    </div>
+    <div class="chatbot-body" id="chatbot-body">
+        <!-- Messages will appear here -->
+    </div>
+    <div class="chatbot-suggestions" id="chatbot-suggestions">
+        <button class="suggestion-chip" onclick="sendSuggestion(this)">Sản phẩm bán chạy?</button>
+        <button class="suggestion-chip" onclick="sendSuggestion(this)">Chính sách đổi trả?</button>
+        <button class="suggestion-chip" onclick="sendSuggestion(this)">Thanh toán như nào?</button>
+    </div>
+    <div class="chatbot-footer">
+        <input type="text" id="chatbot-input" placeholder="Nhập tin nhắn..." autocomplete="off"
+               onkeydown="if(event.key==='Enter') sendMessage()">
+        <button class="chatbot-send" onclick="sendMessage()" title="Gửi">
+            <i class="fa fa-paper-plane"></i>
+        </button>
     </div>
 </div>
 
+<style>
+    /* =====================================================
+       FLOATING UI: Chatbox (Left Aligned)
+       — Sử dụng CSS Variables → tự động phối màu
+    ===================================================== */
+
+    /* --- Chatbot Toggle Button (Hiệu ứng Ripple kêu gọi chú ý) --- */
+    #chatbot-toggle {
+        position: fixed !important;
+        bottom: 30px !important;
+        right: 30px !important;
+        z-index: 100005 !important;
+        width: 65px;
+        height: 65px;
+        border-radius: 50%;
+        background: linear-gradient(135deg, var(--clr-primary), var(--clr-accent-violet));
+        color: #fff;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 28px;
+        cursor: pointer;
+        box-shadow: 0 8px 30px var(--clr-primary-glow);
+        transition: transform 0.3s cubic-bezier(0.34,1.56,0.64,1), box-shadow 0.3s ease !important;
+    }
+    #chatbot-toggle::after {
+        content: '';
+        position: absolute;
+        inset: 0;
+        border-radius: 50%;
+        border: 2px solid var(--clr-primary);
+        opacity: 0;
+        animation: chatRipple 2s infinite ease-out;
+    }
+    @keyframes chatRipple {
+        0% { transform: scale(1); opacity: 0.8; }
+        100% { transform: scale(1.6); opacity: 0; }
+    }
+    #chatbot-toggle:hover {
+        transform: scale(1.15) rotate(-5deg);
+        box-shadow: 0 12px 40px var(--clr-primary-glow);
+    }
+    .chatbot-badge {
+        position: absolute;
+        top: 0;
+        right: 0;
+        background: var(--clr-danger);
+        color: #fff;
+        font-size: 13px;
+        font-weight: 800;
+        width: 24px;
+        height: 24px;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        box-shadow: 0 4px 10px rgba(239,68,68,0.5);
+        border: 2px solid #fff;
+    }
+
+    /* --- Chat Window --- */
+    #chatbot-window {
+        position: fixed !important;
+        bottom: 100px !important;
+        right: 28px !important;
+        z-index: 100001 !important;
+        width: 380px;
+        max-height: 530px;
+        border-radius: 22px;
+        background: var(--clr-surface);
+        border: 1px solid var(--clr-border);
+        box-shadow: 0 16px 56px rgba(0,0,0,0.22);
+        display: flex;
+        flex-direction: column;
+        overflow: hidden;
+        animation: chatSlideUp 0.32s cubic-bezier(0.34,1.56,0.64,1);
+        font-family: 'Inter', 'Segoe UI', sans-serif;
+        transition: background 0.3s ease, border-color 0.3s ease !important;
+    }
+    @keyframes chatSlideUp {
+        from { opacity: 0; transform: translateY(24px) scale(0.96); }
+        to   { opacity: 1; transform: translateY(0) scale(1); }
+    }
+
+    /* --- Chat Header --- */
+    .chatbot-header {
+        background: linear-gradient(135deg, var(--clr-primary), var(--clr-accent-violet));
+        color: #fff;
+        padding: 16px 20px;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        flex-shrink: 0;
+    }
+    .chatbot-header-info {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+    }
+    .chatbot-avatar-sm {
+        width: 38px;
+        height: 38px;
+        border-radius: 50%;
+        background: rgba(255,255,255,0.18);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 18px;
+    }
+    .chatbot-header-title { font-weight: 700; font-size: 15px; }
+    .chatbot-header-status {
+        font-size: 12px;
+        opacity: 0.85;
+        display: flex;
+        align-items: center;
+        gap: 5px;
+    }
+    .status-dot {
+        width: 7px;
+        height: 7px;
+        border-radius: 50%;
+        background: #4ade80;
+        display: inline-block;
+        animation: pulse-dot 2s infinite;
+    }
+    @keyframes pulse-dot {
+        0%,100% { opacity:1; }
+        50%      { opacity:0.4; }
+    }
+    .chatbot-close {
+        background: none;
+        border: none;
+        color: #fff;
+        font-size: 24px;
+        cursor: pointer;
+        line-height: 1;
+        opacity: 0.8;
+        transition: opacity 0.2s, transform 0.2s;
+    }
+    .chatbot-close:hover { opacity: 1; transform: rotate(90deg); }
+
+    /* --- Chat Body --- */
+    .chatbot-body {
+        flex: 1;
+        overflow-y: auto;
+        padding: 16px;
+        display: flex;
+        flex-direction: column;
+        gap: 10px;
+        max-height: 320px;
+        min-height: 250px;
+        background: var(--clr-surface-2);
+        transition: background var(--transition);
+    }
+    .chatbot-body::-webkit-scrollbar { width: 4px; }
+    .chatbot-body::-webkit-scrollbar-thumb {
+        background: var(--clr-border);
+        border-radius: 10px;
+    }
+
+    .chat-msg {
+        max-width: 82%;
+        padding: 10px 16px;
+        border-radius: 18px;
+        font-size: 14px;
+        line-height: 1.55;
+        word-break: break-word;
+        animation: msgFade 0.3s ease;
+        transition: background var(--transition), color var(--transition);
+    }
+    @keyframes msgFade {
+        from { opacity: 0; transform: translateY(8px); }
+        to   { opacity: 1; transform: translateY(0); }
+    }
+    .chat-msg.bot {
+        background: var(--clr-surface);
+        color: var(--clr-text);
+        align-self: flex-start;
+        border-bottom-left-radius: 5px;
+        box-shadow: 0 1px 5px rgba(0,0,0,0.07);
+        border: 1px solid var(--clr-border);
+    }
+    .chat-msg.user {
+        background: linear-gradient(135deg, var(--clr-primary), var(--clr-accent-violet));
+        color: #fff;
+        align-self: flex-end;
+        border-bottom-right-radius: 5px;
+        border: none;
+    }
+
+    /* Typing indicator */
+    .typing-indicator {
+        display: flex;
+        gap: 5px;
+        padding: 11px 14px;
+        align-self: flex-start;
+        background: var(--clr-surface);
+        border-radius: 18px;
+        border-bottom-left-radius: 5px;
+        border: 1px solid var(--clr-border);
+    }
+    .typing-indicator span {
+        width: 8px; height: 8px; border-radius: 50%;
+        background: var(--clr-primary);
+        animation: typingBounce 1.4s infinite;
+    }
+    .typing-indicator span:nth-child(2) { animation-delay: 0.2s; }
+    .typing-indicator span:nth-child(3) { animation-delay: 0.4s; }
+    @keyframes typingBounce {
+        0%,60%,100% { transform: translateY(0); }
+        30%          { transform: translateY(-8px); }
+    }
+
+    /* --- Suggestions --- */
+    .chatbot-suggestions {
+        padding: 8px 14px;
+        display: flex;
+        gap: 7px;
+        flex-wrap: wrap;
+        background: var(--clr-surface);
+        border-top: 1px solid var(--clr-border);
+        transition: background var(--transition), border-color var(--transition);
+    }
+    .suggestion-chip {
+        background: var(--clr-surface-2);
+        border: 1px solid var(--clr-border);
+        color: var(--clr-primary);
+        font-size: 12px;
+        font-weight: 600;
+        padding: 6px 13px;
+        border-radius: 20px;
+        cursor: pointer;
+        transition: all 0.22s ease;
+    }
+    .suggestion-chip:hover {
+        background: var(--clr-primary);
+        color: #fff;
+        border-color: var(--clr-primary);
+        transform: translateY(-1px);
+    }
+
+    /* --- Footer / Input --- */
+    .chatbot-footer {
+        display: flex;
+        align-items: center;
+        gap: 9px;
+        padding: 12px 14px;
+        background: var(--clr-surface);
+        border-top: 1px solid var(--clr-border);
+        transition: background var(--transition), border-color var(--transition);
+        flex-shrink: 0;
+    }
+    #chatbot-input {
+        flex: 1;
+        border: 1.5px solid var(--clr-border);
+        border-radius: 24px;
+        padding: 10px 18px;
+        font-size: 14px;
+        outline: none;
+        background: var(--clr-surface-2);
+        color: var(--clr-text);
+        transition: border-color 0.22s, background var(--transition), color var(--transition);
+        font-family: inherit;
+    }
+    #chatbot-input::placeholder { color: var(--clr-text-light); }
+    #chatbot-input:focus { border-color: var(--clr-primary); }
+    .chatbot-send {
+        width: 42px;
+        height: 42px;
+        border-radius: 50%;
+        border: none;
+        background: linear-gradient(135deg, var(--clr-primary), var(--clr-accent-violet));
+        color: #fff;
+        font-size: 15px;
+        cursor: pointer;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        transition: transform 0.22s, box-shadow 0.22s;
+        flex-shrink: 0;
+    }
+    .chatbot-send:hover {
+        transform: scale(1.1);
+        box-shadow: 0 4px 14px var(--clr-primary-glow);
+    }
+
+    /* =====================================================
+       GLOBAL DARK MODE — Phủ toàn bộ trang web
+    ===================================================== */
+
+    /* --- Bề mặt chung --- */
+    [data-theme="dark"] body,
+    [data-theme="dark"] .container-fluid,
+    [data-theme="dark"] .well {
+        background-color: var(--clr-bg) !important;
+        color: var(--clr-text) !important;
+    }
+    [data-theme="dark"] .content {
+        background-color: var(--clr-bg) !important;
+    }
+
+    /* --- Header & Nav --- */
+    [data-theme="dark"] .header-wrapper {
+        background-color: var(--clr-header-bg) !important;
+    }
+    [data-theme="dark"] .top-header {
+        background: var(--clr-topbar-bg) !important;
+    }
+
+    /* --- Footer --- */
+    [data-theme="dark"] .footer,
+    [data-theme="dark"] footer {
+        background: var(--clr-footer-bg) !important;
+        color: var(--clr-footer-text) !important;
+    }
+    [data-theme="dark"] .tiny-footer {
+        background: rgba(0,0,0,0.4) !important;
+        color: var(--clr-footer-text) !important;
+    }
+    [data-theme="dark"] .footer-title,
+    [data-theme="dark"] .footer-widget h3 {
+        color: #e2e8f0 !important;
+    }
+    [data-theme="dark"] .footer-widget ul li a,
+    [data-theme="dark"] .contact-text,
+    [data-theme="dark"] .tiny-footer p {
+        color: var(--clr-footer-text) !important;
+    }
+
+    /* --- Product Cards --- */
+    [data-theme="dark"] .product-block,
+    [data-theme="dark"] .showcase-block {
+        background: var(--clr-card-bg) !important;
+        border-color: var(--clr-border) !important;
+    }
+    [data-theme="dark"] .product-content {
+        background: var(--clr-card-bg) !important;
+        border-color: var(--clr-border-light) !important;
+    }
+    [data-theme="dark"] .product-title,
+    [data-theme="dark"] .product-content h5 a {
+        color: var(--clr-text-muted) !important;
+    }
+
+    /* --- Sidebar & Widgets --- */
+    [data-theme="dark"] .widget,
+    [data-theme="dark"] .widget-head,
+    [data-theme="dark"] .widget-body {
+        background: var(--clr-card-bg) !important;
+        border-color: var(--clr-border) !important;
+        color: var(--clr-text) !important;
+    }
+    [data-theme="dark"] .widget-categories ul li a,
+    [data-theme="dark"] .widget-archives ul li a {
+        color: var(--clr-text-muted) !important;
+    }
+
+    /* --- Forms --- */
+    [data-theme="dark"] .form-control,
+    [data-theme="dark"] .input-text,
+    [data-theme="dark"] .qty,
+    [data-theme="dark"] input[type="text"],
+    [data-theme="dark"] input[type="email"],
+    [data-theme="dark"] input[type="password"],
+    [data-theme="dark"] input[type="number"],
+    [data-theme="dark"] select,
+    [data-theme="dark"] textarea {
+        background: var(--clr-surface-2) !important;
+        border-color: var(--clr-border) !important;
+        color: var(--clr-text) !important;
+    }
+    [data-theme="dark"] input::placeholder,
+    [data-theme="dark"] textarea::placeholder {
+        color: var(--clr-text-light) !important;
+    }
+
+    /* --- Tables --- */
+    [data-theme="dark"] .table > thead > tr > th,
+    [data-theme="dark"] .cart .table > thead:first-child > tr:first-child > th {
+        background: var(--clr-surface-2) !important;
+        color: var(--clr-text) !important;
+        border-color: var(--clr-border) !important;
+    }
+    [data-theme="dark"] .table > tbody > tr > td,
+    [data-theme="dark"] .cart .table > tbody > tr > td,
+    [data-theme="dark"] .pay-amount .table > tbody > tr > td {
+        background: var(--clr-surface) !important;
+        color: var(--clr-text) !important;
+        border-color: var(--clr-border) !important;
+    }
+    [data-theme="dark"] .table-bordered {
+        border-color: var(--clr-border) !important;
+    }
+
+    /* --- Page sections --- */
+    [data-theme="dark"] .breadcrumb {
+        background: var(--clr-surface-2) !important;
+        border-color: var(--clr-border) !important;
+        color: var(--clr-text-muted) !important;
+    }
+    [data-theme="dark"] .highlights {
+        background: var(--clr-surface) !important;
+        border-color: var(--clr-border) !important;
+    }
+    [data-theme="dark"] .highlights ul li { color: var(--clr-text-muted) !important; }
+    [data-theme="dark"] .highlights ul li strong { color: var(--clr-text) !important; }
+
+    /* --- Nav tabs (Product detail) --- */
+    [data-theme="dark"] .nav-tabs > li > a {
+        background: var(--clr-surface-2) !important;
+        color: var(--clr-text-muted) !important;
+        border-color: var(--clr-border) !important;
+    }
+    [data-theme="dark"] .nav-tabs > li.active > a,
+    [data-theme="dark"] .nav-tabs > li.active > a:hover {
+        background: var(--clr-surface) !important;
+        color: var(--clr-text) !important;
+    }
+    [data-theme="dark"] .tab-content {
+        background: var(--clr-surface) !important;
+        border-color: var(--clr-border) !important;
+        color: var(--clr-text) !important;
+    }
+
+    /* --- Gallery frame (product detail) --- */
+    [data-theme="dark"] .gallery-frame {
+        background: var(--clr-surface) !important;
+        border-color: var(--clr-border) !important;
+    }
+    [data-theme="dark"] .thumbnail-list li {
+        background: var(--clr-surface-2) !important;
+        border-color: var(--clr-border) !important;
+    }
+    [data-theme="dark"] .thumbnail-list li.active {
+        border-color: var(--clr-primary) !important;
+    }
+
+    /* --- Miscellaneous text --- */
+    [data-theme="dark"] p,
+    [data-theme="dark"] span:not(.cart-quantity):not(.status-dot) {
+        color: var(--clr-text-muted);
+    }
+    [data-theme="dark"] h1, [data-theme="dark"] h2,
+    [data-theme="dark"] h3, [data-theme="dark"] h4,
+    [data-theme="dark"] h5, [data-theme="dark"] h6 {
+        color: var(--clr-text) !important;
+    }
+    [data-theme="dark"] strong {
+        color: var(--clr-text) !important;
+    }
+    [data-theme="dark"] hr {
+        border-color: var(--clr-border) !important;
+    }
+
+    /* --- Smooth global transitions — chỉ color/bg, KHÔNG override layout --- */
+    body, .footer, .header-wrapper, .top-header,
+    .product-block, .product-content, .widget, .highlights,
+    .gallery-frame, .thumbnail-list li, .breadcrumb,
+    .chatbot-body, .chatbot-footer, .chatbot-suggestions,
+    .chat-msg, #chatbot-input,
+    .form-control, input, select, textarea,
+    .tab-content, .nav-tabs > li > a {
+        transition: background-color 0.3s ease, border-color 0.3s ease, color 0.22s ease !important;
+    }
+    /* Hover/interactive elements: full transition */
+    a, button, .btn, .product-block, .nav-arrow,
+    .thumbnail-list li, .suggestion-chip, .btn-social {
+        transition: all 0.28s cubic-bezier(0.4,0,0.2,1) !important;
+    }
+    /* Fixed elements: chỉ transition visual, giữ position --- */
+    #chatbot-toggle, #chatbot-window {
+        transition: transform 0.28s ease, box-shadow 0.28s ease, background-color 0.3s ease !important;
+    }
+
+    /* Responsive chatbot */
+    @media (max-width: 440px) {
+        #chatbot-window {
+            width: calc(100vw - 24px);
+            left: auto;
+            right: 12px;
+            bottom: 90px;
+            max-height: 75vh;
+        }
+        #chatbot-toggle { left: auto; right: 14px; }
+    }
+</style>
+
+<script>
+(function() {
+    var chatbotOpen = false;
+    var welcomed = false;
+    /* Tạo session ID duy nhất cho mỗi tab trình duyệt */
+    var sessionId = 'session_' + Math.random().toString(36).substr(2, 9);
+
+    function addMessage(text, sender) {
+        var body = document.getElementById('chatbot-body');
+        var div = document.createElement('div');
+        div.className = 'chat-msg ' + sender;
+        div.innerHTML = text;
+        body.appendChild(div);
+        body.scrollTop = body.scrollHeight;
+    }
+
+    function showTyping() {
+        var body = document.getElementById('chatbot-body');
+        var div = document.createElement('div');
+        div.className = 'typing-indicator';
+        div.id = 'typing';
+        div.innerHTML = '<span></span><span></span><span></span>';
+        body.appendChild(div);
+        body.scrollTop = body.scrollHeight;
+    }
+
+    function removeTyping() {
+        var el = document.getElementById('typing');
+        if (el) el.remove();
+    }
+
+    /**
+     * Gọi API backend để lấy phản hồi AI.
+     */
+    function callChatAPI(userMsg, callback) {
+        var xhr = new XMLHttpRequest();
+        xhr.open('POST', '/api/chat', true);
+        xhr.setRequestHeader('Content-Type', 'application/json');
+        xhr.onreadystatechange = function() {
+            if (xhr.readyState === 4) {
+                if (xhr.status === 200) {
+                    try {
+                        var data = JSON.parse(xhr.responseText);
+                        callback(data.reply || 'Xin lỗi, mình gặp sự cố. Bạn thử lại nhé! 😅');
+                    } catch(e) {
+                        callback('Xin lỗi, có lỗi xảy ra. Bạn thử lại nhé! 😅');
+                    }
+                } else {
+                    callback('Xin lỗi, mình không kết nối được. Bạn thử lại sau nhé! 😅');
+                }
+            }
+        };
+        xhr.send(JSON.stringify({ message: userMsg, session_id: sessionId }));
+    }
+
+    window.toggleChatbot = function() {
+        var win = document.getElementById('chatbot-window');
+        var badge = document.getElementById('chatbot-badge');
+        chatbotOpen = !chatbotOpen;
+        win.style.display = chatbotOpen ? 'flex' : 'none';
+        badge.style.display = 'none';
+        
+        if (chatbotOpen && !welcomed) {
+            welcomed = true;
+            setTimeout(function() {
+                addMessage('Xin chào! 👋 Mình là trợ lý AI của <b>MobileStore</b>.<br>Bạn cần mình hỗ trợ gì nào?', 'bot');
+            }, 400);
+        }
+        if (chatbotOpen) {
+            setTimeout(function() { document.getElementById('chatbot-input').focus(); }, 100);
+        }
+    };
+
+    window.sendMessage = function() {
+        var input = document.getElementById('chatbot-input');
+        var text = input.value.trim();
+        if (!text) return;
+        addMessage(text, 'user');
+        input.value = '';
+
+        /* Hide suggestions after first user message */
+        var sug = document.getElementById('chatbot-suggestions');
+        if (sug) sug.style.display = 'none';
+
+        showTyping();
+
+        /* Gọi backend API (Gemini AI) */
+        callChatAPI(text, function(reply) {
+            removeTyping();
+            addMessage(reply, 'bot');
+        });
+    };
+
+    window.sendSuggestion = function(el) {
+        document.getElementById('chatbot-input').value = el.textContent;
+        sendMessage();
+    };
+
+    /* Auto-show badge after 3 seconds */
+    setTimeout(function() {
+        if (!chatbotOpen) {
+            var badge = document.getElementById('chatbot-badge');
+            if (badge) badge.style.display = 'flex';
+        }
+    }, 3000);
+})();
+</script>
+<!-- ==================== /AI CHATBOT ==================== -->
+
 <script src="{{ url_for('static', filename='js/jquery.min.js')}}" type="text/javascript"></script>
-<script src="{{ url_for('static', filename='js/jquery-2.1.1.js')}}" type="text/javascript"></script>
 <!-- Include all compiled plugins (below), or include individual files as needed -->
 <script src="{{ url_for('static', filename='js/bootstrap.min.js')}}" type="text/javascript"></script>
 <script src="{{ url_for('static', filename='js/menumaker.js')}}" type="text/javascript"></script>
-<script src="{{ url_for('static', filename='js/jquery-3.5.1.slim.min.js') }}"></script>
+
 <script src="{{ url_for('static', filename='js/bootstrap.bundle.min.js') }}"></script>
 <script type="text/javascript" src="{{ url_for('static', filename='js/jquery.sticky.js')}}"></script>
 <script type="text/javascript" src="{{ url_for('static', filename='js/sticky-header.js')}}"></script>
 <script type="text/javascript" src="{{ url_for('static', filename='js/owl.carousel.min.js')}}"></script>
 <script type="text/javascript" src="{{ url_for('static', filename='js/photo-gallery.js')}}"></script>
 <script type="text/javascript" src="{{ url_for('static', filename='js/multiple-carousel.js')}}"></script>
-<script type='text/javascript'>
-    $(function () {
-        $(window).on('scroll', function () {
-            if ($(window).scrollTop() > 100) {
-                $('.scrollToTop').fadeIn();
-            } else {
-                $('.scrollToTop').fadeOut();
-            }
-        });
 
-        $('.scrollToTop').on('click', function () {
-
-            $('html, body').animate({ scrollTop: 0 }, 500, 'linear');
-            return false;
-        });
+<script>
+/* ==========================================
+   SCROLL REVEAL ANIMATIONS (INTERSECTION OBSERVER)
+   ========================================== */
+document.addEventListener("DOMContentLoaded", function() {
+    // 1. Assign animation classes dynamically
+    const fadeUpElements = document.querySelectorAll('.product-block, .top-rated-card, .widget, .box, .ai-container-box');
+    fadeUpElements.forEach((el, index) => {
+        el.classList.add('reveal-up');
+        // Add staggering delay for cards
+        if (el.classList.contains('product-block') || el.classList.contains('top-rated-card')) {
+            el.style.transitionDelay = `${(index % 4) * 0.1}s`;
+        }
     });
 
+    const fadeLeftElements = document.querySelectorAll('.vertical-menu');
+    fadeLeftElements.forEach(el => el.classList.add('reveal-left'));
+
+    // 2. Set up observer
+    const observerOptions = {
+        root: null,
+        rootMargin: '0px 0px -50px 0px',
+        threshold: 0.1
+    };
+
+    const observer = new IntersectionObserver((entries, observer) => {
+        entries.forEach(entry => {
+            if (entry.isIntersecting) {
+                entry.target.classList.add('is-visible');
+                observer.unobserve(entry.target); // Run only once
+            }
+        });
+    }, observerOptions);
+
+    // 3. Observe elements
+    const animatedElements = document.querySelectorAll('.reveal-up, .reveal-left, .reveal-right, .reveal-scale');
+    animatedElements.forEach(el => observer.observe(el));
+});
 </script>
+
 </body>
 
 </html>

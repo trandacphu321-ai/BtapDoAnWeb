@@ -38,10 +38,16 @@
                                        aria-selected="false">Hủy đơn hàng</a>
                                 </li>
                                 <li class="nav-item">
+                                    <a class="nav-link" id="custom-tabs-one-shipping-tab" data-toggle="pill"
+                                       href="#custom-tabs-one-shipping" role="tab"
+                                       aria-controls="custom-tabs-one-shipping"
+                                       aria-selected="false">Đơn giao hàng</a>
+                                </li>
+                                <li class="nav-item">
                                     <a class="nav-link" id="custom-tabs-one-messages-tab" data-toggle="pill"
                                        href="#custom-tabs-one-messages" role="tab"
                                        aria-controls="custom-tabs-one-messages"
-                                       aria-selected="false">Doanh Thu</a>
+                                       aria-selected="false">Doanh Thu (Đã giao)</a>
                                 </li>
                             </ul>
                         </div>
@@ -80,19 +86,26 @@
                                                             <td>{{ loop.index }}</td>
 
                                                             {# tìm tên khách #}
-                                                            {% for customer in customers %}
-                                                              {% if customer.id == order.customer_id %}
-                                                                {% set customer_name =
-                                                                      (customer.first_name or '') ~ ' ' ~ (customer.last_name or '') %}
-                                                                <td>{{ customer_name }}</td>
-                                                              {% endif %}
-                                                            {% endfor %}
+                                                            <td>
+                                                                {% set found_customer = false %}
+                                                                {% for customer in customers %}
+                                                                    {% if customer.id|string == order.customer_id|string %}
+                                                                        {{ customer.first_name }} {{ customer.last_name }}
+                                                                        {% set found_customer = true %}
+                                                                    {% endif %}
+                                                                {% endfor %}
+                                                                {% if not found_customer %}Khách vãng lai ({{ order.customer_id }}){% endif %}
+                                                            </td>
 
                                                             <td>{{ order.invoice }}</td>
 
-                                                            {% for key, product in order.orders.items() %}
-                                                              <td>{{ product.name }}</td>
-                                                            {% endfor %}
+                                                            <td>
+                                                                {% for key, product in order.orders.items() %}
+                                                                    <div class="badge badge-light border mb-1" style="display: block; text-align: left;">
+                                                                        {{ product.name }} <span class="text-primary">x{{ product.quantity }}</span>
+                                                                    </div>
+                                                                {% endfor %}
+                                                            </td>
 
                                                             <td>{{ order.status }}</td>
                                                             <td>{{ order.date_created }}</td>
@@ -150,7 +163,7 @@
                                                                             hủy
                                                                         </button>
 
-                                                                        <form action="{{ url_for('customer_accept_order', id=order.id) }}"
+                                                                        <form action="{{ url_for('accept_order', id=order.id) }}"
                                                                               method="POST">
                                                                             <button type="submit" class="btn btn-success">
                                                                                 chấp nhận
@@ -244,6 +257,60 @@
                                     </div>
                                 </div>
 
+                                {# ================= TAB 4: SHIPPING ================= #}
+                                <div class="tab-pane fade" id="custom-tabs-one-shipping" role="tabpanel"
+                                     aria-labelledby="custom-tabs-one-shipping-tab">
+                                    <div class="card">
+                                        <div class="card-body">
+                                            <table id="example4" class="table table-bordered table-striped">
+                                                <thead>
+                                                <tr>
+                                                    <th>Stt</th>
+                                                    <th>Khách hàng</th>
+                                                    <th>Hóa đơn</th>
+                                                    <th>Sản phẩm</th>
+                                                    <th>Ngày tạo</th>
+                                                    <th>Thao tác</th>
+                                                </tr>
+                                                </thead>
+                                                <tbody>
+                                                {% for order in orders %}
+                                                  {% if order.status == "Shipping" %}
+                                                    <tr>
+                                                        <td>{{ loop.index }}</td>
+                                                        <td>
+                                                            {% set found_c = false %}
+                                                            {% for c in customers %}
+                                                                {% if c.id|string == order.customer_id|string %}
+                                                                    {{ c.first_name }} {{ c.last_name }}
+                                                                    {% set found_c = true %}
+                                                                {% endif %}
+                                                            {% endfor %}
+                                                            {% if not found_c %}Khách vãng lai{% endif %}
+                                                        </td>
+                                                        <td>{{ order.invoice }}</td>
+                                                        <td>
+                                                            {% for k, p in order.orders.items() %}
+                                                                {{ p.name }} (x{{ p.quantity }})<br>
+                                                            {% endfor %}
+                                                        </td>
+                                                        <td>{{ order.date_created }}</td>
+                                                        <td>
+                                                            <form action="{{ url_for('complete_order', id=order.id) }}" method="POST" style="display:inline;">
+                                                                <button type="submit" class="btn btn-primary btn-sm">
+                                                                    <i class="fa fa-truck"></i> Giao thành công
+                                                                </button>
+                                                            </form>
+                                                        </td>
+                                                    </tr>
+                                                  {% endif %}
+                                                {% endfor %}
+                                                </tbody>
+                                            </table>
+                                        </div>
+                                    </div>
+                                </div>
+
                                 {# ================= TAB 2: CANCELLED ================= #}
                                 <div class="tab-pane fade" id="custom-tabs-one-profile" role="tabpanel"
                                      aria-labelledby="custom-tabs-one-profile-tab">
@@ -266,17 +333,24 @@
                                                       {% if order.status == "Cancelled" %}
                                                         <tr>
                                                             <td>{{ loop.index }}</td>
-                                                            {% for customer in customers %}
-                                                              {% if customer.id == order.customer_id %}
-                                                                {% set customer_name =
-                                                                      (customer.first_name or '') ~ ' ' ~ (customer.last_name or '') %}
-                                                                <td>{{ customer_name }}</td>
-                                                              {% endif %}
-                                                            {% endfor %}
+                                                            <td>
+                                                                {% set found_customer = false %}
+                                                                {% for customer in customers %}
+                                                                    {% if customer.id|string == order.customer_id|string %}
+                                                                        {{ customer.first_name }} {{ customer.last_name }}
+                                                                        {% set found_customer = true %}
+                                                                    {% endif %}
+                                                                {% endfor %}
+                                                                {% if not found_customer %}Khách vãng lai ({{ order.customer_id }}){% endif %}
+                                                            </td>
                                                             <td>{{ order.invoice }}</td>
-                                                            {% for key, product in order.orders.items() %}
-                                                              <td>{{ product.name }}</td>
-                                                            {% endfor %}
+                                                            <td>
+                                                                {% for key, product in order.orders.items() %}
+                                                                    <div class="badge badge-light border mb-1" style="display: block; text-align: left;">
+                                                                        {{ product.name }} <span class="text-primary">x{{ product.quantity }}</span>
+                                                                    </div>
+                                                                {% endfor %}
+                                                            </td>
                                                             <td>{{ order.status }}</td>
                                                             <td>{{ order.date_created }}</td>
                                                         </tr>
@@ -313,26 +387,37 @@
                                                       {% if order.status == "Accepted" %}
                                                         <tr>
                                                             <td>{{ loop.index }}</td>
-                                                            {% for customer in customers %}
-                                                              {% if customer.id == order.customer_id %}
-                                                                {% set customer_name =
-                                                                      (customer.first_name or '') ~ ' ' ~ (customer.last_name or '') %}
-                                                                <td>{{ customer_name }}</td>
-                                                              {% endif %}
-                                                            {% endfor %}
+                                                            <td>
+                                                                {% set found_customer = false %}
+                                                                {% for customer in customers %}
+                                                                    {% if customer.id|string == order.customer_id|string %}
+                                                                        {{ customer.first_name }} {{ customer.last_name }}
+                                                                        {% set found_customer = true %}
+                                                                    {% endif %}
+                                                                {% endfor %}
+                                                                {% if not found_customer %}Khách vãng lai ({{ order.customer_id }}){% endif %}
+                                                            </td>
                                                             <td>{{ order.invoice }}</td>
                                                             <td>{{ order.status }}</td>
                                                             <td>{{ order.date_created }}</td>
-                                                            {% for key, product in order.orders.items() %}
-                                                                <td>{{ product.name }}</td>
-                                                                <td>{{ product.quantity }}</td>
-                                                                <td>
-                                                                    {{
-                                                                      (product.quantity|int * product.price|float)
-                                                                      - (product.discount|int * product.price|float / 100)
-                                                                    }}
-                                                                </td>
-                                                            {% endfor %}
+                                                            <td>
+                                                                {% set ns = namespace(total_order_revenue=0) %}
+                                                                {% for key, product in order.orders.items() %}
+                                                                    <div class="mb-2 p-1 border-bottom">
+                                                                        <strong>{{ product.name }}</strong><br>
+                                                                        <small class="text-muted">
+                                                                            SL: {{ product.quantity }} x 
+                                                                            {{ 
+                                                                                (product.price|float) - (product.discount|int * product.price|float / 100) 
+                                                                            }}
+                                                                        </small>
+                                                                    </div>
+                                                                    {% set item_revenue = (product.quantity|int * product.price|float) - (product.discount|int * product.price|float / 100 * product.quantity|int) %}
+                                                                    {% set ns.total_order_revenue = ns.total_order_revenue + item_revenue %}
+                                                                {% endfor %}
+                                                            </td>
+                                                            <td>Bảng kê lẻ</td>
+                                                            <td class="text-success fw-bold">{{ ns.total_order_revenue|vnd if ns.total_order_revenue else '0đ' }}</td>
                                                         </tr>
                                                       {% endif %}
                                                     {% endfor %}

@@ -11,7 +11,7 @@
                 <div class="col-sm-6">
                     <ol class="breadcrumb float-sm-right">
                         <li class="breadcrumb-item"><a href="{{url_for('admin_manager')}}">Trang chủ</a></li>
-                        {%if brands %}
+                        {%if title == 'Add brand' %}
                         <li class="breadcrumb-item active">Nhãn hàng</li>
                         {% else %}
                         <li class="breadcrumb-item active">Phân loại</li>
@@ -31,7 +31,7 @@
                 <div class="col-md-6" style=" margin-top: 35px; ">
                     <div class="card card-primary">
                         <div class="card-header">
-                            {%if brands %}
+                            {%if title == 'Add brand' %}
                             <h3 class="card-title">Thêm nhãn hàng mới</h3>
                             {% else %}
                             <h3 class="card-title">Thêm danh mục mới</h3>
@@ -41,7 +41,7 @@
                         <div class="card">
                             <div class="card-body">
                                 {% include "_messages.html" %}
-                                {%if brands %}
+                                {%if title == 'Add brand' %}
                                 <form action="" method='POST'>
                                     <div class="form-group">
                                         <div>
@@ -57,8 +57,7 @@
                                                 </select>
                                             </div>
                                             <div class="col ml-auto">
-                                                <button class="btn btn-block bg-gradient-info" onclick="window.location.href='{{url_for('addcat')}}'">New Category
-                                                </button>
+                                                <a href="{{url_for('addcat')}}" class="btn btn-block bg-gradient-info">New Category</a>
                                             </div>
                                         </div>
 

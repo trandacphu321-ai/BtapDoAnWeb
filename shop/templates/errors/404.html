@@ -1,0 +1,9 @@
+{% extends 'base.html' %}
+{% block content %}
+<div class="container text-center py-5">
+    <h1 class="display-1 fw-bold text-primary">404</h1>
+    <h2 class="mb-4">Không Tìm Thấy Trang</h2>
+    <p class="lead mb-4">Trang bạn đang cố truy cập không tồn tại hoặc đã bị di dời.</p>
+    <a href="{{ url_for('home') }}" class="btn btn-primary rounded-pill px-4 py-2">Quay về Trang Chủ</a>
+</div>
+{% endblock %}

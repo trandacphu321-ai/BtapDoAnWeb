@@ -1,0 +1,72 @@
+{% extends 'admin/layout.html' %}
+{% block content %}
+<div class="content-wrapper">
+    <div class="content-header">
+        <div class="container-fluid">
+            <div class="row mb-2">
+                <div class="col-sm-6">
+                    <h1 class="m-0 text-dark">Quản lý Mã giảm giá</h1>
+                </div>
+                <div class="col-sm-6 text-right">
+                    <a href="{{ url_for('add_coupon') }}" class="btn btn-primary">
+                        <i class="fas fa-plus"></i> Thêm mã mới
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <section class="content">
+        <div class="container-fluid">
+            {% include '_messages.html' %}
+            <div class="card">
+                <div class="card-body p-0">
+                    <table class="table table-striped">
+                        <thead>
+                            <tr>
+                                <th>Mã</th>
+                                <th>Loại</th>
+                                <th>Giá trị</th>
+                                <th>Ngày hết hạn</th>
+                                <th>Lượt dùng</th>
+                                <th>Trạng thái</th>
+                                <th>Hành động</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for coupon in coupons %}
+                            <tr>
+                                <td><strong>{{ coupon.code }}</strong></td>
+                                <td>{{ 'Giảm cố định' if coupon.discount_type == 'fixed' else 'Giảm %' }}</td>
+                                <td>{{ coupon.discount_value|vnd if coupon.discount_type == 'fixed' else coupon.discount_value ~ '%' }}</td>
+                                <td>{{ coupon.expiry_date.strftime('%d/%m/%Y') }}</td>
+                                <td>{{ coupon.used_count }} / {{ coupon.usage_limit }}</td>
+                                <td>
+                                    {% if coupon.is_active %}
+                                        <span class="badge badge-success">Đang chạy</span>
+                                    {% else %}
+                                        <span class="badge badge-secondary">Tạm dừng</span>
+                                    {% endif %}
+                                </td>
+                                <td>
+                                    <a href="{{ url_for('delete_coupon', id=coupon.id) }}" 
+                                       class="btn btn-sm btn-danger"
+                                       onclick="return confirm('Bạn có chắc muốn xóa mã này?')">
+                                        <i class="fas fa-trash"></i>
+                                    </a>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                            {% if not coupons %}
+                            <tr>
+                                <td colspan="7" class="text-center">Chưa có mã giảm giá nào.</td>
+                            </tr>
+                            {% endif %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </section>
+</div>
+{% endblock %}

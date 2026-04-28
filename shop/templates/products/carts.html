@@ -5,12 +5,14 @@
 <div class="single-page">
     <div class="container">
         <div class="row">
-            <div class="col-lg-12">
-                <ul class="breadcrumb">
-                    <li><a href="{{ url_for('home') }}">Trang chủ</a></li>
-                    <li><a href="{{ url_for('getCart') }}">Giỏ hàng</a></li>
-                </ul>
-            </div>
+<div class="breadcrumb-wrapper">
+    <div class="container">
+        <ul class="breadcrumb">
+            <li><a href="{{ url_for('home') }}"><i class="fa fa-home"></i> Trang chủ</a></li>
+            <li class="active">Giỏ hàng</li>
+        </ul>
+    </div>
+</div>
         </div>
 
         {# ================= GIỎ HÀNG TRỐNG ================= #}
@@ -58,7 +60,7 @@
                                 <form action="{{ url_for('updatecart', code=key) }}" method="post">
                                     <div>
                                         {% set colors = product.colors.split(',') %}
-                                        <label for="color">Colors: </label>
+                                        <label for="color">Màu sắc: </label>
                                         <select name="color" id="color">
                                             <option value="{{ product.color }}" style="display: none;">
                                                 {{ product.color|capitalize }}
@@ -69,15 +71,30 @@
                                             {% endfor %}
                                         </select>
                                     </div>
+                                    
+                                    {% if product.capacities %}
+                                    <div style="margin-top: 5px;">
+                                        {% set capacities = product.capacities.split(',') %}
+                                        <label for="capacity">Phiên bản: </label>
+                                        <select name="capacity" id="capacity">
+                                            <option value="{{ product.capacity }}" style="display: none;">
+                                                {{ product.capacity }}
+                                            </option>
+                                            {% for cap in capacities %}
+                                                <option value="{{ cap.strip() }}">{{ cap.strip() }}</option>
+                                            {% endfor %}
+                                        </select>
+                                    </div>
+                                    {% endif %}
 
                                     {% if product.discount %}
                                         <div class="price">
-                                            ${{ "%.2f"|format(product.price - discount) }}
-                                            <span>${{ "%.2f"|format(product.price) }}</span>
+                                            {{ (product.price - discount) | vnd }}
+                                            <span>{{ product.price | vnd }}</span>
                                         </div>
                                     {% else %}
                                         <div class="price">
-                                            ${{ "%.2f"|format(product.price) }}
+                                            {{ product.price | vnd }}
                                         </div>
                                     {% endif %}
 
@@ -123,31 +140,29 @@
                             <tr>
                                 <td>Giá gốc</td>
                                 <td style="text-align:right">
-                                    {{ "%.2f"|format(subtotals|default(0)) }}
+                                    {{ (subtotals|default(0)) | vnd }}
                                 </td>
                             </tr>
                             <tr>
                                 <td>Giảm giá</td>
                                 <td style="text-align:right">
-                                    {{ "%.2f"|format(discounttotal|default(0)) }}
+                                    {{ (discounttotal|default(0)) | vnd }}
                                 </td>
                             </tr>
                             <tr style="border-top: 1px solid #333">
                                 <td>Tổng cộng</td>
                                 <td style="text-align:right">
-                                    {{ "%.2f"|format((subtotals|default(0)) - (discounttotal|default(0))) }}
+                                    {{ ((subtotals|default(0)) - (discounttotal|default(0))) | vnd }}
                                 </td>
                             </tr>
                         </table>
 
                         <center>
-                            <form action="{{ url_for('checkout') }}" method="POST">
-                                <button type="submit"
-                                        class="btn btn-2"
-                                        style="padding: 3px 26px; margin-bottom: 20px;">
-                                    Thanh toán
-                                </button>
-                            </form>
+                            <a href="{{ url_for('checkout') }}" 
+                               class="btn btn-2" 
+                               style="padding: 10px 40px; margin-bottom: 20px; display: inline-block; text-decoration: none;">
+                                THANH TOÁN
+                            </a>
                         </center>
                     </div>
                 </div>

@@ -15,14 +15,14 @@
                 {{ render_field(form.stock, class="form-control") }}
                 <label for="category">Thêm một danh mục</label>
                 <select name="category" id="category" class="form-control" onchange='myFunction()' required>
-                    <option value="{{product.category_id}}">{{product.category.name}}</option>
+                    <option value="{{product.category.id if product.category else ''}}">{{product.category.name if product.category else 'N/A'}}</option>
                     {% for category in categories %}
                     <option value="{{category.id}}">{{category.name}}</option>
                     {% endfor %}
                 </select>
                 <label for="brand">Thêm brand</label>
                 <select name="brand" id="brand" class="form-control" required>
-                    <option value="{{product.brand_id}}">{{product.brand.name}}</option>
+                    <option value="{{product.brand.id if product.brand else ''}}">{{product.brand.name if product.brand else 'N/A'}}</option>
                     {% for brand in brands %}
                     <option value="{{brand.id}}">{{brand.name}}</option>
                     {% endfor %}
@@ -30,7 +30,11 @@
 
 
                 {{ render_field(form.colors, class="form-control") }}
+                {{ render_field(form.capacity, class="form-control", placeholder="Ví dụ: 64GB:25000000, 128GB:29000000") }}
+                <small style="color: #6c757d; display: block; margin-bottom: 15px; margin-top: -10px;">* Định dạng dung lượng: Tên:Giá (VD: 64GB:25000000, 128GB:29000000)</small>
                 {{ render_field(form.description, class="form-control", rows="10") }}
+                {{ render_field(form.video_link, class="form-control", placeholder="Link YouTube") }}
+                {{ render_field(form.review_video, class="form-control", placeholder="Link YouTube Review") }}
                 <div class="container">
                     <div class="row">
                         <div class="col-md-4"><input type="file" name="image_1" id="image_1">
@@ -42,6 +46,18 @@
 
                         <div class="col-md-4"><input type="file" name="image_3" id="image_3">
                             <a href="{{url_for('static',filename='images/' + product.image_3)}}"> </a>
+                        </div>
+                    </div>
+                    <div class="row mt-2">
+                        <div class="col-md-4"><input type="file" name="image_4" id="image_4">
+                            {% if product.image_4 %}
+                            <a href="{{url_for('static',filename='images/' + product.image_4)}}"> </a>
+                            {% endif %}
+                        </div>
+                        <div class="col-md-4"><input type="file" name="image_5" id="image_5">
+                            {% if product.image_5 %}
+                            <a href="{{url_for('static',filename='images/' + product.image_5)}}"> </a>
+                            {% endif %}
                         </div>
                     </div>
                 </div>
@@ -56,14 +72,32 @@
 function myFunction() {
      $("#brand option").remove();
      var newoptions = "";
-     {% for brand in brands %}
-     if(document.getElementById("category").value == {{brand.category_id}}){
+     var catVal = document.getElementById("category").value;
+     // {% for brand in brands %}
+     if(catVal == '{{brand.category.id if brand.category else ""}}'){
         newoptions+="<option value='{{brand.id}}'>{{brand.name}}</option>";
      }
-     {% endfor %}
+     // {% endfor %}
      $("#brand").append(newoptions);
-     }
+}
 
+// Auto-remove dots from Price and Capacity
+document.addEventListener('DOMContentLoaded', function() {
+    const priceInput = document.getElementById('price');
+    const capacityInput = document.getElementById('capacity');
+
+    if (priceInput) {
+        priceInput.addEventListener('input', function() {
+            this.value = this.value.replace(/\./g, '');
+        });
+    }
+
+    if (capacityInput) {
+        capacityInput.addEventListener('input', function() {
+            this.value = this.value.replace(/\./g, '');
+        });
+    }
+});
 </script>
 {%include 'admin/footer.html'%}
 {% endblock content %}

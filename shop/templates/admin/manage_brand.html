@@ -57,12 +57,11 @@
                                 </thead>
                                 <tbody>
                                 {%if brands%}
-                                {%for _brand in brands%}
-                                {% set brand= _brand[0] %}
+                                {%for brand in brands%}
                                 <tr>
                                     <td>{{loop.index}}</td>
                                     <td>{{brand.name}}</td>
-                                    <td>{{_brand[1]}}</td>
+                                    <td>{{brand.category.name if brand.category else 'N/A'}}</td>
                                     <td><a href="{{url_for('updatebrand',id=brand.id)}}" class="btn btn-sm btn-info">Edit</a>
                                     </td>
                                     <td>

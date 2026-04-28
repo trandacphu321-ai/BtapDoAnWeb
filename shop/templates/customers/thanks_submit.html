@@ -1,35 +1,319 @@
-{% extends 'base.html' %}
+{% extends "base.html" %}
 {% block content %}
+<!-- Header is included but we will position the content to cover the screen -->
 {% include 'header.html' %}
-<br>
-<br>
-<table class="table table-sm">
-    <thead>
-    <th>Invoice Code</th>
-    <th>Product</th>
-    <th>Quantity</th>
-    <th>Total</th>
-    <th>Status</th>
 
-    </thead>
-    <tbody>
-    {% for order in orders %}
-    {% for key, product in order.orders.items() %}
-    {% set discount =(product.discount/100) * product.price |float %}
-    {% set subtotal = product.quantity|int * product.price|float %}
-    <tr>
-        <td> {{order.invoice}}</td>
-        <td>{{product.name}}</td>
-        <td>
-            {{product.quantity}}
-        </td>
-        <td>${{"%.2f"|format(subtotal - discount|round(1,'floor')) }}</td>
-        <td>{{order.status}}</td>
-    </tr>
-    {% endfor %}
-    {% endfor %}
-    </tbody>
-</table>
+<div class="success-page-full">
+    <div class="receipt-card animate__animated animate__zoomIn">
+        <!-- Top Section: Success State -->
+        <div class="receipt-header">
+            <div class="success-check-pulse">
+                <i class="fa fa-check"></i>
+            </div>
+            <h2 class="mt-5 fw-800 text-dark">Đặt hàng thành công!</h2>
+            <p class="text-muted">Đơn hàng của bạn đã được hệ thống ghi nhận</p>
+        </div>
 
+        <!-- Receipt Body -->
+        <div class="receipt-body">
+            <!-- Order ID Badge -->
+            <div class="order-id-section">
+                <span class="label">MÃ ĐƠN HÀNG</span>
+                <h3 class="invoice-number">#{{ invoice }}</h3>
+            </div>
 
+            <div class="receipt-divider">
+                <div class="dot-left"></div>
+                <div class="dot-right"></div>
+            </div>
+
+            <!-- Details Grid -->
+            <div class="order-details-grid">
+                <div class="detail-item">
+                    <span class="d-label">Tổng thanh toán</span>
+                    <span class="d-value price-highlight">{{ grand_total | vnd }}</span>
+                </div>
+                <div class="detail-item">
+                    <span class="d-label">Ngày đặt hàng</span>
+                    <span class="d-value">Hôm nay</span>
+                </div>
+                <div class="detail-item full-width">
+                    <span class="d-label">Địa chỉ nhận hàng</span>
+                    <span class="d-value text-break">{{ address }}</span>
+                </div>
+                <div class="detail-item">
+                    <span class="d-label">Vận chuyển</span>
+                    <span class="d-value">Giao hàng tận nơi</span>
+                </div>
+                <div class="detail-item">
+                    <span class="d-label">Trạng thái</span>
+                    <span class="d-value text-success">Đã xác nhận</span>
+                </div>
+            </div>
+
+            <!-- Phone Contact Info -->
+            <div class="contact-alert mt-4">
+                <div class="alert-icon">
+                    <i class="fa fa-phone-square"></i>
+                </div>
+                <div class="alert-text">
+                    <strong>Vui lòng giữ máy</strong>
+                    <span>Nhân viên sẽ gọi xác nhận đơn hàng sớm nhất.</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Receipt Footer: Actions -->
+        <div class="receipt-footer">
+            <div class="d-flex gap-3">
+                <a href="{{ url_for('customer_dashboard_orders') }}" class="btn-modern-primary flex-grow-1">
+                    <i class="fa fa-list-alt"></i> ĐƠN HÀNG
+                </a>
+                <a href="{{ url_for('home') }}" class="btn-modern-ghost flex-grow-1">
+                    <i class="fa fa-shopping-cart"></i> MUA SẮM
+                </a>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+/* --- Absolute Centering Logic --- */
+.success-page-full {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100vw;
+    height: 100vh;
+    background-color: #f4f7fe;
+    background-image: radial-gradient(#6366f1 0.5px, transparent 0.5px);
+    background-size: 30px 30px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 9999;
+    padding: 20px;
+    overflow-y: auto;
+}
+
+.receipt-card {
+    background: #fff;
+    border-radius: 32px;
+    box-shadow: 0 50px 100px rgba(0,0,0,0.12);
+    width: 100%;
+    max-width: 550px;
+    position: relative;
+    overflow: hidden;
+    margin: auto;
+}
+
+/* Header Section */
+.receipt-header {
+    padding: 60px 30px 25px;
+    text-align: center;
+    background: linear-gradient(to bottom, #fcfdfe, #ffffff);
+}
+
+.success-check-pulse {
+    width: 75px;
+    height: 75px;
+    background: #6366f1;
+    color: #fff;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 30px;
+    margin: 0 auto;
+    position: relative;
+    box-shadow: 0 10px 25px rgba(99, 102, 241, 0.4);
+}
+
+.success-check-pulse::after {
+    content: '';
+    position: absolute;
+    width: 100%;
+    height: 100%;
+    border-radius: 50%;
+    border: 2px solid #6366f1;
+    animation: pulse-ring 1.5s infinite;
+}
+
+@keyframes pulse-ring {
+    0% { transform: scale(1); opacity: 0.8; }
+    100% { transform: scale(1.6); opacity: 0; }
+}
+
+.fw-800 { font-weight: 800; }
+
+/* Body Section */
+.receipt-body {
+    padding: 0 35px 30px;
+}
+
+.order-id-section {
+    text-align: center;
+    margin-bottom: 20px;
+}
+
+.order-id-section .label {
+    font-size: 10px;
+    font-weight: 800;
+    color: #94a3b8;
+    letter-spacing: 2px;
+    display: block;
+    margin-bottom: 4px;
+}
+
+.invoice-number {
+    font-weight: 800;
+    color: #1e293b;
+    margin: 0;
+    font-size: 1.6rem;
+}
+
+/* Divider with ticket dots */
+.receipt-divider {
+    height: 1.5px;
+    background: #e2e8f0;
+    margin: 25px -35px;
+    position: relative;
+}
+
+.dot-left, .dot-right {
+    position: absolute;
+    width: 18px;
+    height: 18px;
+    background: #f4f7fe;
+    border-radius: 50%;
+    top: -9px;
+}
+.dot-left { left: -9px; }
+.dot-right { right: -9px; }
+
+/* Details Grid */
+.order-details-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 15px;
+}
+
+.detail-item {
+    display: flex;
+    flex-direction: column;
+}
+
+.detail-item.full-width {
+    grid-column: span 2;
+}
+
+.d-label {
+    font-size: 10px;
+    font-weight: 700;
+    color: #64748b;
+    text-transform: uppercase;
+    margin-bottom: 2px;
+}
+
+.d-value {
+    font-weight: 700;
+    color: #1e293b;
+    font-size: 0.9rem;
+}
+
+.price-highlight {
+    color: #ef4444;
+    font-size: 1.1rem;
+}
+
+/* Alert Box */
+.contact-alert {
+    background: #f0fdf4;
+    border-radius: 14px;
+    padding: 14px;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    border: 1px solid #dcfce7;
+}
+
+.alert-icon i {
+    font-size: 22px;
+    color: #16a34a;
+}
+
+.alert-text {
+    display: flex;
+    flex-direction: column;
+}
+
+.alert-text strong {
+    font-size: 13px;
+    color: #14532d;
+}
+
+.alert-text span {
+    font-size: 11px;
+    color: #166534;
+}
+
+/* Footer Section */
+.receipt-footer {
+    padding: 0 35px 35px;
+}
+
+.btn-modern-primary {
+    background: #6366f1;
+    color: #fff !important;
+    border: none;
+    padding: 14px;
+    border-radius: 14px;
+    font-weight: 700;
+    font-size: 0.9rem;
+    text-decoration: none !important;
+    text-align: center;
+    transition: all 0.3s;
+    box-shadow: 0 10px 20px rgba(99, 102, 241, 0.2);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+}
+
+.btn-modern-primary:hover {
+    background: #4f46e5;
+    transform: translateY(-2px);
+    box-shadow: 0 15px 30px rgba(99, 102, 241, 0.3);
+}
+
+.btn-modern-ghost {
+    background: transparent;
+    color: #64748b !important;
+    border: 2px solid #e2e8f0;
+    padding: 12px;
+    border-radius: 14px;
+    font-weight: 700;
+    font-size: 0.9rem;
+    text-decoration: none !important;
+    text-align: center;
+    transition: all 0.3s;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+}
+
+.btn-modern-ghost:hover {
+    background: #f8fafc;
+    border-color: #cbd5e1;
+    color: #1e293b !important;
+}
+
+/* Mobile Responsive */
+@media (max-width: 576px) {
+    .order-details-grid { grid-template-columns: 1fr; }
+    .detail-item.full-width { grid-column: span 1; }
+    .receipt-body, .receipt-footer { padding: 0 25px 25px; }
+}
+</style>
 {% endblock content %}

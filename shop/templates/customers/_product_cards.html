@@ -1,0 +1,50 @@
+{% for product in products_list %}
+<div class="product-grid-item">
+    <a href="{{url_for('detail', id = product.id)}}" class="product-card-link">
+        <div class="product-card">
+            <div class="product-card-img">
+                <img src="{{ url_for('static', filename='images/'+product.image_1) }}"
+                    alt="{{ product.name}}">
+                {% if product.discount > 0 %}
+                <span class="product-card-badge">-{{product.discount}}%</span>
+                {% endif %}
+            </div>
+            <div class="product-card-info">
+                <h5 class="product-card-name">{{ product.name }}</h5>
+                <div class="product-card-pricing">
+                    <span class="product-card-price">{{ (product.price -
+                        product.price*product.discount/100) | vnd }}</span>
+                    {% if product.discount > 0 %}
+                    <span class="product-card-original">{{ (product.price) | vnd }}</span>
+                    {% endif %}
+                </div>
+                <div class="product-card-extra">
+                    <div class="tag-installment">
+                        <i class="fa fa-credit-card" style="font-size: 9px;"></i> Trả góp 0%
+                    </div>
+                    <div class="tag-delivery">
+                        <i class="fa fa-truck" style="font-size: 9px;"></i> Sẵn sàng giao hàng
+                    </div>
+                </div>
+                <div class="product-card-rating">
+                    <div class="stars {% if average_data[product.id].count == 0 %}no-rating{% endif %}">
+                        {% if average_data[product.id].count > 0 %}
+                            {% for i in range(average_data[product.id].average|int) %}
+                            <span class="glyphicon glyphicon-star"></span>
+                            {% endfor %}
+                            {% if average_data[product.id].average % 1 >= 0.5 %}
+                            <span class="glyphicon glyphicon-star"></span>
+                            {% endif %}
+                        {% else %}
+                            {% for i in range(5) %}
+                            <span class="glyphicon glyphicon-star"></span>
+                            {% endfor %}
+                        {% endif %}
+                    </div>
+                    <span class="rating-count">({{ average_data[product.id].count if average_data[product.id].count > 0 else 0 }})</span>
+                </div>
+            </div>
+        </div>
+    </a>
+</div>
+{% endfor %}

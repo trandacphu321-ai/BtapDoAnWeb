@@ -39,7 +39,7 @@
                                     <td>
                                         {{product.color|capitalize}}
                                     </td>
-                                    <td>${{"%.2f"|format(product.price)}}</td>
+                                    <td>{{ ("%.2f"|format(product.price)) | vnd }}</td>
                                     <td> {{product.quantity}}</td>
                                     {% if product.discount %}
                                     <td>{{product.discount}} %</td>
@@ -47,7 +47,7 @@
                                     <td></td>
                                     {% endif %}
                                     {% set subtotal = product.quantity|int * product.price|float %}
-                                    <td>${{"%.2f"|format(subtotal - discount|round(1,'floor')) }}</td>
+                                    <td>{{ ("%.2f"|format(subtotal - discount|round(1,'floor'))) | vnd }}</td>
                                 </form>
                             </tr>
                             {% endfor %}
@@ -55,67 +55,220 @@
                             <tr>
                                 <td colspan="5"></td>
                                 <td>Total:</td>
-                                <td>${{subtotals}}</td>
+                                <td>{{ (subtotals) | vnd }}</td>
                             </tr>
                             </tbody>
                         </table>
-                        </table>
-                        <h2>Chọn phương thức thanh toán</h2>
-                        <table class="table table-sm">
-                            <tr>
-                                <td>
-                                    {% set amount = subtotals %}
-                                    <!--                <input type="button" name="CashOn",onclick="openPaymentForm()">Cash on delivery-->
-                                    <button class="open-button btn-info" onclick="openForm()">Tiền mặt khi giao hàng
-                                    </button>
-                                    <div class="form-popup" id="myForm" style="display: none;">
-                                        <h4 style="margin-top:12px; color:red">Thông tin khách hàng</h4>
-                                        <form action="{{ url_for('submit_order') }}" method="POST" class="form-group" onsubmit="return confirmForm();"  >
-                                            <input type="hidden" name="invoice_customer" value="{{','.join(invoices)}}">
-                                            <div class="form-group">
-                                                <label><b>Tên khách hàng</b></label>
-                                                <input type="text" class="form-control" id="customer_name"
-                                                       name="CustomerName"
-                                                       value="{{customer.username}}" readonly>
-                                            </div>
-                                            <div class="form-group">
-                                                <label><b>Email</b></label>
-                                                <input type="text" class="form-control" id="customer_email"
-                                                       name="CustomerEmail"
-                                                       value="{{customer.email}}" readonly>
-                                            </div>
-                                            <div class="form-group">
-                                                <label><b>SĐT</b></label>
-                                                <input type="text" class="form-control" id="customer_phone"
-                                                       name="CustomerPhone"
-                                                       value="{{customer.phone_number}}" readonly>
-                                            </div>
-                                            <div class="form-group">
-                                                <label><b>Địa chỉ</b></label>
-                                                <input type="text" class="form-control" placeholder="Enter Address"
-                                                       name="CustomerAddress" required>
-                                            </div>
-                                            <div class="form-group">
-                                                <button type="submit" class="btn btn-info"
-                                                        style="padding: 3px 26px;background: #D9534F;">Thanh toán</button>
-                                            </div>
-                                        </form>
+                        <h2>Thông tin thanh toán & Giao hàng</h2>
+                        <div class="row">
+                            <div class="col-md-7">
+                                <div class="card p-3 mb-3">
+                                    <h4>1. Thông tin nhận hàng</h4>
+                                    <form action="{{ url_for('submit_order') }}" method="POST" id="checkout-form">
+                                        <div class="form-group">
+                                            <label>Họ tên người nhận</label>
+                                            <input type="text" name="CustomerName" class="form-control" value="{{ current_user.first_name }} {{ current_user.last_name }}" required>
+                                        </div>
+                                        <div class="form-group">
+                                            <label>Số điện thoại</label>
+                                            <input type="text" name="CustomerPhone" class="form-control" value="{{ current_user.phone_number }}" required>
+                                        </div>
+                                        <div class="form-group">
+                                            <label>Địa chỉ nhận hàng</label>
+                                            <textarea name="CustomerAddress" class="form-control" rows="3" placeholder="Số nhà, tên đường, phường/xã..." required></textarea>
+                                        </div>
+                                        <input type="hidden" name="coupon_code" id="applied_coupon_input">
+                                        
+                                        <h4 class="mt-4">2. Phương thức thanh toán</h4>
+                                        <div class="payment-methods">
+                                            <label class="d-block p-2 border rounded mb-2">
+                                                <input type="radio" name="payment_method" value="COD" checked> Tiền mặt khi nhận hàng (COD)
+                                            </label>
+                                            <label class="d-block p-2 border rounded mb-2">
+                                                <input type="radio" name="payment_method" value="VNPAY"> Thanh toán qua VNPAY
+                                            </label>
+                                            <label class="d-block p-2 border rounded mb-2">
+                                                <input type="radio" name="payment_method" value="MOMO"> Ví điện tử MoMo
+                                            </label>
+                                        </div>
+                                        
+                                        <button type="submit" class="btn btn-2 w-100 mt-3" style="width: 100%; padding: 10px;">
+                                            XÁC NHẬN ĐẶT HÀNG
+                                        </button>
+                                    </form>
+                                </div>
+                            </div>
+                            
+                            <div class="col-md-5">
+                                <div class="coupon-card">
+                                    <h5 class="coupon-title"><i class="fa fa-ticket"></i> Mã giảm giá</h5>
+                                    <div class="coupon-input-group">
+                                        <input type="text" id="coupon_input" placeholder="Nhập mã ưu đãi..." autocomplete="off">
+                                        <button type="button" onclick="applyCoupon()">ÁP DỤNG</button>
                                     </div>
-                                    <script src="{{ url_for('static', filename='js/checkout.js')}}"
-                                            class="stripe-button"
-                                            data-key="pk_test_MaILxTYQ15v5Uhd6NKI9wPdD00qdL0QZSl"
-                                            data-name="{{current_user.username}}"
-                                            data-description="Payment"
-                                            data-amount="{{amount}}"
-                                            data-currency="USD">
-                                    </script>
+                                    <div id="coupon_message"></div>
+                                    
+                                    <div class="summary-details mt-4">
+                                        <div class="summary-row">
+                                            <span>Tạm tính</span>
+                                            <span class="fw-bold">{{ (subtotals) | vnd }}</span>
+                                        </div>
+                                        <div class="summary-row" id="coupon_discount_row" style="display: none; color: #16a34a;">
+                                            <span>Giảm giá</span>
+                                            <span id="coupon_discount_val" class="fw-bold">- 0đ</span>
+                                        </div>
+                                        <div class="summary-divider"></div>
+                                        <div class="summary-row total">
+                                            <span>TỔNG CỘNG</span>
+                                            <span id="final_total_val">{{ (subtotals) | vnd }}</span>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
 
-                                </td>
-                                <td width="35%"></td>
+<style>
+/* === Coupon & Summary Card Redesign === */
+.coupon-card {
+    background: #ffffff;
+    border-radius: 20px;
+    padding: 24px;
+    border: 1px solid #e2e8f0;
+    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
+}
 
+.coupon-title {
+    font-weight: 700;
+    font-size: 0.95rem;
+    color: #1e293b;
+    margin-bottom: 16px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
 
-                            </tr>
-                        </table>
+.coupon-title i {
+    color: #6366f1;
+    font-size: 1.1rem;
+}
+
+.coupon-input-group {
+    display: flex;
+    background: #f8fafc;
+    border: 1.5px solid #e2e8f0;
+    border-radius: 12px;
+    padding: 6px;
+    transition: all 0.2s;
+}
+
+.coupon-input-group:focus-within {
+    border-color: #6366f1;
+    background: #fff;
+    box-shadow: 0 0 0 4px rgba(99, 102, 241, 0.1);
+}
+
+.coupon-input-group input {
+    flex: 1;
+    border: none;
+    background: transparent;
+    padding: 8px 12px;
+    font-size: 0.9rem;
+    font-weight: 600;
+    color: #1e293b;
+    outline: none;
+}
+
+.coupon-input-group button {
+    background: #6366f1;
+    color: #fff;
+    border: none;
+    padding: 8px 18px;
+    border-radius: 8px;
+    font-weight: 700;
+    font-size: 0.8rem;
+    letter-spacing: 0.5px;
+    transition: all 0.2s;
+}
+
+.coupon-input-group button:hover {
+    background: #4f46e5;
+    transform: translateY(-1px);
+}
+
+#coupon_message {
+    margin-top: 8px;
+    font-size: 0.8rem;
+    font-weight: 500;
+}
+
+/* Summary Details */
+.summary-details {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+.summary-row {
+    display: flex;
+    justify-content: space-between;
+    font-size: 0.9rem;
+    color: #64748b;
+}
+
+.summary-divider {
+    height: 1px;
+    background: #f1f5f9;
+    margin: 4px 0;
+}
+
+.summary-row.total {
+    color: #1e293b;
+    font-weight: 800;
+    font-size: 1.15rem;
+}
+
+.summary-row.total #final_total_val {
+    color: #dc2626;
+}
+</style>
+                        </div>
+
+<script>
+    let rawSubtotal = JSON.parse('{{ subtotals|tojson|safe }}');
+    
+    function applyCoupon() {
+        let code = document.getElementById('coupon_input').value;
+        if (!code) return;
+        
+        fetch('/api/apply-coupon', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ code: code })
+        })
+        .then(response => response.json())
+        .then(data => {
+            const msgDiv = document.getElementById('coupon_message');
+            if (data.success) {
+                msgDiv.innerHTML = `<span style="color: green;">${data.message}</span>`;
+                document.getElementById('applied_coupon_input').value = data.code;
+                
+                let discount = 0;
+                if (data.discount_type === 'fixed') {
+                    discount = data.discount_value;
+                } else {
+                    discount = (rawSubtotal * data.discount_value) / 100;
+                }
+                
+                document.getElementById('coupon_discount_row').style.display = 'table-row';
+                document.getElementById('coupon_discount_val').innerText = '- ' + new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(discount);
+                
+                let final = rawSubtotal - discount;
+                document.getElementById('final_total_val').innerText = new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(final);
+            } else {
+                msgDiv.innerHTML = `<span style="color: red;">${data.message}</span>`;
+            }
+        });
+    }
+</script>
                     </div>
                 </div>
             </div>
@@ -129,6 +282,10 @@
   }
   function confirmForm(){
     return confirm("Are you confirm information payment!");
+  }
+  function mockPayment(method) {
+    alert("Đang chuyển hướng đến cổng thanh toán " + method + " Sandbox...\n(Tính năng đang được giả lập trong môi trường Dev)");
+    document.getElementById("myForm").style.display = "block";
   }
 </script>
 {% endblock content %}

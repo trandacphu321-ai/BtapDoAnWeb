@@ -1,0 +1,350 @@
+{% extends "customers/dashboard/layout.html" %}
+{% block dashboard_content %}
+<div class="profile-premium-container animate__animated animate__fadeIn">
+    <!-- Header with visual flair -->
+    <div class="profile-hero-card mb-5">
+        <div class="hero-glow"></div>
+        <div class="hero-content">
+            <div class="user-avatar-wrapper">
+                <div class="avatar-circle">
+                    <i class="fa fa-user-secret"></i>
+                </div>
+                <div class="status-indicator"></div>
+            </div>
+            <div class="hero-text">
+                <h2 class="user-greeting">Xin chào, {{ current_user.username }}!</h2>
+                <p class="user-subtext">Quản lý thông tin cá nhân và thiết lập tài khoản của bạn</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Main Content Form -->
+    <div class="profile-glass-form">
+        <form action="{{ url_for('customer_dashboard_profile') }}" method="POST">
+            <div class="section-divider mb-4">
+                <i class="fa fa-id-card-o"></i>
+                <span>Thông tin định danh</span>
+            </div>
+
+            <div class="row">
+                <div class="col-md-6 mb-5">
+                    <div class="floating-group">
+                        <input type="text" name="first_name" class="floating-input" value="{{ current_user.first_name }}" placeholder=" " required>
+                        <label class="floating-label">Họ của bạn</label>
+                        <i class="fa fa-user-circle-o input-icon"></i>
+                    </div>
+                </div>
+                <div class="col-md-6 mb-5">
+                    <div class="floating-group">
+                        <input type="text" name="last_name" class="floating-input" value="{{ current_user.last_name }}" placeholder=" " required>
+                        <label class="floating-label">Tên của bạn</label>
+                        <i class="fa fa-user-o input-icon"></i>
+                    </div>
+                </div>
+            </div>
+
+            <div class="section-divider mb-4 mt-2">
+                <i class="fa fa-envelope-open-o"></i>
+                <span>Thông tin liên lạc</span>
+            </div>
+
+            <div class="row">
+                <div class="col-md-12 mb-5">
+                    <div class="floating-group readonly-group">
+                        <input type="email" class="floating-input" value="{{ current_user.email }}" readonly placeholder=" ">
+                        <label class="floating-label">Địa chỉ Email (Không thể thay đổi)</label>
+                        <i class="fa fa-lock input-icon"></i>
+                    </div>
+                </div>
+                <div class="col-md-12 mb-5">
+                    <div class="floating-group">
+                        <input type="text" name="phone" class="floating-input" value="{{ current_user.phone_number }}" placeholder=" " required>
+                        <label class="floating-label">Số điện thoại liên hệ</label>
+                        <i class="fa fa-phone input-icon"></i>
+                    </div>
+                </div>
+                <div class="col-md-12 mb-5">
+                    <div class="floating-group textarea-group">
+                        <textarea name="address" class="floating-input" rows="3" placeholder=" ">{{ current_user.address or '' }}</textarea>
+                        <label class="floating-label">Địa chỉ nhận hàng mặc định</label>
+                        <i class="fa fa-map-marker input-icon"></i>
+                    </div>
+                </div>
+            </div>
+
+            <div class="form-actions text-center">
+                <button type="submit" class="btn-premium-save">
+                    <i class="fa fa-check-circle"></i> LƯU THÔNG TIN
+                </button>
+            </div>
+        </form>
+    </div>
+
+    <!-- Security Section -->
+    <div class="security-card-modern mt-5 animate__animated animate__fadeInUp">
+        <div class="security-icon">
+            <i class="fa fa-shield"></i>
+        </div>
+        <div class="security-info">
+            <h4>Bảo mật & Quyền riêng tư</h4>
+            <p>Thông tin của bạn được bảo mật theo tiêu chuẩn mã hóa SSL 256-bit. Chúng tôi không bao giờ chia sẻ dữ liệu của bạn cho bên thứ ba.</p>
+        </div>
+        <button class="btn-security-action" disabled>
+            <i class="fa fa-refresh"></i> Đổi mật khẩu
+        </button>
+    </div>
+</div>
+
+<style>
+/* Container & Background */
+.profile-premium-container {
+    padding: 10px;
+    font-family: 'Inter', sans-serif;
+}
+
+/* Hero Card */
+.profile-hero-card {
+    background: #1e293b;
+    border-radius: 30px;
+    padding: 40px;
+    position: relative;
+    overflow: hidden;
+    color: #fff;
+    display: flex;
+    align-items: center;
+    box-shadow: 0 20px 40px rgba(0,0,0,0.1);
+}
+.hero-glow {
+    position: absolute;
+    top: -50%;
+    right: -20%;
+    width: 300px;
+    height: 300px;
+    background: #4f46e5;
+    filter: blur(100px);
+    opacity: 0.3;
+}
+.hero-content {
+    display: flex;
+    align-items: center;
+    gap: 25px;
+    position: relative;
+    z-index: 2;
+}
+.user-avatar-wrapper {
+    position: relative;
+}
+.avatar-circle {
+    width: 80px;
+    height: 80px;
+    background: rgba(255,255,255,0.1);
+    border: 2px solid rgba(255,255,255,0.2);
+    border-radius: 24px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 32px;
+    color: #818cf8;
+}
+.status-indicator {
+    position: absolute;
+    bottom: -5px;
+    right: -5px;
+    width: 20px;
+    height: 20px;
+    background: #10b981;
+    border: 4px solid #1e293b;
+    border-radius: 50%;
+}
+.user-greeting {
+    font-size: 24px;
+    font-weight: 800;
+    margin: 0;
+}
+.user-subtext {
+    color: #94a3b8;
+    margin: 5px 0 0;
+    font-size: 14px;
+}
+
+/* Glass Form */
+.profile-glass-form {
+    background: #fff;
+    border-radius: 30px;
+    padding: 50px; /* Tăng padding từ 40px lên 50px */
+    box-shadow: 0 10px 30px rgba(0,0,0,0.03);
+    border: 1px solid #f1f5f9;
+}
+
+/* Section Divider */
+.section-divider {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    color: #6366f1;
+    font-weight: 800;
+    font-size: 13px;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    margin-top: 20px; /* Thêm margin-top */
+    margin-bottom: 35px !important; /* Tăng margin-bottom từ 24px lên 35px */
+}
+.section-divider span {
+    flex: none;
+}
+.section-divider::after {
+    content: '';
+    height: 1px;
+    flex: 1;
+    background: #f1f5f9;
+}
+
+/* Floating Input Group */
+.floating-group {
+    position: relative;
+    margin-top: 30px; /* Tăng từ 10px lên 30px để tách các ô */
+}
+.floating-input {
+    width: 100%;
+    padding: 18px 15px 18px 45px;
+    background: #f8fafc;
+    border: 2px solid transparent;
+    border-radius: 18px;
+    font-size: 15px;
+    font-weight: 600;
+    color: #1e293b;
+    transition: all 0.3s ease;
+    outline: none;
+}
+.floating-input:focus {
+    background: #fff;
+    border-color: #6366f1;
+    box-shadow: 0 8px 15px rgba(99, 102, 241, 0.1);
+}
+.floating-label {
+    position: absolute;
+    left: 45px;
+    top: 50%;
+    transform: translateY(-50%);
+    color: #94a3b8;
+    pointer-events: none;
+    transition: all 0.3s ease;
+    font-size: 15px;
+}
+.floating-input:focus ~ .floating-label,
+.floating-input:not(:placeholder-shown) ~ .floating-label {
+    top: -12px;
+    left: 15px;
+    font-size: 12px;
+    font-weight: 800;
+    color: #6366f1;
+    background: #fff;
+    padding: 0 8px;
+    transform: translateY(0);
+}
+.input-icon {
+    position: absolute;
+    left: 18px;
+    top: 50%;
+    transform: translateY(-50%);
+    color: #cbd5e1;
+    font-size: 18px;
+    transition: all 0.3s;
+}
+.floating-input:focus ~ .input-icon {
+    color: #6366f1;
+}
+
+/* Special Inputs */
+.readonly-group .floating-input {
+    background: #f1f5f9;
+    color: #64748b;
+    cursor: not-allowed;
+}
+.textarea-group .floating-label {
+    top: 25px;
+}
+.textarea-group .input-icon {
+    top: 25px;
+}
+.textarea-group .floating-input:focus ~ .floating-label,
+.textarea-group .floating-input:not(:placeholder-shown) ~ .floating-label {
+    top: -12px;
+}
+
+/* Save Button */
+.btn-premium-save {
+    background: #6366f1;
+    color: #fff;
+    border: none;
+    padding: 16px 60px;
+    border-radius: 20px;
+    font-weight: 800;
+    font-size: 16px;
+    letter-spacing: 0.5px;
+    box-shadow: 0 10px 25px rgba(99, 102, 241, 0.3);
+    transition: all 0.3s;
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    gap: 10px;
+}
+.btn-premium-save:hover {
+    background: #4f46e5;
+    transform: translateY(-3px);
+    box-shadow: 0 15px 30px rgba(99, 102, 241, 0.4);
+}
+
+/* Security Card */
+.security-card-modern {
+    background: #fff7ed;
+    border: 1px dashed #fdba74;
+    border-radius: 25px;
+    padding: 30px;
+    display: flex;
+    align-items: center;
+    gap: 20px;
+}
+.security-icon {
+    width: 60px;
+    height: 60px;
+    background: #ffedd5;
+    color: #f97316;
+    border-radius: 18px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 24px;
+}
+.security-info h4 {
+    font-size: 18px;
+    font-weight: 800;
+    margin: 0 0 5px;
+    color: #9a3412;
+}
+.security-info p {
+    font-size: 14px;
+    color: #c2410c;
+    margin: 0;
+}
+.btn-security-action {
+    background: #fff;
+    border: 1px solid #fed7aa;
+    color: #f97316;
+    padding: 10px 20px;
+    border-radius: 12px;
+    font-weight: 700;
+    font-size: 13px;
+    white-space: nowrap;
+    margin-left: auto;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+    .profile-hero-card { flex-direction: column; text-align: center; padding: 30px; }
+    .hero-content { flex-direction: column; }
+    .security-card-modern { flex-direction: column; text-align: center; }
+    .btn-security-action { margin-left: 0; margin-top: 15px; }
+}
+</style>
+{% endblock dashboard_content %}

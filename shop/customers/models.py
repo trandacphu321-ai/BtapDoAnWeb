@@ -17,50 +17,33 @@ def load_user(user_id: str) -> Optional["Register"]:
     dựa theo ID trong session.
     """
     try:
-        return Register.query.get(int(user_id))
-    except (TypeError, ValueError):
+        return Register.objects(id=user_id).first()
+    except Exception:
         return None
 
 
 # -------------------------------------------------------------------
-# Kiểu dữ liệu JSON lưu trong TEXT (tương thích MySQL)
+# (Đã loại bỏ JSONEncodedDict do MongoEngine hỗ trợ sẵn DictField)
 # -------------------------------------------------------------------
-class JSONEncodedDict(db.TypeDecorator):
-    """
-    Cho phép lưu trữ dict Python vào cột TEXT trong MySQL.
-    Dữ liệu sẽ được tự động json.dumps khi ghi
-    và json.loads khi đọc.
-    """
-    impl = db.Text
-    cache_ok = True  # tương thích SQLAlchemy 2.x
-
-    def process_bind_param(self, value: Optional[Dict[str, Any]], dialect) -> str:
-        if value is None:
-            return "{}"
-        return json.dumps(value)
-
-    def process_result_value(self, value: Optional[str], dialect) -> Dict[str, Any]:
-        if not value:
-            return {}
-        return json.loads(value)
 
 
 # -------------------------------------------------------------------
 # Bảng Register (tài khoản khách hàng) - khớp dump myshop.sql
 # -------------------------------------------------------------------
-class Register(db.Model, UserMixin):
-    __tablename__ = "register"
+class Register(db.Document, UserMixin):
+    username = db.StringField(max_length=50, unique=True)
+    first_name = db.StringField(max_length=50)
+    last_name = db.StringField(max_length=50)
+    email = db.StringField(max_length=50, unique=True)
+    phone_number = db.StringField(max_length=50, unique=True)
+    gender = db.StringField(max_length=5)
+    password = db.StringField(max_length=200)
+    address = db.StringField(max_length=200)
+    date_created = db.DateTimeField(default=datetime.utcnow)
+    lock = db.BooleanField(default=False)
+    cart = db.DictField()
 
-    id = db.Column(db.Integer, primary_key=True)
-    username = db.Column(db.String(50), unique=True)
-    first_name = db.Column(db.String(50))
-    last_name = db.Column(db.String(50))
-    email = db.Column(db.String(50), unique=True)
-    phone_number = db.Column(db.String(50), unique=True)
-    gender = db.Column(db.String(5))
-    password = db.Column(db.String(200))
-    date_created = db.Column(db.DateTime, nullable=False, default=datetime.utcnow)
-    lock = db.Column(db.Boolean, default=False)
+    meta = {'collection': 'register'}
 
     def __repr__(self) -> str:
         return "<Register %r>" % self.username
@@ -68,6 +51,25 @@ class Register(db.Model, UserMixin):
     # Helper (tuỳ chọn)
     def full_name(self) -> str:
         return f"{self.first_name or ''} {self.last_name or ''}".strip()
+
+    def get_rank(self) -> Dict[str, Any]:
+        """Tính toán hạng khách hàng dựa trên tổng chi tiêu tích lũy."""
+        try:
+            from shop.customers.models import CustomerOrder
+            # Tính tổng tiền của các đơn hàng đã hoàn thành (Accepted)
+            orders = CustomerOrder.objects(customer_id=str(self.id), status='Accepted')
+            total_spent = sum(order.total_amount for order in orders if order.total_amount)
+            
+            if total_spent < 5000000:
+                return {"name": "Đồng", "color": "#cd7f32", "icon": "fa-award", "spent": total_spent, "next": 5000000}
+            elif total_spent < 20000000:
+                return {"name": "Bạc", "color": "#a8a29e", "icon": "fa-medal", "spent": total_spent, "next": 20000000}
+            elif total_spent < 50000000:
+                return {"name": "Vàng", "color": "#fbbf24", "icon": "fa-crown", "spent": total_spent, "next": 50000000}
+            else:
+                return {"name": "Kim Cương", "color": "#22d3ee", "icon": "fa-gem", "spent": total_spent, "next": None}
+        except:
+            return {"name": "Đồng", "color": "#cd7f32", "icon": "fa-award", "spent": 0, "next": 5000000}
 
     def to_dict(self) -> Dict[str, Any]:
         return {
@@ -86,16 +88,18 @@ class Register(db.Model, UserMixin):
 # -------------------------------------------------------------------
 # Bảng CustomerOrder (đơn hàng của khách) - khớp dump myshop.sql
 # -------------------------------------------------------------------
-class CustomerOrder(db.Model):
-    __tablename__ = "customer_order"
+class CustomerOrder(db.Document):
+    invoice = db.StringField(max_length=20, unique=True, required=True)
+    status = db.StringField(max_length=20)  # Pending / Accepted / Cancelled
+    address = db.StringField(max_length=200)
+    phone_number = db.StringField(max_length=20)
+    total_amount = db.FloatField()
+    coupon_code = db.StringField(max_length=50)
+    customer_id = db.StringField(required=True)
+    orders = db.DictField()
+    date_created = db.DateTimeField(default=datetime.utcnow)
 
-    id = db.Column(db.Integer, primary_key=True)
-    invoice = db.Column(db.String(20), unique=True, nullable=False)
-    status = db.Column(db.String(20), nullable=True)  # Pending / Accepted / Cancelled
-    address = db.Column(db.String(200))
-    customer_id = db.Column(db.Integer, nullable=False)
-    orders = db.Column(JSONEncodedDict)
-    date_created = db.Column(db.DateTime, nullable=False, default=datetime.utcnow)
+    meta = {'collection': 'customer_order'}
 
     def __repr__(self) -> str:
         return "<CustomerOrder %r>" % self.invoice

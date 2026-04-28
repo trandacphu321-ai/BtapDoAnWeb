@@ -1,0 +1,56 @@
+{% extends "customers/dashboard/layout.html" %}
+{% block dashboard_content %}
+<h3 class="mb-4">Chính sách bảo hành</h3>
+
+<div class="accordion" id="warrantyAccordion">
+  <div class="card mb-2 border-0">
+    <div class="card-header bg-light" id="headingOne">
+      <h2 class="mb-0">
+        <button class="btn btn-link btn-block text-left font-weight-bold" type="button" data-toggle="collapse" data-target="#collapseOne">
+          1. Chính sách đổi trả 1:1 trong 30 ngày
+        </button>
+      </h2>
+    </div>
+    <div id="collapseOne" class="collapse show" data-parent="#warrantyAccordion">
+      <div class="card-body">
+        MobileStore cam kết đổi mới sản phẩm cùng loại nếu có lỗi phần cứng từ nhà sản xuất trong vòng 30 ngày kể từ ngày nhận hàng. 
+        Sản phẩm đổi trả phải còn nguyên vẹn, không trầy xước và đầy đủ phụ kiện.
+      </div>
+    </div>
+  </div>
+  
+  <div class="card mb-2 border-0">
+    <div class="card-header bg-light" id="headingTwo">
+      <h2 class="mb-0">
+        <button class="btn btn-link btn-block text-left font-weight-bold collapsed" type="button" data-toggle="collapse" data-target="#collapseTwo">
+          2. Bảo hành chính hãng 12 tháng
+        </button>
+      </h2>
+    </div>
+    <div id="collapseTwo" class="collapse" data-parent="#warrantyAccordion">
+      <div class="card-body">
+        Tất cả các sản phẩm iPhone, Samsung, Xiaomi tại MobileStore đều được hưởng chính sách bảo hành chính hãng 12 tháng tại các trung tâm bảo hành ủy quyền của hãng trên toàn quốc.
+      </div>
+    </div>
+  </div>
+  
+  <div class="card mb-2 border-0">
+    <div class="card-header bg-light" id="headingThree">
+      <h2 class="mb-0">
+        <button class="btn btn-link btn-block text-left font-weight-bold collapsed" type="button" data-toggle="collapse" data-target="#collapseThree">
+          3. Các trường hợp từ chối bảo hành
+        </button>
+      </h2>
+    </div>
+    <div id="collapseThree" class="collapse" data-parent="#warrantyAccordion">
+      <div class="card-body">
+        <ul>
+            <li>Sản phẩm bị rơi vỡ, móp méo, vào nước do lỗi người dùng.</li>
+            <li>Sản phẩm đã bị can thiệp phần cứng bởi bên thứ ba không thuộc ủy quyền.</li>
+            <li>Sản phẩm không có tem bảo hành hoặc tem đã bị rách/vỡ.</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

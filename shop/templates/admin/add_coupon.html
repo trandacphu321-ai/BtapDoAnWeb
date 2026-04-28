@@ -1,0 +1,48 @@
+{% extends 'admin/layout.html' %}
+{% block content %}
+<div class="content-wrapper">
+    <div class="content-header">
+        <div class="container-fluid">
+            <h1 class="m-0 text-dark">Thêm Mã giảm giá mới</h1>
+        </div>
+    </div>
+
+    <section class="content">
+        <div class="container-fluid">
+            <div class="card card-primary">
+                <form action="{{ url_for('add_coupon') }}" method="POST">
+                    <div class="card-body">
+                        <div class="form-group">
+                            <label for="code">Mã giảm giá (VD: GIAM20K)</label>
+                            <input type="text" name="code" class="form-control" id="code" placeholder="Nhập mã..." required>
+                        </div>
+                        <div class="form-group">
+                            <label for="discount_type">Loại giảm giá</label>
+                            <select name="discount_type" class="form-control" id="discount_type">
+                                <option value="fixed">Giảm số tiền cố định (VNĐ)</option>
+                                <option value="percent">Giảm theo phần trăm (%)</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label for="discount_value">Giá trị giảm</label>
+                            <input type="number" name="discount_value" class="form-control" id="discount_value" step="0.01" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="expiry_date">Ngày hết hạn</label>
+                            <input type="date" name="expiry_date" class="form-control" id="expiry_date" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="usage_limit">Giới hạn lượt dùng</label>
+                            <input type="number" name="usage_limit" class="form-control" id="usage_limit" value="100" required>
+                        </div>
+                    </div>
+                    <div class="card-footer">
+                        <button type="submit" class="btn btn-primary">Lưu mã giảm giá</button>
+                        <a href="{{ url_for('manage_coupons') }}" class="btn btn-default">Hủy</a>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </section>
+</div>
+{% endblock %}

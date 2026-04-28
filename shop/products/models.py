@@ -4,66 +4,97 @@ from shop.customers.models import Register
 from flask_login import UserMixin
 
 
-class Addproduct(db.Model):
-    id = db.Column(db.Integer, primary_key=True)
-    name = db.Column(db.String(80), nullable=False)
-    price = db.Column(db.Numeric(10, 2), nullable=False)
-    discount = db.Column(db.Integer, default=0)
-    stock = db.Column(db.Integer, nullable=False)
-    colors = db.Column(db.Text, nullable=False)
-    desc = db.Column(db.Text, nullable=False)
-    pub_date = db.Column(db.DateTime, nullable=False, default=datetime.utcnow)
+class Addproduct(db.Document):
+    name = db.StringField(max_length=80, required=True)
+    price = db.FloatField(required=True)
+    discount = db.IntField(default=0)
+    stock = db.IntField(required=True)
+    colors = db.StringField(required=True)
+    capacity = db.StringField(default="") 
+    desc = db.StringField(required=True)
+    pub_date = db.DateTimeField(default=datetime.utcnow)
 
-    category_id = db.Column(db.Integer, db.ForeignKey('category.id'), nullable=False)
-    category = db.relationship('Category', backref=db.backref('categories', lazy=True))
+    category = db.ReferenceField('Category', required=True)
+    brand = db.ReferenceField('Brand', required=True)
 
-    brand_id = db.Column(db.Integer, db.ForeignKey('brand.id'), nullable=False)
-    brand = db.relationship('Brand', backref=db.backref('brands', lazy=True))
+    image_1 = db.StringField(required=True, default='image1.jpg')
+    image_2 = db.StringField(required=True, default='image2.jpg')
+    image_3 = db.StringField(required=True, default='image3.jpg')
+    image_4 = db.StringField(required=False, default='image4.jpg')
+    image_5 = db.StringField(required=False, default='image5.jpg')
+    video_link = db.StringField(required=False, default='')
+    review_video = db.StringField(required=False, default='')
 
-    image_1 = db.Column(db.String(150), nullable=False, default='image1.jpg')
-    image_2 = db.Column(db.String(150), nullable=False, default='image2.jpg')
-    image_3 = db.Column(db.String(150), nullable=False, default='image3.jpg')
+    meta = {
+        'collection': 'products', 
+        'strict': False,
+        'indexes': ['name', 'category', 'brand', 'price']
+    }
 
     def __repr__(self):
         return '<Addproduct %r>' % self.name
 
 
-class Category(db.Model):
-    id = db.Column(db.Integer, primary_key=True)
-    name = db.Column(db.String(30), nullable=False, unique=True)
+class Category(db.Document):
+    name = db.StringField(max_length=30, required=True, unique=True)
+
+    meta = {'collection': 'categories'}
 
     def __repr__(self):
         return '<Category %r>' % self.name
 
 
-class Brand(db.Model):
-    id = db.Column(db.Integer, primary_key=True)
-    category_id = db.Column(db.Integer, db.ForeignKey('category.id'), nullable=True)
-    category = db.relationship('Category', backref=db.backref('category', lazy=True))
-    name = db.Column(db.String(30), nullable=False, unique=False)
+class Brand(db.Document):
+    category = db.ReferenceField('Category')
+    name = db.StringField(max_length=30, required=True)
+
+    meta = {'collection': 'brands'}
 
     def __repr__(self):
         return '<Brand %r>' % self.name
 
 
-class Rate(db.Model):
-    id = db.Column(db.Integer, primary_key=True)
-    product_id = db.Column(db.Integer, db.ForeignKey('addproduct.id'), nullable=False)
-    product = db.relationship('Addproduct', backref=db.backref('addproducts', lazy=True))
+class Rate(db.Document):
+    product = db.ReferenceField('Addproduct', required=True)
+    user_id = db.StringField(required=True) # Changed from register to avoid circular import immediately
 
-    register_id = db.Column(db.Integer, db.ForeignKey('register.id'), nullable=False)
-    register = db.relationship('Register', backref=db.backref('registers', lazy=True))
+    time = db.DateTimeField(default=datetime.utcnow)
+    desc = db.StringField(required=True)
+    rate_number = db.IntField(required=True)
+    performance_rate = db.IntField(default=5)
+    battery_rate = db.IntField(default=5)
+    camera_rate = db.IntField(default=5)
 
-    time = db.Column(db.DateTime, nullable=False, default=datetime.utcnow)
-    desc = db.Column(db.Text, nullable=False)
-    rate_number = db.Column(db.Integer, nullable=False)
+    meta = {'collection': 'rates'}
 
     def __repr__(self):
-        return '<Rate %r>' % self.product_id
+        return '<Rate %r>' % self.id
 
-# class Register(db.Model, UserMixin):
-#     id = db.Column(db.Integer, primary_key=True)
-#     username = db.Column(db.String(100))
-#     email = db.Column(db.String(120), unique=True)
-#     password = db.Column(db.String(255))   # có thể là hash hoặc plaintext
-# db.create_all()
+class UserInteraction(db.Document):
+    user_id = db.StringField(required=True)
+    product_id = db.StringField(required=True)
+    interaction_type = db.StringField(required=True, choices=('view', 'cart', 'purchase'))
+    weight = db.IntField(required=True, default=1)
+    timestamp = db.DateTimeField(default=datetime.utcnow)
+
+    meta = {
+        'collection': 'user_interactions',
+        'indexes': ['user_id', 'product_id', 'interaction_type']
+    }
+
+    def __repr__(self):
+        return '<UserInteraction %r %r>' % (self.user_id, self.product_id)
+
+class Coupon(db.Document):
+    code = db.StringField(max_length=50, required=True, unique=True)
+    discount_type = db.StringField(choices=('fixed', 'percent'), default='fixed')
+    discount_value = db.FloatField(required=True)
+    expiry_date = db.DateTimeField(required=True)
+    usage_limit = db.IntField(default=100)
+    used_count = db.IntField(default=0)
+    is_active = db.BooleanField(default=True)
+
+    meta = {'collection': 'coupons'}
+
+    def __repr__(self):
+        return '<Coupon %r>' % self.code

@@ -1,0 +1,335 @@
+{% extends 'admin/layout.html' %}
+{% block content %}
+{% include 'admin/header.html' %}
+
+<!-- Content Wrapper -->
+<div class="content-wrapper">
+
+    <!-- Header -->
+    <section class="content-header">
+        <div class="container-fluid">
+            <div class="row mb-2">
+                <div class="col-sm-6 d-flex align-items-center">
+                    <h1 class="mr-3"><i class="fas fa-brain"></i> AI Dashboard</h1>
+                    <button class="btn btn-outline-danger btn-sm" id="btn-reset-ai" onclick="resetAIData()">
+                        <i class="fas fa-sync-alt"></i> Reset dữ liệu AI
+                    </button>
+                </div>
+                <div class="col-sm-6">
+                    <ol class="breadcrumb float-sm-right">
+                        <li class="breadcrumb-item"><a href="{{url_for('admin_manager')}}">Trang chủ</a></li>
+                        <li class="breadcrumb-item active">AI Dashboard</li>
+                    </ol>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Main content -->
+    <section class="content">
+        <div class="container-fluid">
+
+            <!-- Stat Cards Row -->
+            <div class="row">
+                <div class="col-lg-3 col-6">
+                    <div class="small-box bg-gradient-info">
+                        <div class="inner">
+                            <h3 id="stat-total-interactions">--</h3>
+                            <p>Tổng tương tác AI</p>
+                        </div>
+                        <div class="icon"><i class="fas fa-chart-line"></i></div>
+                    </div>
+                </div>
+                <div class="col-lg-3 col-6">
+                    <div class="small-box bg-gradient-success">
+                        <div class="inner">
+                            <h3 id="stat-unique-users">--</h3>
+                            <p>Người dùng được theo dõi</p>
+                        </div>
+                        <div class="icon"><i class="fas fa-users"></i></div>
+                    </div>
+                </div>
+                <div class="col-lg-3 col-6">
+                    <div class="small-box bg-gradient-warning">
+                        <div class="inner">
+                            <h3 id="stat-cart-rate">--%</h3>
+                            <p>Tỉ lệ Xem → Giỏ hàng</p>
+                        </div>
+                        <div class="icon"><i class="fas fa-shopping-cart"></i></div>
+                    </div>
+                </div>
+                <div class="col-lg-3 col-6">
+                    <div class="small-box bg-gradient-danger">
+                        <div class="inner">
+                            <h3 id="stat-purchase-rate">--%</h3>
+                            <p>Tỉ lệ Xem → Mua hàng</p>
+                        </div>
+                        <div class="icon"><i class="fas fa-dollar-sign"></i></div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Charts Row -->
+            <div class="row">
+                <!-- Interaction Breakdown Chart -->
+                <div class="col-md-6">
+                    <div class="card card-primary card-outline">
+                        <div class="card-header">
+                            <h3 class="card-title"><i class="fas fa-chart-pie mr-1"></i> Phân bố tương tác</h3>
+                        </div>
+                        <div class="card-body">
+                            <canvas id="interactionPieChart" style="min-height: 300px;"></canvas>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Conversion Funnel -->
+                <div class="col-md-6">
+                    <div class="card card-success card-outline">
+                        <div class="card-header">
+                            <h3 class="card-title"><i class="fas fa-filter mr-1"></i> Phễu chuyển đổi (Conversion Funnel)</h3>
+                        </div>
+                        <div class="card-body">
+                            <canvas id="funnelChart" style="min-height: 300px;"></canvas>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Top Products Row -->
+            <div class="row">
+                <div class="col-12">
+                    <div class="card card-warning card-outline">
+                        <div class="card-header">
+                            <h3 class="card-title"><i class="fas fa-trophy mr-1"></i> Top 10 sản phẩm thu hút AI nhiều nhất</h3>
+                        </div>
+                        <div class="card-body">
+                            <canvas id="topProductsChart" style="min-height: 350px;"></canvas>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Overview Table -->
+            <div class="row">
+                <div class="col-12">
+                    <div class="card">
+                        <div class="card-header">
+                            <h3 class="card-title"><i class="fas fa-database mr-1"></i> Tổng quan hệ thống</h3>
+                        </div>
+                        <div class="card-body">
+                            <table class="table table-bordered table-hover">
+                                <thead class="thead-dark">
+                                    <tr>
+                                        <th>Chỉ số</th>
+                                        <th>Giá trị</th>
+                                        <th>Mô tả</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="overview-table-body">
+                                    <tr><td colspan="3" class="text-center">Đang tải dữ liệu...</td></tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- API Endpoints Info -->
+            <div class="row">
+                <div class="col-12">
+                    <div class="card card-dark card-outline">
+                        <div class="card-header">
+                            <h3 class="card-title"><i class="fas fa-code mr-1"></i> REST API Endpoints (Giai đoạn 5)</h3>
+                            <div class="card-tools">
+                                <button type="button" class="btn btn-tool" data-card-widget="collapse"><i class="fas fa-minus"></i></button>
+                            </div>
+                        </div>
+                        <div class="card-body">
+                            <table class="table table-sm table-striped">
+                                <thead><tr><th>Method</th><th>Endpoint</th><th>Mô tả</th></tr></thead>
+                                <tbody>
+                                    <tr><td><span class="badge bg-success">GET</span></td><td><code>/api/v1/products</code></td><td>Danh sách sản phẩm (hỗ trợ phân trang, lọc, tìm kiếm)</td></tr>
+                                    <tr><td><span class="badge bg-success">GET</span></td><td><code>/api/v1/products/&lt;id&gt;</code></td><td>Chi tiết 1 sản phẩm + đánh giá</td></tr>
+                                    <tr><td><span class="badge bg-success">GET</span></td><td><code>/api/v1/categories</code></td><td>Danh sách danh mục</td></tr>
+                                    <tr><td><span class="badge bg-success">GET</span></td><td><code>/api/v1/brands</code></td><td>Danh sách thương hiệu</td></tr>
+                                    <tr><td><span class="badge bg-info">GET</span></td><td><code>/api/v1/recommendations/personal</code></td><td>Gợi ý cá nhân hóa (Collaborative Filtering)</td></tr>
+                                    <tr><td><span class="badge bg-info">GET</span></td><td><code>/api/v1/recommendations/similar/&lt;id&gt;</code></td><td>Sản phẩm tương tự (Content-based)</td></tr>
+                                    <tr><td><span class="badge bg-success">GET</span></td><td><code>/api/v1/cart</code></td><td>Giỏ hàng hiện tại</td></tr>
+                                    <tr><td><span class="badge bg-success">GET</span></td><td><code>/api/v1/auth/status</code></td><td>Trạng thái đăng nhập</td></tr>
+                                    <tr><td><span class="badge bg-warning">GET</span></td><td><code>/api/v1/admin/ai-stats</code></td><td>Thống kê AI Dashboard (Admin only)</td></tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+    </section>
+
+</div>
+
+{% include 'admin/footer.html' %}
+
+<!-- Chart.js is already loaded in layout.html -->
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    fetch('/api/v1/admin/ai-stats')
+        .then(res => res.json())
+        .then(result => {
+            if (result.status !== 'success') {
+                console.error('AI Stats error:', result.message);
+                return;
+            }
+            const d = result.data;
+
+            // --- Stat Cards ---
+            document.getElementById('stat-total-interactions').textContent = d.total_interactions.toLocaleString();
+            document.getElementById('stat-unique-users').textContent = d.unique_users.toLocaleString();
+            document.getElementById('stat-cart-rate').textContent = d.conversion_funnel.view_to_cart_rate + '%';
+            document.getElementById('stat-purchase-rate').textContent = d.conversion_funnel.view_to_purchase_rate + '%';
+
+            // --- Pie Chart: Interaction Breakdown ---
+            const pieCtx = document.getElementById('interactionPieChart').getContext('2d');
+            new Chart(pieCtx, {
+                type: 'doughnut',
+                data: {
+                    labels: ['Xem sản phẩm', 'Thêm giỏ hàng', 'Mua hàng'],
+                    datasets: [{
+                        data: [
+                            d.interaction_breakdown.views,
+                            d.interaction_breakdown.cart_adds,
+                            d.interaction_breakdown.purchases
+                        ],
+                        backgroundColor: ['#17a2b8', '#ffc107', '#dc3545'],
+                        borderWidth: 2,
+                        borderColor: '#fff'
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    legend: { position: 'bottom' }
+                }
+            });
+
+            // --- Bar Chart: Conversion Funnel ---
+            const funnelCtx = document.getElementById('funnelChart').getContext('2d');
+            new Chart(funnelCtx, {
+                type: 'bar',
+                data: {
+                    labels: ['Xem (View)', 'Giỏ hàng (Cart)', 'Mua (Purchase)'],
+                    datasets: [{
+                        label: 'Số lượt tương tác',
+                        data: [
+                            d.interaction_breakdown.views,
+                            d.interaction_breakdown.cart_adds,
+                            d.interaction_breakdown.purchases
+                        ],
+                        backgroundColor: [
+                            'rgba(23, 162, 184, 0.8)',
+                            'rgba(255, 193, 7, 0.8)',
+                            'rgba(220, 53, 69, 0.8)'
+                        ],
+                        borderColor: [
+                            '#17a2b8', '#ffc107', '#dc3545'
+                        ],
+                        borderWidth: 2,
+                        borderRadius: 6
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    legend: { display: false },
+                    scales: {
+                        yAxes: [{ ticks: { beginAtZero: true } }]
+                    }
+                }
+            });
+
+            // --- Horizontal Bar: Top Products ---
+            const topCtx = document.getElementById('topProductsChart').getContext('2d');
+            const topLabels = d.top_products.map(p => p.product_name.length > 25 ? p.product_name.substr(0,25)+'...' : p.product_name);
+            const topScores = d.top_products.map(p => p.total_score);
+            const topCounts = d.top_products.map(p => p.interaction_count);
+
+            new Chart(topCtx, {
+                type: 'horizontalBar',
+                data: {
+                    labels: topLabels,
+                    datasets: [
+                        {
+                            label: 'Tổng điểm AI',
+                            data: topScores,
+                            backgroundColor: 'rgba(0, 123, 255, 0.7)',
+                            borderColor: '#007bff',
+                            borderWidth: 1,
+                            borderRadius: 4
+                        },
+                        {
+                            label: 'Số lượt tương tác',
+                            data: topCounts,
+                            backgroundColor: 'rgba(40, 167, 69, 0.7)',
+                            borderColor: '#28a745',
+                            borderWidth: 1,
+                            borderRadius: 4
+                        }
+                    ]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    legend: { position: 'top' },
+                    scales: {
+                        xAxes: [{ ticks: { beginAtZero: true } }]
+                    }
+                }
+            });
+
+            // --- Overview Table ---
+            const tbody = document.getElementById('overview-table-body');
+            tbody.innerHTML = `
+                <tr><td><i class="fas fa-eye text-info"></i> Tổng lượt xem</td><td><strong>${d.interaction_breakdown.views.toLocaleString()}</strong></td><td>Số lần người dùng xem chi tiết sản phẩm</td></tr>
+                <tr><td><i class="fas fa-cart-plus text-warning"></i> Tổng lượt thêm giỏ</td><td><strong>${d.interaction_breakdown.cart_adds.toLocaleString()}</strong></td><td>Số lần sản phẩm được thêm vào giỏ hàng</td></tr>
+                <tr><td><i class="fas fa-cash-register text-danger"></i> Tổng lượt mua</td><td><strong>${d.interaction_breakdown.purchases.toLocaleString()}</strong></td><td>Số lần sản phẩm được mua thành công</td></tr>
+                <tr><td><i class="fas fa-users text-success"></i> Người dùng unique</td><td><strong>${d.unique_users.toLocaleString()}</strong></td><td>Số khách hàng có dữ liệu hành vi</td></tr>
+                <tr><td><i class="fas fa-box text-primary"></i> Tổng sản phẩm</td><td><strong>${d.total_products.toLocaleString()}</strong></td><td>Toàn bộ sản phẩm trong hệ thống</td></tr>
+                <tr><td><i class="fas fa-user-friends text-secondary"></i> Tổng khách hàng</td><td><strong>${d.total_customers.toLocaleString()}</strong></td><td>Khách hàng đã đăng ký tài khoản</td></tr>
+                <tr><td><i class="fas fa-receipt text-dark"></i> Tổng đơn hàng</td><td><strong>${d.total_orders.toLocaleString()}</strong></td><td>Đơn hàng đã được ghi nhận (đã submit)</td></tr>
+                <tr class="table-info"><td><i class="fas fa-percentage text-warning"></i> Tỉ lệ View→Cart</td><td><strong>${d.conversion_funnel.view_to_cart_rate}%</strong></td><td>Bao nhiêu % người xem sẽ thêm giỏ hàng</td></tr>
+                <tr class="table-danger"><td><i class="fas fa-percentage text-danger"></i> Tỉ lệ View→Purchase</td><td><strong>${d.conversion_funnel.view_to_purchase_rate}%</strong></td><td>Bao nhiêu % người xem sẽ mua hàng (Conversion Rate)</td></tr>
+            `;
+        })
+        .catch(err => console.error('Failed to load AI stats:', err));
+});
+
+function resetAIData() {
+    if (confirm('BẠN CÓ CHẮC CHẮN? Toàn bộ dữ liệu hành vi người dùng sẽ bị xóa. Việc này sẽ làm các gợi ý AI quay về trạng thái ban đầu.')) {
+        const btn = document.getElementById('btn-reset-ai');
+        btn.disabled = true;
+        btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Đang xử lý...';
+
+        fetch('/api/v1/admin/ai-reset', { method: 'POST' })
+            .then(res => res.json())
+            .then(result => {
+                if (result.status === 'success') {
+                    alert(result.message);
+                    location.reload();
+                } else {
+                    alert('Lỗi: ' + result.message);
+                    btn.disabled = false;
+                    btn.innerHTML = '<i class="fas fa-sync-alt"></i> Reset dữ liệu AI';
+                }
+            })
+            .catch(err => {
+                alert('Lỗi kết nối server');
+                btn.disabled = false;
+                btn.innerHTML = '<i class="fas fa-sync-alt"></i> Reset dữ liệu AI';
+            });
+    }
+}
+</script>
+
+{% endblock content %}

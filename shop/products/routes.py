@@ -12,6 +12,7 @@ from shop import app, db, photos, storage
 from .models import Category, Brand, Addproduct, Rate, Register
 from .forms import Addproducts, Rates
 from shop.admin.models import Admin
+from shop.recommender import get_content_based_recommendations, get_collaborative_recommendations
 # 
 
 # ===================================================================
@@ -19,30 +20,69 @@ from shop.admin.models import Admin
 # ===================================================================
 
 def brands():
-    return Brand.query.all()
-
+    return Brand.objects().all()
 
 def categories():
-    return Category.query.order_by(Category.name.desc()).all()
-
+    desired_order = [
+        "điện thoại thông minh",
+        "máy tính xách tay",
+        "đồng hồ thông minh",
+        "tai nghe & âm thanh"
+    ]
+    cats = list(Category.objects().all())
+    
+    def sort_key(c):
+        name_lower = c.name.lower().strip()
+        if name_lower in desired_order:
+            return desired_order.index(name_lower)
+        # Nếu có danh mục nào khác thì xếp xuống cuối
+        return 999
+        
+    cats.sort(key=sort_key)
+    return cats
 
 def registers():
-    return Register.query.join(Rate, (Register.id == Rate.register_id)).all()
-
+    rated_users_ids = [rate.user_id for rate in Rate.objects().all()]
+    return Register.objects(id__in=rated_users_ids).all()
 
 def medium():
-    """Tính điểm trung bình + số lượng đánh giá cho từng sản phẩm."""
-    products = Addproduct.query.filter(Addproduct.stock > 0).all()
+    """Tính điểm trung bình + số lượng đánh giá cho từng sản phẩm + phân bổ sao và chỉ số chi tiết."""
+    products = Addproduct.objects(stock__gt=0).all()
     dst = {}
     for product in products:
-        rates = Rate.query.filter(Rate.product_id == product.id).all()
+        rates = Rate.objects(product=product).all()
         length = len(rates)
+        
+        star_dist = {5: 0, 4: 0, 3: 0, 2: 0, 1: 0}
+        perf_sum, batt_sum, cam_sum = 0, 0, 0
+        
         if length == 0:
             average = 5
+            perf_avg, batt_avg, cam_avg = 5.0, 5.0, 5.0
         else:
-            sum_value = sum(rate.rate_number for rate in rates)
+            sum_value = 0
+            for rate in rates:
+                sum_value += rate.rate_number
+                star_dist[rate.rate_number] = star_dist.get(rate.rate_number, 0) + 1
+                perf_sum += getattr(rate, 'performance_rate', 5)
+                batt_sum += getattr(rate, 'battery_rate', 5)
+                cam_sum += getattr(rate, 'camera_rate', 5)
+                
             average = sum_value / length
-        dst[product.id] = [average, length]
+            perf_avg = perf_sum / length
+            batt_avg = batt_sum / length
+            cam_avg = cam_sum / length
+            
+        dst[product.id] = {
+            'average': average,
+            'count': length,
+            'star_dist': star_dist,
+            'experience': {
+                'performance': round(perf_avg, 1),
+                'battery': round(batt_avg, 1),
+                'camera': round(cam_avg, 1)
+            }
+        }
     return dst
 
 
@@ -53,34 +93,42 @@ def medium():
 @app.route('/')
 def home():
     page = request.args.get('page', 1, type=int)
-    category = Category.query.filter_by(name="Smartphone").first()
+    category = Category.objects(name="Điện thoại di động").first() # Thay đổi do mình setup DB mẫu theo tiếng việt
 
-    products_all = Addproduct.query.filter(
-        Addproduct.stock > 0,
-        Addproduct.category_id == category.id
-    ).order_by(Addproduct.id.desc()).paginate(page=page, per_page=4)
+    # Nếu không tìm thấy dùng category đầu tiên
+    cat_query = {'category': category} if category else {}
 
-    products_hot = Addproduct.query.filter(
-        Addproduct.stock > 0,
-        Addproduct.category_id == category.id
-    ).order_by(Addproduct.price.desc()).limit(3).all()
+    products_all = Addproduct.objects(stock__gt=0, **cat_query).order_by('-id').paginate(page=page, per_page=4)
+    products_hot = Addproduct.objects(stock__gt=0, **cat_query).order_by('-price').limit(3)
+    products_new = Addproduct.objects(stock__gt=0, **cat_query).order_by('-id')
+    products_sell = Addproduct.objects(stock__gt=0, discount__gt=0, **cat_query).order_by('-discount').limit(10)
 
-    products_new = Addproduct.query.filter(
-        Addproduct.stock > 0,
-        Addproduct.category_id == category.id
-    ).order_by(Addproduct.id.desc()).all()
+    # --- AI Recommendation: Dành riêng cho bạn (Collaborative) ---
+    ai_suggest = []
+    if current_user.is_authenticated:
+        ai_suggest = get_collaborative_recommendations(current_user.id, limit=4)
+    # -------------------------------------------------------------
 
-    products_sell = Addproduct.query.filter(
-        Addproduct.stock > 0,
-        Addproduct.category_id == category.id
-    ).order_by(Addproduct.discount.desc()).limit(10).all()
+    avg_data = medium()
+    top_rated_ids = [pid for pid, data in avg_data.items() if data['count'] > 0]
+    top_rated_ids.sort(key=lambda pid: (avg_data[pid]['average'], avg_data[pid]['count']), reverse=True)
+    
+    top_rated_prods = []
+    for pid in top_rated_ids[:6]:
+        p = Addproduct.objects(id=pid, stock__gt=0).first()
+        if p: top_rated_prods.append(p)
+        
+    if len(top_rated_prods) < 4:
+        top_rated_prods = list(Addproduct.objects(stock__gt=0).order_by('-id').limit(6))
 
     products = {
         'all': products_all,
         'hot': products_hot,
         'new': products_new,
         'sell': products_sell,
-        'average': medium()
+        'average': avg_data,
+        'ai_suggest': ai_suggest,
+        'top_rated': top_rated_prods
     }
 
     return render_template(
@@ -89,6 +137,26 @@ def home():
         brands=brands(),
         categories=categories()
     )
+
+
+@app.route('/load_more')
+def load_more():
+    page = request.args.get('page', 1, type=int)
+    category = Category.objects(name="Điện thoại di động").first()
+    cat_query = {'category': category} if category else {}
+    
+    products_all = Addproduct.objects(stock__gt=0, **cat_query).order_by('-id').paginate(page=page, per_page=4)
+    
+    html = render_template(
+        'customers/_product_cards.html', 
+        products_list=products_all.items,
+        average_data=medium()
+    )
+    
+    return {
+        'html': html,
+        'has_next': products_all.has_next
+    }
 
 
 # ===================================================================
@@ -100,13 +168,8 @@ def get_all_category():
     """Trang liệt kê tất cả sản phẩm (dùng cho /category)."""
     page = request.args.get('page', 1, type=int)
 
-    products_all = Addproduct.query.filter(
-        Addproduct.stock > 0
-    ).order_by(Addproduct.id.desc()).paginate(page=page, per_page=9)
-
-    products_new = Addproduct.query.filter(
-        Addproduct.stock > 0
-    ).order_by(Addproduct.id.desc()).limit(2).all()
+    products_all = Addproduct.objects(stock__gt=0).order_by('-id').paginate(page=page, per_page=9)
+    products_new = Addproduct.objects(stock__gt=0).order_by('-id').limit(2)
 
     products = {
         'all': products_all,
@@ -132,18 +195,17 @@ def get_category(name):
     page = request.args.get('page', 1, type=int)
 
     # Lấy category theo tên, nếu không thấy thì 404
-    get_cat = Category.query.filter_by(name=name).first_or_404()
+    get_cat = Category.objects(name=name).first()
+    if not get_cat: return "Category not found", 404
 
     # Lấy sản phẩm thuộc category này, phân trang
-    get_cat_prod_page = Addproduct.query.filter_by(category=get_cat).paginate(
+    get_cat_prod_page = Addproduct.objects(category=get_cat).paginate(
         page=page,
         per_page=9
     )
 
     # Một vài sản phẩm mới để hiển thị bên cạnh
-    products_new = Addproduct.query.filter(
-        Addproduct.stock > 0
-    ).order_by(Addproduct.id.desc()).limit(2).all()
+    products_new = Addproduct.objects(stock__gt=0).order_by('-id').limit(2)
 
     products = {
         'all': get_cat_prod_page,
@@ -172,76 +234,82 @@ def get_category(name):
 def addbrand():
     if 'email' not in session:
         flash('Please login first', 'danger')
-        return redirect(url_for('login'))
+        return redirect(url_for('unified_login'))
 
     if request.method == "POST":
         getbrand = request.form.get('brand')
-        category = request.form.get('category')
-        brand = Brand(name=getbrand, category_id=category)
-        db.session.add(brand)
-        db.session.commit()
+        category_id = request.form.get('category') if request.form.get('category') else None
+        
+        try:
+            category = Category.objects(id=category_id).first() if category_id else None
+        except Exception:
+            flash('Invalid category selected.', 'danger')
+            return redirect(url_for('addbrand'))
+        
+        brand = Brand(name=getbrand, category=category)
+        brand.save()
         flash(f'The brand {getbrand} was added to your database', 'success')
         return redirect(url_for('addbrand'))
 
-    user = Admin.query.filter_by(email=session['email']).all()
-    categories_list = Category.query.all()
+    user = Admin.objects(email=session['email']).first()
+    categories_list = Category.objects().all()
     return render_template(
         'products/addbrand.html',
         title='Add brand',
         categories=categories_list,
-        user=user[0]
+        user=user
     )
 
 
-@app.route('/updatebrand/<int:id>', methods=['GET', 'POST'])
+@app.route('/updatebrand/<string:id>', methods=['GET', 'POST'])
 def updatebrand(id):
     if 'email' not in session:
         flash('Login first please', 'danger')
-        return redirect(url_for('login'))
+        return redirect(url_for('unified_login'))
 
-    updatebrand_obj = Brand.query.get_or_404(id)
+    updatebrand_obj = Brand.objects(id=id).first()
+    if not updatebrand_obj: return "Not found", 404
     brand_name = request.form.get('brand')
 
     if request.method == "POST":
         if brand_name:
             updatebrand_obj.name = brand_name
-            db.session.commit()
+            updatebrand_obj.save()
             flash(f'The brand {updatebrand_obj.name} was updated', 'success')
         return redirect(url_for('brands'))    # endpoint /brands bên admin
 
-    user = Admin.query.filter_by(email=session['email']).all()
+    user = Admin.objects(email=session['email']).first()
     return render_template(
         'products/updatebrand.html',
         title='Update brand',
         updatebrand=updatebrand_obj,
         categories=categories(),
-        user=user[0]
+        user=user
     )
 
 
-@app.route('/deletebrand/<int:id>', methods=['GET', 'POST'])
+@app.route('/deletebrand/<string:id>', methods=['GET', 'POST'])
 def deletebrand(id):
     if 'email' not in session:
         flash('Please login first', 'danger')
-        return redirect(url_for('login'))
+        return redirect(url_for('unified_login'))
 
-    brand = Brand.query.get_or_404(id)
+    brand = Brand.objects(id=id).first()
 
-    if request.method == "POST":
+    if request.method == "POST" and brand:
         # Xoá tất cả sản phẩm thuộc brand này + rate của chúng
-        products = Addproduct.query.filter(Addproduct.brand_id == id).all()
+        products = Addproduct.objects(brand=brand).all()
         for product in products:
-            rates = Rate.query.filter(Rate.product_id == product.id).all()
+            rates = Rate.objects(product=product).all()
             for rate in rates:
-                db.session.delete(rate)
-            db.session.delete(product)
+                rate.delete()
+            product.delete()
 
-        db.session.delete(brand)
-        db.session.commit()
+        brand.delete()
         flash(f"The brand {brand.name} was deleted from your database", "success")
         return redirect(url_for('brands'))
 
-    flash(f"The brand {brand.name} can't be deleted from your database", "warning")
+    flash(f"The brand can't be deleted", "warning")
     return redirect(url_for('brands'))
 
 
@@ -253,78 +321,77 @@ def deletebrand(id):
 def addcat():
     if 'email' not in session:
         flash('Please login first', 'danger')
-        return redirect(url_for('login'))
+        return redirect(url_for('unified_login'))
 
     if request.method == "POST":
         getcat = request.form.get('category')
         cat = Category(name=getcat)
-        db.session.add(cat)
-        db.session.commit()
+        cat.save()
 
         flash(f'The category {getcat} was added to your database', 'success')
         return redirect(url_for('addcat'))
 
-    user = Admin.query.filter_by(email=session['email']).all()
+    user = Admin.objects(email=session['email']).first()
     return render_template(
         'products/addbrand.html',
         title='Add category',
-        user=user[0]
+        user=user
     )
 
 
-@app.route('/updatecat/<int:id>', methods=['GET', 'POST'])
+@app.route('/updatecat/<string:id>', methods=['GET', 'POST'])
 def updatecat(id):
     if 'email' not in session:
         flash('Login first please', 'danger')
-        return redirect(url_for('login'))
+        return redirect(url_for('unified_login'))
 
-    updatecat_obj = Category.query.get_or_404(id)
+    updatecat_obj = Category.objects(id=id).first()
+    if not updatecat_obj: return "Not found", 404
     category_name = request.form.get('category')
 
     if request.method == "POST":
         if category_name:
             updatecat_obj.name = category_name
-            db.session.commit()
+            updatecat_obj.save()
             flash(f'The category {updatecat_obj.name} was updated', 'success')
         return redirect(url_for('categories'))
 
-    user = Admin.query.filter_by(email=session['email']).all()
+    user = Admin.objects(email=session['email']).first()
     return render_template(
         'products/updatebrand.html',
         title='Update category',
         updatecat=updatecat_obj,
-        user=user[0]
+        user=user
     )
 
 
-@app.route('/deletecat/<int:id>', methods=['GET', 'POST'])
+@app.route('/deletecat/<string:id>', methods=['GET', 'POST'])
 def deletecat(id):
     if 'email' not in session:
         flash('Please login first', 'danger')
-        return redirect(url_for('login'))
+        return redirect(url_for('unified_login'))
 
-    category_obj = Category.query.get_or_404(id)
+    category_obj = Category.objects(id=id).first()
 
-    if request.method == "POST":
+    if request.method == "POST" and category_obj:
         # Xoá toàn bộ product thuộc category + rate của chúng
-        products = Addproduct.query.filter(Addproduct.category_id == id).all()
+        products = Addproduct.objects(category=category_obj).all()
         for product in products:
-            rates = Rate.query.filter(Rate.product_id == product.id).all()
+            rates = Rate.objects(product=product).all()
             for rate in rates:
-                db.session.delete(rate)
-            db.session.delete(product)
+                rate.delete()
+            product.delete()
 
         # Xoá các brand thuộc category này
-        brands_in_cat = Brand.query.filter(Brand.category_id == id).all()
+        brands_in_cat = Brand.objects(category=category_obj).all()
         for b in brands_in_cat:
-            db.session.delete(b)
+            b.delete()
 
-        db.session.delete(category_obj)
-        db.session.commit()
+        category_obj.delete()
         flash(f"The category {category_obj.name} was deleted from your database", "success")
         return redirect(url_for('categories'))
 
-    flash(f"The category {category_obj.name} can't be deleted from your database", "warning")
+    flash(f"The category can't be deleted", "warning")
     return redirect(url_for('categories'))
 
 
@@ -336,76 +403,96 @@ def deletecat(id):
 def addproduct():
     if 'email' not in session:
         flash('Please login first', 'danger')
-        return redirect(url_for('login'))
+        return redirect(url_for('unified_login'))
 
     form = Addproducts(request.form)
-    brands_list = Brand.query.all()
-    categories_list = Category.query.all()
+    brands_list = Brand.objects().all()
+    categories_list = Category.objects().all()
 
     if request.method == "POST":
         name = form.name.data
-        price = form.price.data
+        price = float(form.price.data) if form.price.data else 0.0
         discount = form.discount.data
         stock = form.stock.data
         colors = form.colors.data
+        capacity = form.capacity.data
         desc = form.description.data
-        brand = request.form.get('brand')
-        category = request.form.get('category')
+        video_link = form.video_link.data
+        review_video = form.review_video.data
+        brand_id = request.form.get('brand')
+        category_id = request.form.get('category')
 
         # GET FILES
         image_1 = request.files.get('image_1')
         image_2 = request.files.get('image_2')
         image_3 = request.files.get('image_3')
+        image_4 = request.files.get('image_4')
+        image_5 = request.files.get('image_5')
 
-        # RANDOM NAMES (tên file lưu thật)
+        # RANDOM NAMES
         name_1 = secrets.token_hex(10) + "." + image_1.filename.split('.')[-1]
         name_2 = secrets.token_hex(10) + "." + image_2.filename.split('.')[-1]
         name_3 = secrets.token_hex(10) + "." + image_3.filename.split('.')[-1]
+        name_4 = ""
+        if image_4:
+            name_4 = secrets.token_hex(10) + "." + image_4.filename.split('.')[-1]
+        name_5 = ""
+        if image_5:
+            name_5 = secrets.token_hex(10) + "." + image_5.filename.split('.')[-1]
 
         # PATH SAVE
         path1 = os.path.join(current_app.root_path, "static/images", name_1)
         path2 = os.path.join(current_app.root_path, "static/images", name_2)
         path3 = os.path.join(current_app.root_path, "static/images", name_3)
-
+        
         # SAVE FILE
         image_1.save(path1)
         image_2.save(path2)
         image_3.save(path3)
-
-        # UPLOAD TO FIREBASE
-        storage.child("images/" + name_1).put(path1)
-        storage.child("images/" + name_2).put(path2)
-        storage.child("images/" + name_3).put(path3)
+        
+        if image_4:
+            path4 = os.path.join(current_app.root_path, "static/images", name_4)
+            image_4.save(path4)
+        if image_5:
+            path5 = os.path.join(current_app.root_path, "static/images", name_5)
+            image_5.save(path5)
 
         # LƯU DB
+        brand_ref = Brand.objects(id=brand_id).first()
+        cat_ref = Category.objects(id=category_id).first()
+
         product = Addproduct(
             name=name,
             price=price,
             discount=discount,
             stock=stock,
             colors=colors,
+            capacity=capacity,
             desc=desc,
-            category_id=category,
-            brand_id=brand,
+            video_link=video_link,
+            review_video=review_video,
+            category=cat_ref,
+            brand=brand_ref,
             image_1=name_1,
             image_2=name_2,
-            image_3=name_3
+            image_3=name_3,
+            image_4=name_4,
+            image_5=name_5
         )
 
-        db.session.add(product)
-        db.session.commit()
+        product.save()
 
         flash(f"The product {product.name} was added successfully.", "success")
         return redirect(url_for('addproduct'))
 
-    user = Admin.query.filter_by(email=session['email']).all()
+    user = Admin.objects(email=session['email']).first()
 
     return render_template(
         'products/addproduct.html',
         form=form,
         brands=brands_list,
         categories=categories_list,
-        user=user[0]
+        user=user
     )
 
 
@@ -413,29 +500,33 @@ def addproduct():
 #  UPDATE PRODUCT
 # ===================================================================
 
-@app.route('/updateproduct/<int:id>', methods=['GET', 'POST'])
+@app.route('/updateproduct/<string:id>', methods=['GET', 'POST'])
 def updateproduct(id):
     if 'email' not in session:
         flash('Please login first', 'danger')
-        return redirect(url_for('login'))
+        return redirect(url_for('unified_login'))
 
     form = Addproducts(request.form)
-    product = Addproduct.query.get_or_404(id)
-    brands_list = Brand.query.all()
-    categories_list = Category.query.all()
+    product = Addproduct.objects(id=id).first()
+    if not product: return "Not found", 404
+    brands_list = Brand.objects().all()
+    categories_list = Category.objects().all()
 
-    brand = request.form.get('brand')
-    category = request.form.get('category')
+    brand_id = request.form.get('brand') if request.form.get('brand') else None
+    category_id = request.form.get('category') if request.form.get('category') else None
 
     if request.method == "POST":
         product.name = form.name.data
-        product.price = form.price.data
+        product.price = float(form.price.data) if form.price.data else 0.0
         product.discount = form.discount.data
         product.stock = form.stock.data
         product.colors = form.colors.data
+        product.capacity = form.capacity.data
         product.desc = form.description.data
-        product.category_id = category
-        product.brand_id = brand
+        product.video_link = form.video_link.data
+        product.review_video = form.review_video.data
+        if category_id: product.category = Category.objects(id=category_id).first()
+        if brand_id: product.brand = Brand.objects(id=brand_id).first()
 
         # Update images if provided
         if request.files.get('image_1'):
@@ -448,11 +539,10 @@ def updateproduct(id):
             except Exception:
                 pass
 
-            photos.save(image_1, name=name_1)
+            path1 = os.path.join(current_app.root_path, "static/images", name_1)
+            image_1.save(path1)
             product.image_1 = name_1
-            storage.child("images/" + name_1).put(
-                os.path.join(current_app.root_path, "static/images", name_1)
-            )
+            # storage.child("images/" + name_1).put(path1)
 
         if request.files.get('image_2'):
             image_2 = request.files.get('image_2')
@@ -464,11 +554,10 @@ def updateproduct(id):
             except Exception:
                 pass
 
-            photos.save(image_2, name=name_2)
+            path2 = os.path.join(current_app.root_path, "static/images", name_2)
+            image_2.save(path2)
             product.image_2 = name_2
-            storage.child("images/" + name_2).put(
-                os.path.join(current_app.root_path, "static/images", name_2)
-            )
+            # storage.child("images/" + name_2).put(path2)
 
         if request.files.get('image_3'):
             image_3 = request.files.get('image_3')
@@ -480,13 +569,41 @@ def updateproduct(id):
             except Exception:
                 pass
 
-            photos.save(image_3, name=name_3)
+            path3 = os.path.join(current_app.root_path, "static/images", name_3)
+            image_3.save(path3)
             product.image_3 = name_3
-            storage.child("images/" + name_3).put(
-                os.path.join(current_app.root_path, "static/images", name_3)
-            )
 
-        db.session.commit()
+        if request.files.get('image_4'):
+            image_4 = request.files.get('image_4')
+            ext = image_4.filename.split('.')[-1]
+            name_4 = secrets.token_hex(10) + "." + ext
+
+            try:
+                if product.image_4:
+                    os.unlink(os.path.join(current_app.root_path, "static/images", product.image_4))
+            except Exception:
+                pass
+
+            path4 = os.path.join(current_app.root_path, "static/images", name_4)
+            image_4.save(path4)
+            product.image_4 = name_4
+
+        if request.files.get('image_5'):
+            image_5 = request.files.get('image_5')
+            ext = image_5.filename.split('.')[-1]
+            name_5 = secrets.token_hex(10) + "." + ext
+
+            try:
+                if product.image_5:
+                    os.unlink(os.path.join(current_app.root_path, "static/images", product.image_5))
+            except Exception:
+                pass
+
+            path5 = os.path.join(current_app.root_path, "static/images", name_5)
+            image_5.save(path5)
+            product.image_5 = name_5
+
+        product.save()
         flash('Product updated successfully', 'success')
         return redirect(url_for('product'))
 
@@ -496,9 +613,12 @@ def updateproduct(id):
     form.discount.data = product.discount
     form.stock.data = product.stock
     form.colors.data = product.colors
+    form.capacity.data = product.capacity
     form.description.data = product.desc
+    form.video_link.data = product.video_link
+    form.review_video.data = product.review_video
 
-    user = Admin.query.filter_by(email=session['email']).all()
+    user = Admin.objects(email=session['email']).first()
 
     return render_template(
         'products/updateproduct.html',
@@ -506,7 +626,7 @@ def updateproduct(id):
         product=product,
         brands=brands_list,
         categories=categories_list,
-        user=user[0]
+        user=user
     )
 
 
@@ -514,27 +634,31 @@ def updateproduct(id):
 #  DELETE PRODUCT
 # ===================================================================
 
-@app.route('/deleteproduct/<int:id>', methods=['POST'])
+@app.route('/deleteproduct/<string:id>', methods=['POST'])
 def deleteproduct(id):
     if 'email' not in session:
         flash("Please login first", "danger")
         return redirect(url_for('login'))
 
-    product = Addproduct.query.get_or_404(id)
+    product = Addproduct.objects(id=id).first()
+    if not product: return "Not found", 404
 
     try:
         os.unlink(os.path.join(current_app.root_path, "static/images", product.image_1))
         os.unlink(os.path.join(current_app.root_path, "static/images", product.image_2))
         os.unlink(os.path.join(current_app.root_path, "static/images", product.image_3))
+        if product.image_4:
+            os.unlink(os.path.join(current_app.root_path, "static/images", product.image_4))
+        if product.image_5:
+            os.unlink(os.path.join(current_app.root_path, "static/images", product.image_5))
     except Exception:
         pass
 
-    rates = Rate.query.filter(Rate.product_id == id).all()
+    rates = Rate.objects(product=product).all()
     for rate in rates:
-        db.session.delete(rate)
+        rate.delete()
 
-    db.session.delete(product)
-    db.session.commit()
+    product.delete()
 
     flash(f"Product {product.name} deleted", "success")
     return redirect(url_for('product'))
@@ -544,25 +668,107 @@ def deleteproduct(id):
 #  DETAIL PRODUCT
 # ===================================================================
 
-@app.route('/detail/id_<int:id>')
+@app.route('/detail/id_<string:id>')
 def detail(id):
     kt = False
     customer = None
     if current_user.is_authenticated:
-        customer = Register.query.get_or_404(current_user.id)
-        rates_all = Rate.query.order_by(Rate.id.desc()).all()
+        customer = Register.objects(id=current_user.id).first()
+        rates_all = Rate.objects().order_by('-id').all()
         for rate in rates_all:
-            if id == rate.product_id and customer.id == rate.register_id:
+            if rate.product and rate.product.id == id and rate.user_id == str(current_user.id):
                 kt = True
+                
+    # --- AI Tracking: View Product (For both Auth and Guest) ---
+    try:
+        from .models import UserInteraction
+        import uuid
+        
+        if current_user.is_authenticated:
+            user_identifier = str(current_user.id)
+        else:
+            if not session.get('guest_id'):
+                session['guest_id'] = str(uuid.uuid4())
+            user_identifier = f"guest_{session['guest_id']}"
+            
+        # Prevent F5 spam: Check if this user/guest already viewed this product
+        existing_view = UserInteraction.objects(
+            user_id=user_identifier, 
+            product_id=str(id), 
+            interaction_type='view'
+        ).first()
+        
+        if not existing_view:
+            ui = UserInteraction(
+                user_id=user_identifier, 
+                product_id=str(id), 
+                interaction_type='view', 
+                weight=1
+            )
+            ui.save()
+    except Exception as e:
+        print("Error tracking view interaction:", e)
+    # -----------------------------------------------------------
 
     form = Rates(request.form)
-    rates = Rate.query.filter(Rate.product_id == id).order_by(Rate.id.desc()).all()
-    products_hot = Addproduct.query.filter(Addproduct.stock > 0).order_by(Addproduct.price.desc()).limit(3).all()
-    products_new = Addproduct.query.filter(Addproduct.stock > 0).order_by(Addproduct.id.desc()).limit(2).all()
-    products_sell = Addproduct.query.filter(Addproduct.stock > 0).order_by(Addproduct.discount.desc()).limit(10).all()
+    
+    product = Addproduct.objects(id=id).first()
+    if not product: return "Not found", 404
+    
+    rates = Rate.objects(product=product).order_by('-id').all()
+    
+    # --- Link rates with user objects to show names ---
+    rated_user_ids = [r.user_id for r in rates]
+    users_map = {str(u.id): u for u in Register.objects(id__in=rated_user_ids).all()}
+    for r in rates:
+        r.register = users_map.get(r.user_id)
+    # --------------------------------------------------
+    products_hot = Addproduct.objects(stock__gt=0, category=product.category, id__ne=product.id).order_by('-price').limit(4)
+    products_new = Addproduct.objects(stock__gt=0).order_by('-id').limit(2)
+    products_sell = Addproduct.objects(stock__gt=0).order_by('-discount').limit(10)
 
-    products = {'hot': products_hot, 'new': products_new, 'sell': products_sell, 'average': medium()}
-    product = Addproduct.query.get_or_404(id)
+    # --- AI Recommendation: Sản phẩm tương tự (Content-based) ---
+    ai_suggest = get_content_based_recommendations(id, limit=4)
+    
+    # 1. Recently Viewed (Sản phẩm vừa xem)
+    recently_viewed_ids = session.get('recently_viewed', [])
+    if id not in recently_viewed_ids:
+        recently_viewed_ids.insert(0, id)
+    else:
+        recently_viewed_ids.remove(id)
+        recently_viewed_ids.insert(0, id)
+    session['recently_viewed'] = recently_viewed_ids[:6]
+    rv_products = Addproduct.objects(id__in=[i for i in recently_viewed_ids if i != id]).all()
+    recently_viewed = sorted(rv_products, key=lambda x: recently_viewed_ids.index(str(x.id)))
+
+    # 2. Frequently Bought Together (Mua cùng nhau - Phụ kiện)
+    frequently_bought = []
+    acc_cat = Category.objects(name__icontains="tai nghe").first()
+    if not acc_cat:
+        acc_cat = Category.objects(name__icontains="đồng hồ").first()
+    if acc_cat and product.category != acc_cat:
+        frequently_bought = Addproduct.objects(stock__gt=0, category=acc_cat).limit(4)
+
+    # 3. Upsell (Nâng cấp đời máy)
+    upsell = Addproduct.objects(stock__gt=0, category=product.category, price__gt=product.price).order_by('price').limit(4)
+
+    from .models import UserInteraction
+    all_suggested = list(products_hot) + list(ai_suggest) + list(recently_viewed) + list(frequently_bought) + list(upsell)
+    view_counts = {}
+    for p in set(all_suggested):
+        view_counts[str(p.id)] = UserInteraction.objects(product_id=str(p.id), interaction_type='view').count()
+
+    products = {
+        'hot': products_hot, 
+        'new': products_new, 
+        'sell': products_sell, 
+        'average': medium(),
+        'ai_suggest': ai_suggest,
+        'recently_viewed': recently_viewed,
+        'frequently_bought': frequently_bought,
+        'upsell': upsell,
+        'view_counts': view_counts
+    }
 
     return render_template(
         'products/product.html',
@@ -585,11 +791,9 @@ def detail(id):
 @app.route('/search', methods=['GET', 'POST'])
 def search():
     value = request.form['search']
-    search_value = f"%{value.lower()}%"
+    search_value = f"{value.lower()}"
     page = request.args.get('page', 1, type=int)
-    product = Addproduct.query.filter(
-        Addproduct.name.ilike(search_value)
-    ).paginate(page=page, per_page=9)
+    product = Addproduct.objects(name__icontains=search_value).paginate(page=page, per_page=9)
 
     products = {'all': product, 'average': medium()}
     return render_template(
@@ -610,18 +814,17 @@ def get_brand(name):
     page = request.args.get('page', 1, type=int)
 
     # Lấy đối tượng Brand theo tên, nếu không có thì 404
-    brand_obj = Brand.query.filter_by(name=name).first_or_404()
+    brand_obj = Brand.objects(name=name).first()
+    if not brand_obj: return "Brand not found", 404
 
     # Lấy các sản phẩm thuộc brand này, phân trang
-    brand_products = Addproduct.query.filter_by(brand=brand_obj).paginate(
+    brand_products = Addproduct.objects(brand=brand_obj).paginate(
         page=page,
         per_page=9
     )
 
     # Lấy vài sản phẩm mới để hiển thị bên cạnh
-    products_new = Addproduct.query.filter(
-        Addproduct.stock > 0
-    ).order_by(Addproduct.id.desc()).limit(2).all()
+    products_new = Addproduct.objects(stock__gt=0).order_by('-id').limit(2)
 
     products = {
         'all': brand_products,
@@ -646,16 +849,14 @@ def get_discount(start, end):
     page = request.args.get('page', 1, type=int)
 
     # Lọc sản phẩm theo khoảng phần trăm giảm giá
-    product_discount = Addproduct.query.filter(
-        Addproduct.stock > 0,
-        Addproduct.discount >= start,
-        Addproduct.discount < end
-    ).order_by(Addproduct.id.desc()).paginate(page=page, per_page=9)
+    product_discount = Addproduct.objects(
+        stock__gt=0,
+        discount__gte=start,
+        discount__lt=end
+    ).order_by('-id').paginate(page=page, per_page=9)
 
     # Một vài sản phẩm mới để hiển thị bên cạnh
-    products_new = Addproduct.query.filter(
-        Addproduct.stock > 0
-    ).order_by(Addproduct.id.desc()).limit(2).all()
+    products_new = Addproduct.objects(stock__gt=0).order_by('-id').limit(2)
 
     products = {
         'all': product_discount,
@@ -688,15 +889,20 @@ def addrate():
             return redirect(url_for('detail', id=product_id))
         return redirect(url_for('home'))
 
+    product_obj = Addproduct.objects(id=product_id).first()
+    if not product_obj: return redirect(url_for('home'))
+
     # lưu đánh giá
     rate = Rate(
-        register_id=register_id,
-        product_id=product_id,
+        user_id=register_id,
+        product=product_obj,
         desc=desc,
-        rate_number=rate_number
+        rate_number=int(rate_number),
+        performance_rate=int(request.form.get('performance_rate', 5)),
+        battery_rate=int(request.form.get('battery_rate', 5)),
+        camera_rate=int(request.form.get('camera_rate', 5))
     )
-    db.session.add(rate)
-    db.session.commit()
+    rate.save()
 
     flash("Thank you for your rating!", "success")
     return redirect(url_for('detail', id=product_id))

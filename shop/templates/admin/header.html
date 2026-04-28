@@ -194,6 +194,15 @@
                             </li>
                         </ul>
                     </li>
+                    <li class="nav-item">
+                        <a href="{{ url_for('revenue_report')}}"
+                           class="nav-link {% if request.endpoint == 'revenue_report' %} active {% endif %}">
+                            <i class="nav-icon fas fa-chart-line" style="color: #28a745;"></i>
+                            <p>
+                                Thống kê Doanh thu
+                            </p>
+                        </a>
+                    </li>
 
                     <li class="nav-item">
                         <a href="{{ url_for('orders_manager')}}"
@@ -201,6 +210,28 @@
                             <i class="nav-icon fas fa-inbox"></i>
                             <p>
                                 Đơn đặt hàng
+                                {% if pending_orders_count > 0 %}
+                                    <span class="badge badge-danger right badge-blink">{{ pending_orders_count }}</span>
+                                {% endif %}
+                            </p>
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a href="{{ url_for('ai_dashboard')}}"
+                           class="nav-link {% if request.endpoint == 'ai_dashboard' %} active {% endif %}">
+                            <i class="nav-icon fas fa-brain" style="color: #e83e8c;"></i>
+                            <p>
+                                AI Dashboard
+                                <span class="badge badge-danger right">NEW</span>
+                            </p>
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a href="{{ url_for('manage_coupons')}}"
+                           class="nav-link {% if request.endpoint == 'manage_coupons' %} active {% endif %}">
+                            <i class="nav-icon fas fa-tags" style="color: #ffc107;"></i>
+                            <p>
+                                Mã giảm giá
                             </p>
                         </a>
                     </li>
@@ -244,3 +275,17 @@
         <!-- /.sidebar -->
     </aside>
     <!-- //////////////////////////////////////////////////////////////////////-->
+<style>
+.badge-blink {
+    animation: blinker 1.5s linear infinite;
+    font-weight: 800;
+    box-shadow: 0 0 10px rgba(220, 53, 69, 0.5);
+}
+
+@keyframes blinker {
+    50% {
+        opacity: 0.4;
+        transform: scale(1.1);
+    }
+}
+</style>

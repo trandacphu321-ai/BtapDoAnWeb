@@ -1,3 +1,79 @@
+<style>
+    .footer {
+        background-color: var(--clr-footer-bg) !important;
+        padding: 80px 0 0 !important;
+        color: var(--clr-footer-text) !important;
+        border-top: 1px solid var(--clr-footer-border);
+        width: 100% !important;
+        display: block !important;
+        clear: both !important;
+    }
+    .footer-widget { margin-bottom: 40px; }
+    .footer-title {
+        color: #ffffff !important;
+        font-size: 18px;
+        font-weight: 700;
+        text-transform: uppercase;
+        margin-bottom: 30px;
+        position: relative;
+        padding-bottom: 12px;
+    }
+    .footer-title::after {
+        content: "";
+        position: absolute;
+        bottom: 0;
+        left: 0;
+        width: 40px;
+        height: 2px;
+        background: var(--clr-primary);
+    }
+    .footer-widget ul { list-style: none; padding: 0; margin: 0; }
+    .footer-widget ul li { margin-bottom: 12px; }
+    .footer-widget ul li a {
+        color: var(--clr-footer-text) !important;
+        transition: all 0.3s ease;
+        text-decoration: none !important;
+        display: flex;
+        align-items: center;
+        gap: 10px;
+    }
+    .footer-widget ul li a:hover {
+        color: var(--clr-primary-light) !important;
+        transform: translateX(5px);
+    }
+    .footer-widget ul li a i { font-size: 10px; opacity: 0.5; }
+    
+    .contact-info { display: flex; align-items: flex-start; gap: 15px; margin-bottom: 20px; }
+    .contact-icon { color: var(--clr-primary); font-size: 18px; width: 20px; text-align: center; }
+    .contact-text { font-size: 14px; line-height: 1.6; color: var(--clr-footer-text) !important; }
+
+    .ft-social { display: flex; gap: 12px; margin-top: 20px; }
+    .btn-social {
+        width: 40px;
+        height: 40px;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        background: rgba(255,255,255,0.05);
+        color: #fff !important;
+        font-size: 16px;
+        transition: all 0.3s ease;
+    }
+    .btn-social:hover { transform: translateY(-5px); background: var(--clr-primary); }
+
+    .tiny-footer {
+        background: rgba(0,0,0,0.2);
+        padding: 25px 0;
+        border-top: 1px solid var(--clr-footer-border);
+        margin-top: 40px;
+    }
+    .payment-method ul { display: flex; gap: 15px; list-style: none; padding: 0; margin: 0; }
+    .payment-method ul li a { color: rgba(255,255,255,0.4); transition: color 0.3s; }
+    .payment-method ul li a:hover { color: #fff; }
+    .copyrightlink { color: var(--clr-primary-light) !important; font-weight: 600; text-decoration: none !important; }
+    .copyrightlink:hover { text-decoration: underline !important; }
+</style>
 <div class="footer">
     <div class="container">
         <div class="row">
@@ -12,11 +88,11 @@
                     </div>
                     <div class="contact-info">
                         <span class="contact-icon"><i class="fa fa-phone"></i></span>
-                        <span class="contact-text">+84899966246</span>
+                        <span class="contact-text">+8482618700</span>
                     </div>
                     <div class="contact-info">
                         <span class="contact-icon"><i class="fa fa-envelope"></i></span>
-                        <span class="contact-text">bao.tg1308@gmail.com</span>
+                        <span class="contact-text">dacphutran04@gmail.com</span>
                     </div>
                 </div>
             </div>
@@ -25,11 +101,11 @@
                 <div class="footer-widget">
                     <h3 class="footer-title">Liên kết</h3>
                     <ul class="arrow">
-                        <li><a href="#">Home </a></li>
-                        <li><a href="#">About</a></li>
-                        <li><a href="#">Mobiles</a></li>
-                        <li><a href="#">Blog</a></li>
-                        <li><a href="#">Contact</a></li>
+                        <li><a href="{{url_for('home')}}">Trang chủ</a></li>
+                        <li><a href="#">Giới thiệu</a></li>
+                        <li><a href="{{url_for('get_all_category')}}">Điện thoại</a></li>
+                        <li><a href="#">Tin tức</a></li>
+                        <li><a href="#">Liên hệ</a></li>
                     </ul>
                 </div>
             </div>
@@ -39,11 +115,11 @@
                 <div class="footer-widget">
                     <h3 class="footer-title">Policy Info</h3>
                     <ul class="arrow">
-                        <li><a href="#">Payments</a></li>
-                        <li><a href="#">Cancellation &amp; Returns</a></li>
-                        <li><a href="#">Shipping and Delivery</a></li>
-                        <li><a href="#">Privacy Policy</a></li>
-                        <li><a href="#">T &amp; C</a></li>
+                        <li><a href="#">Thanh toán</a></li>
+                        <li><a href="#">Đổi trả & Hoàn tiền</a></li>
+                        <li><a href="#">Giao hàng</a></li>
+                        <li><a href="#">Chính sách bảo mật</a></li>
+                        <li><a href="#">Điều khoản dịch vụ</a></li>
                     </ul>
                 </div>
             </div>
@@ -53,13 +129,11 @@
                 <div class="footer-widget">
                     <h3 class="footer-title">Connect With Us</h3>
                     <div class="ft-social">
-                        <span><a href="bao.tg1308" class=" btn-social btn-github"><i
-                                class="fa fa-github "></i></a></span>
-                        <span><a href="#" class="btn-social btn-facebook"><i class="fa fa-facebook"></i></a></span>
-                        <span><a href="#" class="btn-social btn-twitter"><i class="fa fa-twitter"></i></a></span>
-                        <span><a href="#" class="btn-social btn-googleplus"><i class="fa fa-google-plus"></i></a></span>
-                        <span><a href="#" class=" btn-social btn-linkedin"><i class="fa fa-linkedin"></i></a></span>
-                        <span><a href="#" class=" btn-social btn-instagram"><i class="fa fa-instagram"></i></a></span>
+                        <span><a href="#" class="btn-social btn-github" title="Github"><i class="fa fa-github"></i></a></span>
+                        <span><a href="#" class="btn-social btn-facebook" title="Facebook"><i class="fa fa-facebook"></i></a></span>
+                        <span><a href="#" class="btn-social btn-google-plus" title="Google Plus"><i class="fa fa-google-plus"></i></a></span>
+                        <span><a href="#" class="btn-social btn-linkedin" title="LinkedIn"><i class="fa fa-linkedin"></i></a></span>
+                        <span><a href="#" class="btn-social btn-instagram" title="Instagram"><i class="fa fa-instagram"></i></a></span>
                     </div>
                 </div>
             </div>
@@ -79,12 +153,10 @@
                             <li><a href="#"><i class="fa fa-cc-discover fa-2x"></i></a></li>
                         </ul>
                     </div>
-                    <p class="alignright">Copyright © All Rights Reserved 2025 Template Design by
-                        <a href="https://github.com/lemanh99/WebThucTapCongNhan" target="_blank" class="copyrightlink">
-                            Team Gia Bảo & Đắc Phú
+                    <p class="alignright">Copyright © All Rights Reserved 2026 Template Design by
+                        <a href="https://github.com/trandacphu321-ai" target="_blank" class="copyrightlink">
+                            Đắc Phú
                         </a>
-                        &
-                        <a href="https://easetemplate.com/" target="_blank" class="copyrightlink">EaseTemplate</a>
                     </p>
                 </div>
             </div>

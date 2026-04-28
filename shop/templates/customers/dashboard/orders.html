@@ -1,0 +1,127 @@
+{% extends "customers/dashboard/layout.html" %}
+{% block dashboard_content %}
+
+<div style="margin-bottom: 28px;">
+    <h3 style="font-weight: 700; color: #1e293b; margin: 0;">Lịch sử mua hàng</h3>
+</div>
+
+<div class="ov-table-wrap">
+    <table class="table" style="margin-bottom: 0;">
+        <thead>
+            <tr>
+                <th style="padding-left: 20px;">Mã đơn</th>
+                <th>Sản phẩm</th>
+                <th>Tổng cộng</th>
+                <th>Ngày đặt</th>
+                <th>Trạng thái</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for order in orders %}
+            <tr>
+                <td style="padding-left: 20px;">
+                    <span class="ov-invoice">#{{ order.invoice }}</span>
+                </td>
+                <td>
+                    {% for key, product in order.orders.items() %}
+                    <span class="ord-product-pill">
+                        {{ product.name }} <strong>x{{ product.quantity }}</strong>
+                    </span>
+                    {% endfor %}
+                </td>
+                <td style="color: #1e293b; font-weight: 700;">{{ order.total_amount|vnd if order.total_amount else '---' }}</td>
+                <td>
+                    <span style="color: #1e293b;">{{ order.date_created.strftime('%d/%m/%Y') }}</span><br>
+                    <span style="color: #94a3b8; font-size: .8rem;">{{ order.date_created.strftime('%H:%M') }}</span>
+                </td>
+                <td>
+                    {% if order.status == 'Pending' %}
+                        <span class="ov-badge ov-badge--warn"><i class="fa fa-clock-o"></i> Đang chờ</span>
+                    {% elif order.status == 'Accepted' %}
+                        <span class="ov-badge ov-badge--ok"><i class="fa fa-check"></i> Đã duyệt</span>
+                    {% elif order.status == 'Cancelled' %}
+                        <span class="ov-badge ov-badge--danger"><i class="fa fa-times"></i> Đã hủy</span>
+                    {% else %}
+                        <span class="ov-badge ov-badge--muted">{{ order.status }}</span>
+                    {% endif %}
+                </td>
+            </tr>
+            {% endfor %}
+            {% if not orders %}
+            <tr>
+                <td colspan="5" style="text-align: center; padding: 60px 20px;">
+                    <i class="fa fa-shopping-basket" style="font-size: 3rem; color: #e2e8f0; display: block; margin-bottom: 16px;"></i>
+                    <h5 style="color: #94a3b8; font-weight: 500;">Bạn chưa có đơn hàng nào</h5>
+                    <a href="{{ url_for('home') }}" style="display: inline-block; margin-top: 12px; padding: 10px 24px; background: #6366f1; color: #fff !important; border-radius: 10px; font-weight: 600; text-decoration: none;">
+                        Mua sắm ngay
+                    </a>
+                </td>
+            </tr>
+            {% endif %}
+        </tbody>
+    </table>
+</div>
+
+<style>
+.ov-table-wrap {
+    border: 1px solid #e2e8f0;
+    border-radius: 12px;
+    overflow: hidden;
+}
+.ov-table-wrap .table thead th {
+    background: #f8fafc;
+    border: none;
+    color: #64748b;
+    font-size: .75rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: .5px;
+    padding: 14px 12px;
+}
+.ov-table-wrap .table tbody td {
+    padding: 16px 12px;
+    border-bottom: 1px solid #f1f5f9;
+    font-size: .9rem;
+    vertical-align: middle;
+}
+.ov-table-wrap .table tbody tr:last-child td { border-bottom: none; }
+.ov-table-wrap .table tbody tr:hover { background: #fafaff; }
+
+.ov-invoice {
+    background: #eef2ff;
+    color: #4f46e5;
+    padding: 4px 10px;
+    border-radius: 6px;
+    font-weight: 700;
+    font-size: .82rem;
+}
+
+.ord-product-pill {
+    display: inline-block;
+    background: #f1f5f9;
+    padding: 3px 10px;
+    border-radius: 6px;
+    font-size: .8rem;
+    margin: 2px 4px 2px 0;
+    color: #475569;
+}
+.ord-product-pill strong {
+    color: #6366f1;
+    margin-left: 4px;
+}
+
+.ov-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    padding: 5px 10px;
+    border-radius: 6px;
+    font-size: .75rem;
+    font-weight: 600;
+}
+.ov-badge--warn   { background: #fff7ed; color: #ea580c; }
+.ov-badge--ok     { background: #f0fdf4; color: #16a34a; }
+.ov-badge--danger { background: #fef2f2; color: #dc2626; }
+.ov-badge--muted  { background: #f1f5f9; color: #64748b; }
+</style>
+{% endblock dashboard_content %}

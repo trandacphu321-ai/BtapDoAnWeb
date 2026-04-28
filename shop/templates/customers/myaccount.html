@@ -121,7 +121,7 @@
                                 <td>
                                     {{product.quantity}}
                                 </td>
-                                <td>${{"%.2f"|format(subtotal - discount|round(1,'floor')) }}</td>
+                                <td>{{ ("%.2f"|format(subtotal - discount|round(1,'floor'))) | vnd }}</td>
                                 {% if order.status == "Pending" %}
                                 <td><p style="color:red;">{{order.status}}</p></td>
                                 {% elif order.status == "Cancelled" %}

@@ -5,30 +5,73 @@
     <div class="container">
         <div class="row">
             <div class="col-lg-12">
-                <ul class="breadcrumb">
-                    <li><a href="{{url_for('home')}}">Trang chủ</a></li>
-                    {% if brand %}
-                    <li><a href="{{url_for('get_all_category', page=1)}}">Tất cả</a></li>
-                    {% for category in categories %}
-                    {% if get_brand.category_id == category.id %}
-                    <li><a href="{{url_for('get_category',name=category.name, page=1)}}">{{ category.name }}</a></li>
-                    {% endif %}
-                    {% endfor %}
-                    <li><a href="{{url_for('get_brand',name=brand, page=1)}}">{{ brand }}</a></li>
-                    {% elif get_cat_prod %}
-                    <li><a href="{{url_for('get_all_category', page=1)}}">Tất cả</a></li>
-                    <li><a href="{{url_for('get_category',name=get_cat_prod.name, page=1)}}">{{ get_cat_prod.name }}</a>
-                    </li>
-                    {% elif get_search %}
-                    <li><a href="{{url_for('get_all_category', page=1)}}">Tìm kiếm '{{ get_search }}'</a></li>
-                    {% else %}
-                    <li><a href="{{url_for('get_all_category', page=1)}}">Tất cả</a></li>
-                    {% endif %}
-                </ul>
+<div class="breadcrumb-wrapper">
+    <div class="container">
+        <ul class="breadcrumb">
+            <li><a href="{{url_for('home')}}"><i class="fa fa-home"></i> Trang chủ</a></li>
+            {% if brand %}
+            <li><a href="{{url_for('get_all_category', page=1)}}">Tất cả</a></li>
+            {% for category in categories %}
+            {% if get_brand.category.id == category.id %}
+            <li><a href="{{url_for('get_category',name=category.name, page=1)}}">{{ category.name }}</a></li>
+            {% endif %}
+            {% endfor %}
+            <li class="active">{{ brand }}</li>
+            {% elif get_cat_prod %}
+            <li><a href="{{url_for('get_all_category', page=1)}}">Tất cả</a></li>
+            <li class="active">{{ get_cat_prod.name }}</li>
+            {% elif get_search %}
+            <li><a href="{{url_for('get_all_category', page=1)}}">Tìm kiếm</a></li>
+            <li class="active">'{{ get_search }}'</li>
+            {% else %}
+            <li class="active">Tất cả sản phẩm</li>
+            {% endif %}
+        </ul>
+    </div>
+</div>
             </div>
         </div>
+        <!-- HORIZONTAL BRAND FILTER BAR -->
+        {% if brands %}
+        <div class="row" style="margin-bottom: 25px;">
+            <div class="col-md-12">
+                <div class="brand-filter-container reveal-up" style="display: flex; gap: 12px; flex-wrap: wrap; background: #fff; padding: 20px; border-radius: 16px; box-shadow: var(--shadow-sm); border: 1px solid var(--clr-border-light);">
+                    <span style="font-weight: 700; color: var(--clr-text-muted); display: flex; align-items: center; margin-right: 10px;">
+                        <i class="fa fa-filter" style="margin-right: 6px;"></i> Lọc theo hãng:
+                    </span>
+                    
+                    {% for b in brands %}
+                        {% if get_brand %}
+                            {% if b.category.id == get_brand.category.id %}
+                                <a href="{{ url_for('get_brand', name=b.name) }}" 
+                                   class="brand-pill {% if get_brand.name == b.name %}active{% endif %}"
+                                   style="padding: 8px 20px; border: 2px solid var(--clr-border); border-radius: 8px; color: var(--clr-text); background: #fff; font-weight: 600; text-decoration: none; transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1); display: inline-block;">
+                                   {{ b.name }}
+                                </a>
+                            {% endif %}
+                        {% elif get_cat_prod %}
+                            {% if b.category.id == get_cat_prod.id %}
+                                <a href="{{ url_for('get_brand', name=b.name) }}" 
+                                   class="brand-pill"
+                                   style="padding: 8px 20px; border: 2px solid var(--clr-border); border-radius: 8px; color: var(--clr-text); background: #fff; font-weight: 600; text-decoration: none; transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1); display: inline-block;">
+                                   {{ b.name }}
+                                </a>
+                            {% endif %}
+                        {% else %}
+                            <a href="{{ url_for('get_brand', name=b.name) }}" 
+                               class="brand-pill"
+                               style="padding: 8px 20px; border: 2px solid var(--clr-border); border-radius: 8px; color: var(--clr-text); background: #fff; font-weight: 600; text-decoration: none; transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1); display: inline-block;">
+                               {{ b.name }}
+                            </a>
+                        {% endif %}
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+        {% endif %}
+
         <div class="row">
-            <div id="main-content" class="col-md-8">
+            <div id="main-content" class="col-md-12">
                 {%if products['all'].items|length <=0 %}
                 {% if get_search %}
                 <h2>Không tìm thấy kết quả cho '{{ get_search }} '</h2>
@@ -36,81 +79,57 @@
                 <h2>Không có sản phẩm phù hợp.</h2>
                 {% endif %}
                 {% else %}
-                {% for i in range(0,9,3) %}
-                <div class="row">
-                    <div class="col-md-12">
-                        <div class="products">
-                            {% for product in products['all'].items[i:i+3] %}
-                            <div class="col-lg-4 col-md-4 col-xs-12">
-                                <a href="{{url_for('detail', id = product.id)}}">
-                                    <div class="product-block" style="height: 435px">
-                                        <div class="product-img" style="margin:-15">
-                                            <img src="{{ url_for('static', filename='images/'+product.image_2) }}"
-                                                 alt="{{ product.name}}" style="height:178px; weight:178px">
+                <div class="product-grid" style="grid-template-columns: repeat(4, 1fr);">
+                    {% for product in products['all'].items %}
+                    <div class="product-grid-item">
+                        <a href="{{url_for('detail', id = product.id)}}" class="product-card-link">
+                            <div class="product-card">
+                                <div class="product-card-img">
+                                    <img src="{{ url_for('static', filename='images/'+product.image_1) }}"
+                                        alt="{{ product.name}}">
+                                    {% if product.discount > 0 %}
+                                    <span class="product-card-badge">-{{product.discount}}%</span>
+                                    {% endif %}
+                                </div>
+                                <div class="product-card-info">
+                                    <h5 class="product-card-name">{{ product.name }}</h5>
+                                    <div class="product-card-pricing">
+                                        <span class="product-card-price">{{ (product.price -
+                                            product.price*product.discount/100) | vnd }}</span>
+                                        {% if product.discount > 0 %}
+                                        <span class="product-card-original">{{ (product.price) | vnd }}</span>
+                                        {% endif %}
+                                    </div>
+                                    <div class="product-card-extra">
+                                        <div class="tag-installment">
+                                            <i class="fa fa-credit-card" style="font-size: 8px;"></i> Trả góp 0%
                                         </div>
-                                        <div class="product-content">
-                                            <div><h5 style="height: 35px;margin-top: -10 ;"><a
-                                                    href="{{url_for('detail', id = product.id)}}"
-                                                    class="product-title">
-                                                {{ product.name }}</a></h5>
-                                            </div>
-                                            <div class="product-meta">
-                                                <div style="height: 60px;">
-                                                    <a href="#" class="product-price">${{ product.price -
-                                                        product.price*product.discount/100 }}</a>
-                                                    {% if product.discount>0 %}
-                                                    <a href="#" class="discounted-price">${{ product.price }}</a>
-                                                    {% endif %}
-                                                    {% if product.discount >0 %}
-                                                    <span class="offer-price">{{product.discount}}%off</span>
-                                                    {% else %}
-                                                    <span class="offer-price"></span>
-                                                    {% endif %}
-                                                </div>
-
-                                                <div class="shopping-btn">
-                                                    <form action="{{url_for('AddCart')}}" method="post">
-                                                        <a href="#" class="product-btn btn-like"><i
-                                                                class="fa fa-heart"></i></a>
-                                                        <button href="#" class="product-btn btn-cart"><i
-                                                                class="fa fa-shopping-cart"></i></button>
-                                                        <BR>
-                                                        <input type="hidden" name="product_id" value="{{product.id}}">
-                                                        <input type="hidden" name="quantity" value="1" min="1" max="20">
-                                                        {% set colors = product.colors.split(',') %}
-                                                        <select name="colors" style="visibility: hidden;">
-                                                            {% for color in colors %}
-                                                            {% set col = color.split(':') %}
-                                                            <option value="{{col[0]}}">{{col[0] | capitalize }}</option>
-                                                            {% endfor %}
-                                                        </select>
-                                                    </form>
-                                                </div>
-                                                <div>
-                                                    <div class="rating pt-3" style="color: #FFC107; margin-top: -30;">
-                                                        {{ products['average'][product.id][0] }}/5
-                                                        {% for i in range(products['average'][product.id][0]|int+1) %}
-                                                        <span class="glyphicon glyphicon-star"></span>
-                                                        {% endfor %}
-                                                        {% for i in range(products['average'][product.id][0]|int + 1, 5)
-                                                        %}
-                                                        <span class="glyphicon glyphicon-star-empty"></span>
-                                                        {% endfor %}
-                                                        {% if products['average'][product.id][1] != 0 %}
-                                                        ({{ products['average'][product.id][1] }})
-                                                        {% endif %}
-                                                    </div>
-                                                </div>
-                                            </div>
+                                        <div class="tag-delivery">
+                                            <i class="fa fa-truck" style="font-size: 8px;"></i> Sẵn sàng giao hàng
                                         </div>
                                     </div>
-                                </a>
+                                    {% if products['average'][product.id].count > 0 %}
+                                    <div class="product-card-rating">
+                                        <div class="stars">
+                                            {% for i in range(products['average'][product.id].average|int) %}
+                                            <span class="glyphicon glyphicon-star"></span>
+                                            {% endfor %}
+                                            {% if products['average'][product.id].average % 1 >= 0.5 %}
+                                            <span class="glyphicon glyphicon-star"></span>
+                                            {% endif %}
+                                        </div>
+                                        <span class="rating-count">({{ products['average'][product.id].count }})</span>
+                                    </div>
+                                    {% endif %}
+                                    <div class="favorite-card-btn">
+                                        <i class="fa fa-heart"></i> Yêu thích
+                                    </div>
+                                </div>
                             </div>
-                            {% endfor %}
-                        </div>
+                        </a>
                     </div>
+                    {% endfor %}
                 </div>
-                {% endfor %}
                 {% endif %}
                 {% if brand %}
                 <div class="row">
@@ -247,92 +266,6 @@
                     </div>
                 </div>
                 {% endif %}
-            </div>
-            <div id="sidebar" class="col-md-4">
-                <div class="widget wid-categories">
-                    <div class="heading"><h4>Thể loại</h4></div>
-                    <div class="content">
-                        <ul>
-                            {% for category in categories %}
-                            <li><a href="{{url_for('get_category', name=category.name)}}">{{category.name}}</a></li>
-                            {% endfor %}
-                        </ul>
-                    </div>
-                </div>
-                <div class="widget wid-discouts">
-                    <div class="heading"><h4>Giảm giá</h4></div>
-                    <div class="content">
-                        <ul>
-                            <li><a href="{{url_for('get_discount', start = 0, end = 20)}}">< 20%</a></li>
-                            <li><a href="{{url_for('get_discount', start = 20, end = 40)}}">20 - 40%</a></li>
-                            <li><a href="{{url_for('get_discount', start = 40, end = 60)}}">40 - 60%</a></li>
-                            <li><a href="{{url_for('get_discount', start = 60, end = 100)}}">> 60%</a></li>
-                        </ul>
-                    </div>
-                </div>
-                {% if get_cat_prod or brand %}
-                <div class="widget wid-brand">
-                    <div class="heading"><h4>BRAND</h4></div>
-                    <div class="content">
-                        <ul>
-                            {% for brand in brands %}
-                            {% if get_brand %}
-                            {% if brand.category_id == get_brand.category_id %}
-                            <li><a href="{{url_for('get_brand', name=brand.name)}}">{{ brand.name }}</a></li>
-                            {% endif %}
-                            {% else %}
-                            {% if brand.category_id == get_cat_prod.id %}
-                            <li><a href="{{url_for('get_brand', name=brand.name)}}">{{ brand.name }}</a></li>
-                            {% endif %}
-                            {% endif %}
-                            {% endfor %}
-                        </ul>
-                    </div>
-                </div>
-                {% endif %}
-                <div class="widget wid-product">
-                    <div class="heading"><h4>Mới nhất</h4></div>
-                    <div class="content">
-                        {% for product in products["new"] %}
-                        <div class="product-block" style="height: 430px;">
-                            <div class="product-img">
-                                <img src="{{ url_for('static', filename='images/'+product.image_2) }}"
-                                     alt="{{ product.name}}"
-                                     style="padding:0 78px 0 58px; width:100%; text-align:center;height:100%;"></div>
-                            <div class="product-content">
-                                <h5 style="height: 35px;margin-top:-10">
-                                    <a href="{{url_for('detail', id = product.id)}}"
-                                       class="product-title">{{ product.name }}</a></h5>
-                                <div class="product-meta">
-                                    <a href="#" class="product-price">${{ product.price -
-                                        product.price*product.discount/100 }}</a>
-                                    {% if product.discount>0 %}
-                                    <a href="#" class="discounted-price">${{ product.price }}</a>
-                                    {% endif %}
-                                </div>
-                                <div class="shopping-btn">
-                                    <a href="#" class="product-btn btn-like"><i class="fa fa-heart"></i></a>
-                                    <a href="#" class="product-btn btn-cart"><i class="fa fa-shopping-cart"></i></a>
-                                </div>
-                                <div>
-                                    <div class="rating pt-3" style="color: #FFC107; margin-top: 20;">
-                                        {{ products['average'][product.id][0] }}/5
-                                        {% for i in range(products['average'][product.id][0]|int+1) %}
-                                        <span class="glyphicon glyphicon-star"></span>
-                                        {% endfor %}
-                                        {% for i in range(products['average'][product.id][0]|int + 1, 5) %}
-                                        <span class="glyphicon glyphicon-star-empty"></span>
-                                        {% endfor %}
-                                        {% if products['average'][product.id][1] != 0 %}
-                                        ({{ products['average'][product.id][1] }})
-                                        {% endif %}
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                        {% endfor %}
-                    </div>
-                </div>
             </div>
         </div>
     </div>

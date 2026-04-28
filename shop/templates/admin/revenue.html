@@ -1,0 +1,199 @@
+{% extends 'admin/layout.html' %}
+{% block content %}
+{% include 'admin/header.html' %}
+
+<div class="content-wrapper">
+    <section class="content-header">
+        <div class="container-fluid">
+            <div class="row mb-2">
+                <div class="col-sm-6">
+                    <h1><i class="fas fa-chart-line text-success"></i> Thống kê Doanh thu</h1>
+                </div>
+                <div class="col-sm-6 text-right">
+                    <a href="{{ url_for('export_revenue') }}" class="btn btn-success">
+                        <i class="fas fa-file-excel"></i> Xuất Báo Cáo Excel
+                    </a>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <section class="content">
+        <div class="container-fluid">
+            <!-- Summary Cards -->
+            <div class="row">
+                <div class="col-md-4">
+                    <div class="small-box bg-info elevation-3">
+                        <div class="inner">
+                            <h3>{{ total_revenue|vnd }}</h3>
+                            <p>Tổng doanh thu (Hoàn thành)</p>
+                        </div>
+                        <div class="icon"><i class="fas fa-money-bill-wave"></i></div>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="small-box bg-success elevation-3">
+                        <div class="inner">
+                            <h3>{{ orders|length }}</h3>
+                            <p>Tổng đơn hàng đã giao</p>
+                        </div>
+                        <div class="icon"><i class="fas fa-check-circle"></i></div>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="small-box bg-warning elevation-3">
+                        <div class="inner">
+                            <h3>{{ (total_revenue / (orders|length or 1))|vnd }}</h3>
+                            <p>Giá trị trung bình đơn hàng</p>
+                        </div>
+                        <div class="icon"><i class="fas fa-calculator"></i></div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Charts Row -->
+            <div class="row mt-4">
+                <div class="col-md-8">
+                    <div class="card card-primary card-outline shadow-sm">
+                        <div class="card-header">
+                            <h3 class="card-title">Biểu đồ doanh thu theo tháng</h3>
+                        </div>
+                        <div class="card-body">
+                            <canvas id="revenueChart" style="min-height: 300px;"></canvas>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="card card-dark card-outline shadow-sm">
+                        <div class="card-header">
+                            <h3 class="card-title">Bảng tổng hợp tháng</h3>
+                        </div>
+                        <div class="card-body p-0">
+                            <table class="table table-striped">
+                                <thead>
+                                    <tr>
+                                        <th>Tháng</th>
+                                        <th>Doanh thu</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for month, total in monthly_stats %}
+                                    <tr>
+                                        <td><strong>Tháng {{ month }}</strong></td>
+                                        <td class="text-success font-weight-bold">{{ total|vnd }}</td>
+                                    </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Detailed Table -->
+            <div class="card mt-4 shadow-sm">
+                <div class="card-header bg-light">
+                    <h3 class="card-title">Chi tiết đơn hàng đã hoàn thành</h3>
+                </div>
+                <div class="card-body">
+                    <table id="example1" class="table table-bordered table-hover">
+                        <thead>
+                            <tr>
+                                <th>Mã đơn</th>
+                                <th>Ngày đặt</th>
+                                <th>Khách hàng</th>
+                                <th>Số điện thoại</th>
+                                <th>Tổng tiền</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for order in orders %}
+                            <tr>
+                                <td><span class="badge badge-info">#{{ order.invoice }}</span></td>
+                                <td>{{ order.date_created.strftime('%d/%m/%Y %H:%M') }}</td>
+                                <td>{{ order.customer_id }}</td>
+                                <td>{{ order.phone_number }}</td>
+                                <td class="text-danger font-weight-bold">{{ order.total_amount|vnd }}</td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </section>
+</div>
+
+{% include 'admin/footer.html' %}
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+    document.addEventListener('DOMContentLoaded', function () {
+        const ctx = document.getElementById('revenueChart').getContext('2d');
+
+        // Dữ liệu từ Flask (monthly_stats là danh sách tuple: [('2024-04', 5000), ...])
+        const rawData = JSON.parse('{{ monthly_stats|tojson|safe }}');
+        // Đảo ngược để hiển thị từ cũ đến mới trên biểu đồ
+        const chartData = [...rawData].reverse();
+
+        const labels = chartData.map(item => item[0]);
+        const values = chartData.map(item => item[1]);
+
+        new Chart(ctx, {
+            type: 'line',
+            data: {
+                labels: labels,
+                datasets: [{
+                    label: 'Doanh thu (VND)',
+                    data: values,
+                    borderColor: '#28a745',
+                    backgroundColor: 'rgba(40, 167, 69, 0.1)',
+                    borderWidth: 3,
+                    fill: true,
+                    tension: 0.4,
+                    pointRadius: 5,
+                    pointBackgroundColor: '#28a745'
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                scales: {
+                    y: {
+                        beginAtZero: true,
+                        ticks: {
+                            callback: function (value) {
+                                return value.toLocaleString() + 'đ';
+                            }
+                        }
+                    }
+                },
+                plugins: {
+                    tooltip: {
+                        callbacks: {
+                            label: function (context) {
+                                return 'Doanh thu: ' + context.parsed.y.toLocaleString() + 'đ';
+                            }
+                        }
+                    }
+                }
+            }
+        });
+    });
+</script>
+
+<style>
+    .small-box {
+        border-radius: 15px;
+        overflow: hidden;
+    }
+
+    .card {
+        border-radius: 15px;
+    }
+
+    .table thead th {
+        border-top: 0;
+    }
+</style>
+{% endblock content %}

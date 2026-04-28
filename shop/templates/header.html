@@ -3,16 +3,191 @@
     <div class="container">
         <div class="row">
             <div class="col-lg-8 col-md-7 col-sm-6 hidden-xs">
-                <p class="top-text">Website đặt hàng sản phẩm điện thoại.</p>
+                <!-- Dòng chữ chạy liên tục -->
+                <div class="marquee-wrapper">
+                    <div class="marquee-content">
+                        <span>🛡️ Sản phẩm Chính hãng</span>
+                        <span class="marquee-dot">•</span>
+                        <span>📄 Xuất VAT đầy đủ</span>
+                        <span class="marquee-dot">•</span>
+                        <span>🚚 Giao nhanh</span>
+                        <span class="marquee-dot">•</span>
+                        <span>🎁 Miễn phí cho đơn 300k</span>
+                        <span class="marquee-dot">•</span>
+                        <span>♻️ Thu cũ giá ngon</span>
+                        <span class="marquee-dot">•</span>
+                        <span>💰 Lên đời tiết kiệm</span>
+                        <!-- Duplicate for seamless loop -->
+                        <span class="marquee-dot">•</span>
+                        <span>🛡️ Sản phẩm Chính hãng</span>
+                        <span class="marquee-dot">•</span>
+                        <span>📄 Xuất VAT đầy đủ</span>
+                        <span class="marquee-dot">•</span>
+                        <span>🚚 Giao nhanh</span>
+                        <span class="marquee-dot">•</span>
+                        <span>🎁 Miễn phí cho đơn 300k</span>
+                        <span class="marquee-dot">•</span>
+                        <span>♻️ Thu cũ giá ngon</span>
+                        <span class="marquee-dot">•</span>
+                        <span>💰 Lên đời tiết kiệm</span>
+                    </div>
+                </div>
             </div>
             <div class="col-lg-4 col-md-5 col-sm-6 col-xs-12">
-                <ul>
-                    <li><a href="mailto:lexuanmanh101199@gmail.com">Hỗ trợ</a></li>
+                <ul class="top-header-links">
+                    <li><a href="mailto:lexuanmanh101199@gmail.com"><i class="fa fa-question-circle"></i> Hỗ trợ</a></li>
+                    <li><a href="{{ url_for('track_order') }}"><i class="fa fa-truck"></i> Tra cứu đơn hàng</a></li>
+                    <li><a href="tel:18002097" class="top-hotline"><i class="fa fa-phone"></i> 1800 2097</a></li>
                 </ul>
             </div>
         </div>
     </div>
 </div>
+
+<style>
+/* === Marquee Animation === */
+.marquee-wrapper {
+    overflow: hidden;
+    white-space: nowrap;
+    line-height: 38px; /* match top-header height */
+}
+.marquee-content {
+    display: inline-block;
+    animation: marqueeScroll 28s linear infinite;
+    font-size: 13px;
+    font-weight: 500;
+    color: rgba(255,255,255,0.92);
+}
+.marquee-content span {
+    padding: 0 6px;
+}
+.marquee-dot {
+    opacity: 0.45;
+    font-size: 10px;
+}
+@keyframes marqueeScroll {
+    0%   { transform: translateX(0); }
+    100% { transform: translateX(-50%); }
+}
+.marquee-wrapper:hover .marquee-content {
+    animation-play-state: paused;
+}
+
+/* === Top Header Links (Hỗ trợ / Tra cứu / Hotline) === */
+.top-header-links {
+    display: flex !important;
+    align-items: center !important;
+    justify-content: flex-end !important;
+    gap: 0;
+    margin: 0 !important;
+    padding: 0 !important;
+    list-style: none !important;
+    line-height: 38px;
+}
+.top-header-links li {
+    float: none !important;
+    padding: 0 12px !important;
+    border-left: 1px solid rgba(255,255,255,0.15);
+}
+.top-header-links li:first-child { border-left: none; }
+.top-header-links li a {
+    color: rgba(255,255,255,0.88) !important;
+    font-size: 12px;
+    font-weight: 500;
+    white-space: nowrap;
+    transition: color 0.2s ease;
+}
+.top-header-links li a:hover { color: #fff !important; }
+.top-header-links li a .fa { margin-right: 4px; font-size: 13px; }
+.top-hotline {
+    color: #fbbf24 !important;
+    font-weight: 700 !important;
+    font-size: 13px !important;
+}
+.top-hotline:hover { color: #fde68a !important; }
+
+/* === Account Section — Flexbox alignment fix === */
+/* === Account & Cart Actions — Light Blue / White Theme === */
+.account-section {
+    display: flex !important;
+    align-items: center !important;
+    justify-content: flex-end !important;
+    height: 54px !important;
+}
+
+.header-site-actions {
+    display: flex;
+    align-items: center;
+    gap: 28px;
+}
+
+.cart-btn-link {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    color: var(--clr-text) !important;
+    text-decoration: none !important;
+    font-weight: 700;
+    font-size: 14px;
+    transition: color 0.2s;
+}
+
+.cart-btn-link:hover {
+    color: var(--clr-primary) !important;
+}
+
+.cart-icon-box {
+    position: relative;
+    display: flex;
+    align-items: center;
+    color: var(--clr-primary);
+}
+
+.cart-icon-box .fa {
+    font-size: 20px;
+}
+
+.cart-badge-new {
+    position: absolute;
+    top: -8px;
+    right: -10px;
+    background: #ef4444;
+    color: #fff;
+    font-size: 9px;
+    font-weight: 800;
+    min-width: 16px;
+    height: 16px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 50%;
+    border: 2px solid #fff;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
+
+.login-div-btn {
+    background: #eff6ff; /* Màu xanh nhạt tinh tế */
+    padding: 8px 18px;
+    border-radius: 12px;
+    transition: all 0.2s ease;
+    border: 1px solid #dbeafe;
+}
+
+.login-div-btn:hover {
+    background: #dbeafe;
+    transform: translateY(-1px);
+}
+
+.login-div-btn a {
+    color: #2563eb !important; /* Chữ màu xanh đậm hơn để nổi bật */
+    text-decoration: none !important;
+    font-weight: 700;
+    font-size: 14px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+</style>
 
 <!-- header-section-->
 <div class="header-wrapper">
@@ -21,8 +196,14 @@
 
             <!-- logo -->
             <div class="col-lg-3 col-md-3 col-sm-3 col-xs-8">
-                <div class="logo">
-                    <!-- <a href="{{ url_for('home') }}"><img src="{{ url_for('static', filename='images/name.png') }}" alt=""></a> -->
+                <div class="logo" style="margin-top:4px">
+                    <a href="{{ url_for('home') }}" class="logo-text">
+                        <div class="logo-icon">M</div>
+                        <div>
+                            <span class="logo-name">MobileStore</span>
+                            <span class="logo-sub">Tech Shop</span>
+                        </div>
+                    </a>
                 </div>
             </div>
 
@@ -39,24 +220,33 @@
             <!-- account -->
             <div class="col-lg-3 col-md-3 col-sm-3 col-xs-12">
                 <div class="account-section">
-                    <ul>
-                        {% if current_user.is_authenticated %}
-                        <li><a href="{{ url_for('update_account') }}" class="title hidden-xs">Tài khoản</a></li>
-                        <li class="hidden-xs">|</li>
-                        <li><a href="{{ url_for('customer_logout') }}" class="title hidden-xs">Đăng xuất</a></li>
-                        {% else %}
-                        <li><a href="{{ url_for('login') }}" class="title hidden-xs">Đăng nhập</a></li>
-                        <li class="hidden-xs">|</li>
-                        <li><a href="{{ url_for('customer_admin_register') }}" class="title hidden-xs">Đăng ký</a></li>
-                        {% endif %}
-
-                        <li>
-                            <a href="{{ url_for('getCart') }}" class="title">
+                    <div class="header-site-actions">
+                        <!-- Giỏ hàng -->
+                        <a href="{{ url_for('getCart') }}" class="cart-btn-link">
+                            <div class="cart-icon-box">
                                 <i class="fa fa-shopping-cart"></i>
-                                <sup class="cart-quantity">{{ session['Shoppingcart']|length }}</sup>
-                            </a>
-                        </li>
-                    </ul>
+                                <sup class="cart-badge-new">{{ session['Shoppingcart']|length }}</sup>
+                            </div>
+                            <span>Giỏ hàng</span>
+                        </a>
+
+                        <!-- Đăng nhập / Tài khoản -->
+                        <div class="login-div-btn">
+                            {% if current_user.is_authenticated %}
+                                <a href="{{ url_for('customer_dashboard') }}">
+                                    <i class="fa fa-user-circle"></i> {{ current_user.username }}
+                                </a>
+                            {% elif session.get('email') %}
+                                <a href="{{ url_for('admin_manager') }}">
+                                    <i class="fa fa-user-shield"></i> Quản trị
+                                </a>
+                            {% else %}
+                                <a href="{{ url_for('unified_login') }}">
+                                    <i class="fa fa-user-circle"></i> Đăng nhập
+                                </a>
+                            {% endif %}
+                        </div>
+                    </div>
                 </div>
             </div>
 
@@ -76,11 +266,11 @@
                             {% for category in categories %}
                             <li class="has-sub">
                                 <!-- FIX LỖI BuildError: dùng đường dẫn trực tiếp -->
-                                <a href="/categories/{{ category.name }}">{{ category.name }}</a>
+                                <a href="{{ url_for('get_category', name=category.name) }}">{{ category.name }}</a>
 
                                 <ul>
                                     {% for brand in brands %}
-                                    {% if brand.category_id == category.id %}
+                                    {% if brand.category.id == category.id %}
                                     <li>
                                         <a href="{{ url_for('get_brand', name=brand.name) }}">
                                             {{ brand.name }}

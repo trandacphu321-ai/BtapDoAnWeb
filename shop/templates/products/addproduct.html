@@ -56,22 +56,34 @@
                                             <option value="">Chọn một brand</option>
                                         </select>
 
-                                        {{ render_field(form.colors, class="form-control") }}
+                                        {{ render_field(form.colors, class="form-control", placeholder="Ví dụ: Đỏ, Xanh, Đen") }}
+                                        {{ render_field(form.capacity, class="form-control", placeholder="Ví dụ: 64GB:25000000, 128GB:29000000") }}
+                                        <small style="color: #6c757d; display: block; margin-bottom: 15px; margin-top: -10px;">* Định dạng dung lượng: Tên:Giá (VD: 64GB:25000000, 128GB:29000000)</small>
                                         {{ render_field(form.description, class="form-control", rows="10") }}
+                                        {{ render_field(form.video_link, class="form-control", placeholder="Link YouTube (VD: https://www.youtube.com/watch?v=...)") }}
+                                        {{ render_field(form.review_video, class="form-control", placeholder="Link YouTube Review (VD: https://www.youtube.com/watch?v=...)") }}
 
                                         <div class="container">
-                                            <div class="row">
-                                                <div class="col-md-4" aria-required="true">{{ render_field(form.image_1,
-                                                    class='form-control')}}
-                                                </div>
-                                                <div class="col-md-4">{{ render_field(form.image_2,
-                                                    class='form-control')}}
-                                                </div>
-                                                <div class="col-md-4">{{ render_field(form.image_3,
-                                                    class='form-control')}}
-                                                </div>
-                                            </div>
-                                        </div>
+                                             <div class="row">
+                                                 <div class="col-md-4" aria-required="true">{{ render_field(form.image_1,
+                                                     class='form-control')}}
+                                                 </div>
+                                                 <div class="col-md-4">{{ render_field(form.image_2,
+                                                     class='form-control')}}
+                                                 </div>
+                                                 <div class="col-md-4">{{ render_field(form.image_3,
+                                                     class='form-control')}}
+                                                 </div>
+                                             </div>
+                                             <div class="row mt-2">
+                                                 <div class="col-md-4">{{ render_field(form.image_4,
+                                                     class='form-control')}}
+                                                 </div>
+                                                 <div class="col-md-4">{{ render_field(form.image_5,
+                                                     class='form-control')}}
+                                                 </div>
+                                             </div>
+                                         </div>
                                     </div>
                                 </div>
                             </div><!-- /.card -->
@@ -93,16 +105,36 @@
 function myFunction() {
      $("#brand option").remove();
      var newoptions = "";
-     {% for brand in brands %}
-     if(document.getElementById("category").value == {{brand.category_id}}){
+     var catVal = document.getElementById("category").value;
+     // {% for brand in brands %}
+     if(catVal == '{{brand.category.id if brand.category else ""}}'){
         newoptions+="<option value='{{brand.id}}'>{{brand.name}}</option>";
      }
-     {% endfor %}
+     // {% endfor %}
      $("#brand").append(newoptions);
-     }
+}
 
+// Auto-remove dots from Price and Capacity
+document.addEventListener('DOMContentLoaded', function() {
+    const priceInput = document.getElementById('price');
+    const capacityInput = document.getElementById('capacity');
 
+    if (priceInput) {
+        priceInput.addEventListener('input', function() {
+            this.value = this.value.replace(/\./g, '');
+        });
+    }
 
-
+    if (capacityInput) {
+        capacityInput.addEventListener('input', function() {
+            this.value = this.value.replace(/\./g, '');
+        });
+    }
+    
+    // Khởi tạo brand khi load trang nếu đã có category
+    if(document.getElementById("category").value) {
+        myFunction();
+    }
+});
 </script>
 {% endblock content %}

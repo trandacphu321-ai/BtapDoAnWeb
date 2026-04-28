@@ -1,0 +1,396 @@
+{% extends "base.html" %}
+{% block content %}
+{% include 'header.html' %}
+
+<div class="track-order-page">
+    <div class="container">
+        <div class="row">
+            <div class="col-md-10 center-block">
+                
+                <!-- Main Card -->
+                <div class="track-glass-card animate__animated animate__fadeIn">
+                    
+                    <!-- Header Section -->
+                    <div class="track-header-premium">
+                        <div class="glow-orb"></div>
+                        <div class="header-content">
+                            <div class="icon-pulse">
+                                <i class="fa fa-crosshairs"></i>
+                            </div>
+                            <h1>Hệ thống Tra cứu Vận đơn</h1>
+                            <p>Theo dõi thời gian thực lộ trình đơn hàng của bạn</p>
+                        </div>
+                    </div>
+
+                    <!-- Search Section -->
+                    <div class="search-section-wrapper">
+                        <form action="{{ url_for('track_order') }}" method="GET" id="trackForm">
+                            <div class="premium-search-box">
+                                <div class="input-wrapper">
+                                    <i class="fa fa-barcode"></i>
+                                    <input type="text" name="invoice_id" id="invoice_id" 
+                                           placeholder="Nhập mã hóa đơn (ví dụ: 0fa6a90866)..." 
+                                           value="{{ invoice or '' }}" required>
+                                </div>
+                                <button type="submit" class="btn-track-submit">
+                                    <span>KIỂM TRA NGAY</span>
+                                    <i class="fa fa-arrow-right"></i>
+                                </button>
+                            </div>
+                        </form>
+
+                        {% with messages = get_flashed_messages(with_categories=true) %}
+                          {% if messages %}
+                            {% for category, message in messages %}
+                              <div class="alert alert-{{ category }} mt-4 custom-alert">
+                                  <i class="fa fa-info-circle"></i> {{ message }}
+                              </div>
+                            {% endfor %}
+                          {% endif %}
+                        {% endwith %}
+                    </div>
+
+                    {% if order %}
+                    <!-- Progress Section -->
+                    <div class="order-status-display animate__animated animate__fadeInUp">
+                        <div class="status-summary">
+                            <div class="summary-item">
+                                <span class="label">Mã hóa đơn:</span>
+                                <span class="value">#{{ order.invoice }}</span>
+                            </div>
+                            <div class="summary-item">
+                                <span class="label">Ngày đặt hàng:</span>
+                                <span class="value">{{ order.date_created.strftime('%d/%m/%Y') }}</span>
+                            </div>
+                        </div>
+
+                        <div class="modern-stepper">
+                            <div class="step-item {% if order.status != None %}completed{% endif %}">
+                                <div class="step-circle"><i class="fa fa-check"></i></div>
+                                <div class="step-info">
+                                    <h4>Đã đặt hàng</h4>
+                                    <p>Chờ xác nhận</p>
+                                </div>
+                            </div>
+                            <div class="step-connector {% if order.status in ['Shipping', 'Delivered'] %}active{% endif %}"></div>
+                            <div class="step-item {% if order.status in ['Shipping', 'Delivered'] %}completed{% endif %}">
+                                <div class="step-circle">
+                                    {% if order.status == 'Shipping' %}<i class="fa fa-truck fa-spin-slow"></i>{% else %}<i class="fa fa-check"></i>{% endif %}
+                                </div>
+                                <div class="step-info">
+                                    <h4>Đang vận chuyển</h4>
+                                    <p>Đang trên đường giao</p>
+                                </div>
+                            </div>
+                            <div class="step-connector {% if order.status == 'Delivered' %}active{% endif %}"></div>
+                            <div class="step-item {% if order.status == 'Delivered' %}completed{% endif %}">
+                                <div class="step-circle"><i class="fa fa-flag-checkered"></i></div>
+                                <div class="step-info">
+                                    <h4>Hoàn thành</h4>
+                                    <p>Giao hàng thành công</p>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="order-details-grid">
+                            <div class="detail-card">
+                                <h5><i class="fa fa-shopping-bag"></i> Sản phẩm</h5>
+                                <div class="product-list">
+                                    {% for k, p in order.orders.items() %}
+                                    <div class="product-item">
+                                        <span>{{ p.name }}</span>
+                                        <strong>x{{ p.quantity }}</strong>
+                                    </div>
+                                    {% endfor %}
+                                </div>
+                            </div>
+                            <div class="detail-card highlight">
+                                <h5><i class="fa fa-credit-card"></i> Thanh toán</h5>
+                                <div class="payment-info">
+                                    <div class="pay-row">
+                                        <span>Trạng thái:</span>
+                                        <span class="status-badge status-{{ order.status|lower }}">{{ order.status }}</span>
+                                    </div>
+                                    <div class="pay-row">
+                                        <span>Tổng cộng:</span>
+                                        <span class="price-big">{{ order.total_amount|vnd if order.total_amount else '---' }}</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    {% elif invoice %}
+                    <!-- Not Found View -->
+                    <div class="not-found-state animate__animated animate__shakeX">
+                        <div class="not-found-img">🔍</div>
+                        <h3>Rất tiếc, không tìm thấy đơn hàng!</h3>
+                        <p>Mã hóa đơn <strong>#{{ invoice }}</strong> không tồn tại trong hệ thống. Vui lòng kiểm tra lại mã hoặc liên hệ bộ phận CSKH để được hỗ trợ.</p>
+                    </div>
+                    {% endif %}
+                </div>
+
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+/* Reset & Base */
+.track-order-page {
+    background: #fdfdfd;
+    background-image: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+    padding: 80px 0;
+    min-height: 90vh;
+    font-family: 'Inter', sans-serif;
+}
+
+/* Glass Card */
+.track-glass-card {
+    background: rgba(255, 255, 255, 0.95);
+    backdrop-filter: blur(10px);
+    border-radius: 40px;
+    box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.15);
+    overflow: hidden;
+    border: 1px solid rgba(255, 255, 255, 0.3);
+}
+
+/* Premium Header */
+.track-header-premium {
+    background: #1e1b4b;
+    position: relative;
+    padding: 60px 40px;
+    text-align: center;
+    color: #fff;
+    overflow: hidden;
+}
+.glow-orb {
+    position: absolute;
+    top: -50%;
+    left: -20%;
+    width: 200px;
+    height: 200px;
+    background: #6366f1;
+    filter: blur(100px);
+    opacity: 0.4;
+}
+.header-content { position: relative; z-index: 2; }
+.icon-pulse {
+    width: 80px;
+    height: 80px;
+    background: rgba(255, 255, 255, 0.1);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 32px;
+    margin: 0 auto 20px;
+    animation: pulseGlow 2s infinite;
+}
+@keyframes pulseGlow {
+    0% { box-shadow: 0 0 0 0 rgba(99, 102, 241, 0.4); }
+    70% { box-shadow: 0 0 0 20px rgba(99, 102, 241, 0); }
+    100% { box-shadow: 0 0 0 0 rgba(99, 102, 241, 0); }
+}
+.track-header-premium h1 {
+    font-size: 36px;
+    font-weight: 900;
+    margin: 0 0 10px;
+    letter-spacing: -1px;
+}
+.track-header-premium p {
+    color: #a5b4fc;
+    font-size: 16px;
+    font-weight: 500;
+}
+
+/* Search Box Modern */
+.search-section-wrapper {
+    padding: 40px;
+    background: #fff;
+}
+.premium-search-box {
+    display: flex;
+    align-items: center;
+    background: #f1f5f9;
+    border-radius: 20px;
+    padding: 10px;
+    border: 2px solid transparent;
+    transition: all 0.3s;
+}
+.premium-search-box:focus-within {
+    background: #fff;
+    border-color: #6366f1;
+    box-shadow: 0 10px 15px -3px rgba(99, 102, 241, 0.1);
+}
+.input-wrapper {
+    display: flex;
+    align-items: center;
+    flex: 1;
+    padding-left: 20px;
+}
+.input-wrapper i { color: #94a3b8; font-size: 20px; }
+.input-wrapper input {
+    background: transparent;
+    border: none;
+    width: 100%;
+    padding: 15px;
+    font-size: 18px;
+    font-weight: 600;
+    color: #1e293b;
+    outline: none;
+}
+.btn-track-submit {
+    background: #6366f1;
+    color: #fff;
+    border: none;
+    padding: 15px 35px;
+    border-radius: 15px;
+    font-weight: 800;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    transition: all 0.3s;
+}
+.btn-track-submit:hover {
+    background: #4f46e5;
+    transform: scale(1.02);
+}
+
+/* Stepper Modern */
+.modern-stepper {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 40px;
+    background: #fcfcfd;
+}
+.step-item {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+    position: relative;
+    z-index: 2;
+}
+.step-circle {
+    width: 50px;
+    height: 50px;
+    background: #e2e8f0;
+    color: #94a3b8;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 20px;
+    margin-bottom: 12px;
+    transition: all 0.5s ease;
+}
+.step-item.completed .step-circle {
+    background: #10b981;
+    color: #fff;
+    box-shadow: 0 0 20px rgba(16, 185, 129, 0.3);
+}
+.step-info h4 { font-size: 15px; font-weight: 800; margin: 0; color: #64748b; }
+.step-info p { font-size: 12px; margin: 2px 0 0; color: #94a3b8; }
+.step-item.completed .step-info h4 { color: #1e293b; }
+
+.step-connector {
+    flex: 1;
+    height: 4px;
+    background: #e2e8f0;
+    margin-bottom: 45px;
+    margin-left: -20px;
+    margin-right: -20px;
+    border-radius: 2px;
+}
+.step-connector.active {
+    background: #10b981;
+}
+
+/* Grid Details */
+.order-details-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 20px;
+    padding: 0 40px 40px;
+}
+.detail-card {
+    background: #f8fafc;
+    border-radius: 20px;
+    padding: 25px;
+    border: 1px solid #f1f5f9;
+}
+.detail-card.highlight {
+    background: #eff6ff;
+    border-color: #dbeafe;
+}
+.detail-card h5 {
+    font-size: 16px;
+    font-weight: 800;
+    color: #475569;
+    margin-bottom: 15px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+.product-item {
+    display: flex;
+    justify-content: space-between;
+    padding: 8px 0;
+    border-bottom: 1px dashed #e2e8f0;
+    font-size: 14px;
+}
+.pay-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 15px;
+}
+.price-big {
+    font-size: 24px;
+    font-weight: 900;
+    color: #ef4444;
+}
+.status-badge {
+    padding: 4px 12px;
+    border-radius: 100px;
+    font-size: 12px;
+    font-weight: 800;
+    text-transform: uppercase;
+}
+.status-pending { background: #fef3c7; color: #d97706; }
+.status-shipping { background: #dbeafe; color: #2563eb; }
+.status-delivered { background: #d1fae5; color: #059669; }
+
+/* Not Found State */
+.not-found-state {
+    padding: 60px 40px;
+    text-align: center;
+}
+.not-found-img { font-size: 60px; margin-bottom: 20px; }
+.not-found-state h3 { font-weight: 800; color: #1e293b; }
+.not-found-state p { color: #64748b; max-width: 450px; margin: 10px auto; }
+
+/* Utils */
+.fa-spin-slow { animation: fa-spin 3s infinite linear; }
+.custom-alert { border-radius: 15px; font-weight: 600; border: none; }
+
+/* Responsive */
+@media (max-width: 768px) {
+    .order-details-grid { grid-template-columns: 1fr; }
+    .modern-stepper { flex-direction: column; gap: 30px; }
+    .step-connector { width: 4px; height: 30px; margin: 0; }
+    .premium-search-box { flex-direction: column; gap: 10px; }
+    .btn-track-submit { width: 100%; justify-content: center; }
+}
+</style>
+
+<script>
+// Auto-focus input on load
+document.addEventListener('DOMContentLoaded', function() {
+    document.getElementById('invoice_id').focus();
+});
+</script>
+
+{% endblock content %}

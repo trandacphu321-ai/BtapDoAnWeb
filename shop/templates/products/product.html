@@ -1,414 +1,810 @@
 {% extends "base.html" %}
 {% block content %}
 {% include 'header.html' %}
-<div id="page-content" class="single-page">
+
+<style>
+    /* === GLOBAL SECTION STYLING === */
+    .detail-section {
+        padding: 40px 0;
+        background-color: transparent;
+    }
+    .detail-box {
+        background: #fff;
+        padding: 35px;
+        border-radius: 24px;
+        border: 2px solid #e2e8f0; /* Thicker and bolder border */
+        box-shadow: 0 10px 30px rgba(0, 0, 0, 0.05);
+        transition: all 0.3s ease;
+    }
+    .detail-box:hover {
+        border-color: #cbd5e1;
+        box-shadow: 0 15px 45px rgba(0, 0, 0, 0.08);
+    }
+    
+
+
+    /* Custom styles for gallery */
+    .gallery-frame {
+        border: 2px solid #e2e8f0;
+        border-radius: 24px;
+        padding: 20px;
+        background: #fff;
+        margin-bottom: 20px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        min-height: 450px;
+        position: relative;
+        overflow: hidden;
+    }
+    .gallery-frame img { max-width: 100%; max-height: 400px; object-fit: contain; transition: transform 0.3s ease; }
+    .gallery-frame:hover img { transform: scale(1.05); }
+
+    /* Commitments */
+    .commitment-box {
+        display: flex;
+        align-items: center;
+        gap: 15px;
+        padding: 15px;
+        border: 2px solid #f1f5f9;
+        border-radius: 16px;
+        margin-bottom: 12px;
+        transition: all 0.2s;
+    }
+    .commitment-box:hover { border-color: #e2e8f0; background: #f8fafc; }
+    .commitment-icon { font-size: 20px; color: var(--clr-primary); width: 40px; text-align: center; }
+
+    /* Rating Summary Pill */
+    .rating-pill {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        background: #f8faff;
+        border: 1.5px solid #e2e8f0;
+        padding: 8px 16px;
+        border-radius: 50px;
+        width: fit-content;
+        margin-bottom: 25px;
+    }
+
+    /* Action Buttons */
+    .btn-action {
+        height: 56px;
+        border-radius: 16px;
+        font-weight: 800;
+        font-size: 16px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 10px;
+        transition: all 0.3s;
+        border: none;
+        cursor: pointer;
+        text-decoration: none;
+    }
+    .btn-add-cart { background: var(--clr-primary); color: #fff; box-shadow: 0 4px 15px var(--clr-primary-glow); }
+    .btn-add-cart:hover { background: var(--clr-primary-dark); transform: translateY(-2px); }
+    .btn-buy-now { background: #ef4444; color: #fff; box-shadow: 0 4px 15px rgba(239, 68, 68, 0.2); }
+    .btn-buy-now:hover { background: #dc2626; transform: translateY(-2px); }
+
+    /* === AI SUGGESTION PREMIUM CARDS === */
+    .related-card {
+        border: 1.5px solid #f1f5f9;
+        border-radius: 20px;
+        padding: 12px;
+        background: #fff;
+        transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        display: flex;
+        flex-direction: column;
+        position: relative;
+        overflow: hidden;
+        height: auto;
+    }
+    .related-card:hover {
+        border-color: var(--clr-primary);
+        transform: translateY(-8px);
+        box-shadow: 0 15px 30px rgba(0, 0, 0, 0.06);
+    }
+    .related-card a, .related-card a:focus, .related-card a:active {
+        outline: none !important;
+        text-decoration: none;
+        user-select: none;
+        -webkit-user-drag: none;
+        -webkit-tap-highlight-color: transparent;
+    }
+    .related-card .img-container {
+        height: 150px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        margin-bottom: 12px;
+        background: #f8fafc;
+        border-radius: 14px;
+        transition: all 0.3s;
+    }
+    .related-card:hover .img-container {
+        background: #fff;
+    }
+    .related-card img {
+        max-width: 80%;
+        max-height: 80%;
+        object-fit: contain;
+        transition: transform 0.5s;
+    }
+    .related-card:hover img {
+        transform: scale(1.1) rotate(2deg);
+    }
+    .ai-badge {
+        position: absolute;
+        top: 15px;
+        right: 15px;
+        background: linear-gradient(135deg, #fbbf24, #f59e0b);
+        color: #fff;
+        font-size: 10px;
+        font-weight: 900;
+        padding: 4px 10px;
+        border-radius: 10px;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+        box-shadow: 0 4px 10px rgba(245, 158, 11, 0.3);
+        z-index: 10;
+    }
+    .badge-pink { background: #ec4899; box-shadow: 0 4px 10px #ec48994d; }
+    .badge-purple { background: #8b5cf6; box-shadow: 0 4px 10px #8b5cf64d; }
+    .badge-yellow { background: #fbbf24; box-shadow: 0 4px 10px #fbbf244d; }
+    .badge-red { background: #ef4444; box-shadow: 0 4px 10px #ef44444d; }
+    .badge-blue { background: #3b82f6; box-shadow: 0 4px 10px #3b82f64d; }
+
+    .btn-view-suggest {
+        border-radius: 14px;
+        border: 2px solid #f1f5f9;
+        font-weight: 800;
+        color: #64748b;
+        background: #fff;
+        font-size: 13px;
+        height: 44px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 8px;
+        transition: all 0.3s;
+    }
+    .btn-view-suggest:hover {
+        background: var(--clr-primary);
+        color: #fff;
+        border-color: var(--clr-primary);
+        box-shadow: 0 4px 15px var(--clr-primary-glow);
+    }
+
+    /* === EXTRA TAGS === */
+    .suggest-card-extra {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 6px;
+        margin-top: 10px;
+    }
+    .tag-mini {
+        font-size: 10px;
+        font-weight: 700;
+        padding: 3px 8px;
+        border-radius: 6px;
+        display: flex;
+        align-items: center;
+        gap: 4px;
+    }
+    .tag-mini-blue {
+        background: #eff6ff;
+        color: #3b82f6;
+        border: 1px solid #dbeafe;
+    }
+    .tag-mini-green {
+        background: #f0fdf4;
+        color: #22c55e;
+        border: 1px solid #dcfce7;
+    }
+</style>
+
+<div class="breadcrumb-wrapper">
     <div class="container">
-        <div class="row">
-            <div class="col-lg-12">
-                <ul class="breadcrumb">
-                    <li><a href="{{url_for('home')}}">Trang chủ</a></li>
-                    <li><a href="{{url_for('get_all_category')}}">{{product.category.name}}</a></li>
-                    <li><a href="#">{{product.name}}</a></li>
-                </ul>
-            </div>
-        </div>
+        <ul class="breadcrumb">
+            <li><a href="{{url_for('home')}}"><i class="fa fa-home"></i> Trang chủ</a></li>
+            <li><a href="{{url_for('get_category', name=product.category.name)}}">{{product.category.name}}</a></li>
+            <li class="active">{{product.name}}</li>
+        </ul>
+    </div>
+</div>
 
-        <div class="row">
-            <div id="main-content" class="col-md-8">
-                <div class="product">
-                    <div class="col-md-6">
-                        <div class="image">
-                            <div class="product-img ">
-                                <ul class="row">
-                                    <div id="b_image">
-                                        <img src="{{ url_for('static', filename='images/'+product.image_2) }}"
-                                             alt="{{ product.name}}">
-                                    </div>
-                                    <div class="product-content" id="s_image">
-                                        <li class="col-lg-3 col-sm-3 col-xs-4">
-                                            <img src="{{ url_for('static', filename='images/'+ product.image_1) }}"
-                                                 alt="{{ product.name}}">
-                                        </li>
-                                        <li class="col-lg-3 col-sm-3 col-xs-4">
-                                            <img src="{{ url_for('static', filename='images/'+ product.image_2) }}"
-                                                 alt="{{ product.name}}">
-                                        </li>
-                                        <li class="col-lg-3 col-sm-3 col-xs-4">
-                                            <img src="{{ url_for('static', filename='images/'+ product.image_3) }}"
-                                                 alt="{{ product.name}}">
-                                        </li>
-                                    </div>
-                                </ul>
-                            </div>
+<!-- SECTION 1: MAIN PRODUCT INFO -->
+<section class="detail-section" style="padding-top: 10px;">
+    <div class="container">
+        <div class="detail-box">
+            <div class="row">
+                <!-- LEFT SIDE: IMAGE & THUMBS -->
+                <div class="col-md-6">
+                    <div class="gallery-frame" id="main-gallery-container">
+                        {% if product.video_link %}
+                        <div id="video-container" style="display: block; width: 100%; height: 100%;">
+                            <iframe id="main-product-video" width="100%" height="450" 
+                                src="https://www.youtube.com/embed/{{ product.video_link.split('v=')[-1].split('&')[0] if 'v=' in product.video_link else product.video_link.split('/')[-1] }}" 
+                                frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen style="border-radius: 24px;"></iframe>
                         </div>
+                        <img src="{{ url_for('static', filename='images/'+product.image_1) }}" alt="{{product.name}}" id="main-product-img" style="display: none;">
+                        {% else %}
+                        <img src="{{ url_for('static', filename='images/'+product.image_1) }}" alt="{{product.name}}" id="main-product-img">
+                        {% endif %}
                     </div>
-                    <div class="col-md-6">
-                        <div class="caption well">
-                            <div class="name"><h3>{{ product.name}}</h3></div>
-                            <div class="info">
-                                <label>Brand: </label> {{ product.brand.name}}
+                    <div class="thumbnail-wrapper" style="margin-top: 20px;">
+                        <div id="thumb-scroll" style="display: flex; gap: 12px; overflow-x: auto; padding-bottom: 10px; scrollbar-width: thin;">
+                            {% if product.video_link %}
+                            <div class="thumb-item video-thumb active" data-video="{{ product.video_link }}" style="cursor: pointer; border: 2px solid var(--clr-primary); border-radius: 16px; padding: 8px; width: 85px; height: 85px; flex-shrink: 0; background: #fff; display: flex; flex-direction: column; align-items: center; justify-content: center; position: relative;">
+                                <i class="fa fa-play-circle" style="font-size: 30px; color: #ff0000;"></i>
+                                <span style="font-size: 10px; font-weight: 700; margin-top: 4px;">VIDEO</span>
                             </div>
-                            <div class="price">
-                                <label class="product-price">
-                                    ${{ product.price - product.price*product.discount/100 }}
-                                </label>
-                                {% if product.discount>0 %}
-                                <label class="discounted-price">${{ product.price }}</label>
-                                {% endif %}
-                                {% if product.discount >0 %}
-                                <span class="offer-price">{{product.discount}}%off</span>
-                                {% endif %}
+                            {% endif %}
+                            <div class="thumb-item {{ 'active' if not product.video_link else '' }}" 
+                                 data-src="{{ url_for('static', filename='images/'+product.image_1) }}" 
+                                 {% if not product.video_link %}
+                                 style="cursor: pointer; border: 2px solid var(--clr-primary); border-radius: 16px; padding: 8px; width: 85px; height: 85px; flex-shrink: 0; background: #fff; display: flex; align-items: center; justify-content: center;"
+                                 {% else %}
+                                 style="cursor: pointer; border: 2px solid #f1f5f9; border-radius: 16px; padding: 8px; width: 85px; height: 85px; flex-shrink: 0; background: #fff; display: flex; align-items: center; justify-content: center;"
+                                 {% endif %}>
+                                <img src="{{ url_for('static', filename='images/'+product.image_1) }}" style="max-width: 100%; max-height: 100%; object-fit: contain;">
                             </div>
-                            <div class="options">
-                                <label>Colors: </label>
-                                {{product.colors}}
+                            {% if product.image_2 %}
+                            <div class="thumb-item" data-src="{{ url_for('static', filename='images/'+product.image_2) }}" style="cursor: pointer; border: 2px solid #f1f5f9; border-radius: 16px; padding: 8px; width: 85px; height: 85px; flex-shrink: 0; background: #fff; display: flex; align-items: center; justify-content: center;">
+                                <img src="{{ url_for('static', filename='images/'+product.image_2) }}" style="max-width: 100%; max-height: 100%; object-fit: contain;">
                             </div>
-                            <div class="rating">
-                                {{ products['average'][product.id][0] }}/5
-                                {% for i in range(products['average'][product.id][0]|int+1) %}
-                                <span class="glyphicon glyphicon-star"></span>
-                                {% endfor %}
-                                {% for i in range(products['average'][product.id][0]|int + 1, 5) %}
-                                <span class="glyphicon glyphicon-star-empty"></span>
-                                {% endfor %}
-                                {% if products['average'][product.id][1] != 0 %}
-                                ({{ products['average'][product.id][1] }})
-                                {% endif %}
+                            {% endif %}
+                            {% if product.image_3 %}
+                            <div class="thumb-item" data-src="{{ url_for('static', filename='images/'+product.image_3) }}" style="cursor: pointer; border: 2px solid #f1f5f9; border-radius: 16px; padding: 8px; width: 85px; height: 85px; flex-shrink: 0; background: #fff; display: flex; align-items: center; justify-content: center;">
+                                <img src="{{ url_for('static', filename='images/'+product.image_3) }}" style="max-width: 100%; max-height: 100%; object-fit: contain;">
                             </div>
-                            <div>
-                                <form action="{{url_for('AddCart')}}" method="post">
-                                    <input hidden name="product_id" value="{{product.id}}">
-                                    <div>
-                                        <label>Số lượng:</label>
-                                        <input type="number" name="quantity" value="1" min="1" max="20" size="5">
-                                    </div>
-                                    <div>
-                                        <label>Chọn màu:</label>
-                                        <select name="colors">
-                                            {% set colors = product.colors.split(',') %}
-                                            {% for color in colors %}
-                                            {% set col = color.split(':') %}
-                                            <option value="{{col[0]}}">{{col[0] | capitalize }}</option>
-                                            {% endfor %}
-                                        </select>
-                                    </div>
-                                    <div class="detail-btn">
-                                        <a href="#" class="product-btn btn-like"><i class="fa fa-heart"></i></a>
-                                        <button href="#" class="product-btn btn-cart">
-                                            <i class="fa fa-shopping-cart"></i></button>
-                                    </div>
-                                </form>
+                            {% endif %}
+                            {% if product.image_4 %}
+                            <div class="thumb-item" data-src="{{ url_for('static', filename='images/'+product.image_4) }}" style="cursor: pointer; border: 2px solid #f1f5f9; border-radius: 16px; padding: 8px; width: 85px; height: 85px; flex-shrink: 0; background: #fff; display: flex; align-items: center; justify-content: center;">
+                                <img src="{{ url_for('static', filename='images/'+product.image_4) }}" style="max-width: 100%; max-height: 100%; object-fit: contain;">
                             </div>
-                            <div class="share">
-                                <strong>Share :</strong>
-                                <a href="#" class="share-btn" target="_blank">
-                                    <i class="fa fa-twitter"> twitter</i>
-                                </a>
-                                <a href="#" class="share-btn" target="_blank">
-                                    <i class="fa fa-facebook"> facebook</i>
-                                </a>
-                                <a href="#" class="share-btn" target="_blank">
-                                    <i class="fa fa-linkedin"> linkedin</i>
-                                </a>
+                            {% endif %}
+                            {% if product.image_5 %}
+                            <div class="thumb-item" data-src="{{ url_for('static', filename='images/'+product.image_5) }}" style="cursor: pointer; border: 2px solid #f1f5f9; border-radius: 16px; padding: 8px; width: 85px; height: 85px; flex-shrink: 0; background: #fff; display: flex; align-items: center; justify-content: center;">
+                                <img src="{{ url_for('static', filename='images/'+product.image_5) }}" style="max-width: 100%; max-height: 100%; object-fit: contain;">
                             </div>
+                            {% endif %}
                         </div>
                     </div>
                 </div>
-                <div class="product-desc">
-                    <ul class="nav nav-tabs">
-                        <li class="active"><a href="#description" role="tab" data-toggle="tab">Sự miêu tả</a></li>
-                        <li><a href="#review" role="tab" data-toggle="tab">Review</a></li>
-                    </ul>
-                    <div class="tab-content">
-                        <div id="description" class="tab-pane fade in active">
-                            <p>{{product.desc}}</p>
-                        </div>
-                        <div id="review" class="tab-pane fade">
-                            <div class="review-form">
-                                {% if rates|length == 0 %}
-                                <h4>There are no reviews yet.</h4>
-                                {% else %}
-                                {% for rate in rates %}
-                                {% if product.id == rate.product_id %}
-                                <div>
-                                    <div style="font-weight: bold; color: black">{{rate.register.username}}:</div>
-                                    <div>
-                                        <div class="rating" style="color: #FFC107">
-                                            {% for i in range(1,rate.rate_number+1) %}
-                                            <span class="glyphicon glyphicon-star"></span>
-                                            {% endfor %}
-                                            {% for i in range(rate.rate_number,5) %}
-                                            <span class="glyphicon glyphicon-star-empty"></span>
-                                            {% endfor %}
-                                        </div>
-                                    </div>
-                                    <div>{{rate.desc}}</div>
-                                </div>
-                                <div style="text-align:right">{{rate.time}}</div>
-                                <div style="margin-top: -20px; text-align: center;">
-                                    - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-                                    - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-                                    - - - - - - - - - - - - - - -
-                                </div>
-                                {% endif %}
-                                {% endfor %}
-                                {% endif %}
-                                {% if kt %}
-                                <h4>Cảm ơn bạn đã đánh giá. Bạn chỉ được đánh giá một lần..</h4>
-                                {% else %}
-                                <h4>Đánh giá của bạn về sản phẩm của chúng tôi:</h4>
-                                <div>
-                                    {% from "_formhelpers.html" import render_field %}
-                                    <form action="{{url_for('addrate')}}" method="POST" enctype="multipart/form-data">
-                                        <input type="text" name="register_id" value="{{customer.id}}" hidden>
-                                        <input type="text" name="product_id" value="{{product.id}}" hidden>
-                                        <div class="rating" style="margin-top: -10px">
-                                            <a class="glyphicon glyphicon-star-empty"
-                                               style="color: #FFC107" onclick="test1()" id="1">
-                                            </a>
-                                            <a class="glyphicon glyphicon-star-empty"
-                                               style="color: #FFC107" onclick="test2()" id="2">
-                                            </a>
-                                            <a class="glyphicon glyphicon-star-empty"
-                                               style="color: #FFC107" onclick="test3()" id="3">
-                                            </a>
-                                            <a class="glyphicon glyphicon-star-empty"
-                                               style="color: #FFC107" onclick="test4()" id="4">
-                                            </a>
-                                            <a class="glyphicon glyphicon-star-empty"
-                                               style="color: #FFC107" onclick="test5()" id="5">
-                                            </a>
-                                            <input type="hidden" name="select" id="select" value="5">
-                                        </div>
-                                        <textarea rows="4" cols="93" name="desc" style="margin-top: 10px"></textarea>
-                                        {% if customer == None %}
-                                        <h4 style="margin-top: 15;">You need
-                                            <!-- CHỖ NÀY ĐÃ ĐỔI customer_login_page -> customer_login -->
-                                            <a href="{{url_for('customer_login', page='rate', id=product.id)}}"
-                                               style="color: blue">đăng nhập
-                                            </a> đánh giá
-                                        </h4>
-                                        {% else %}
-                                        <input class="btn btn-default" style="margin-top: 15px" type="submit"
-                                               value="Đánh giá">
-                                        {% endif %}
-                                    </form>
-                                </div>
-                                {% endif %}
+
+                <!-- RIGHT SIDE: INFO & BUY -->
+                <div class="col-md-6">
+                    <div class="product-info-wrapper" style="padding: 10px 0 0 20px;">
+                        <h1 id="product-main-title" data-original-name="{{product.name}}" style="font-size: 32px; font-weight: 900; color: var(--clr-text); margin-bottom: 12px; line-height: 1.2;">{{product.name}}</h1>
+                        
+                        {% set avg_data = products['average'][product.id] %}
+                        {% if avg_data.count > 0 %}
+                        <div class="rating-pill">
+                            <span style="font-weight: 800; font-size: 18px; color: #fbbf24;">{{ avg_data.average | round(1) }}</span>
+                            <div style="color: #fbbf24; font-size: 14px; display: flex; gap: 2px;">
+                                {% for i in range(avg_data.average|int) %} <i class="fa fa-star"></i> {% endfor %}
+                                {% if avg_data.average % 1 >= 0.5 %} <i class="fa fa-star"></i> {% endif %}
                             </div>
+                            <span style="color: #94a3b8; font-size: 14px; margin-left: 5px;">({{ avg_data.count }} đánh giá)</span>
                         </div>
-                    </div>
-                </div>
-                <div class="product-related">
-                    <div class="heading"><h2>Sản phẩm liên quan</h2></div>
-                    <div class="products">
-                        {% for product in products["hot"] %}
-                        <div class="col-lg-4 col-md-4 col-xs-12">
-                            <div class="product-block" style="height: 450px;">
-                                <div class="product-img">
-                                    <img src="{{ url_for('static', filename='images/'+product.image_2) }}"
-                                         alt="{{ product.name}}" style="height:152px; weight:152px">
-                                </div>
-                                <div class="product-content" style="margin-top:-20">
-                                    <div><h5 style="height: 35px;margin-top:-10"><a
-                                            href="{{url_for('detail', id = product.id)}}"
-                                            class="product-title">
-                                        {{ product.name }}</a></h5>
-                                    </div>
-                                    <div class="product-meta">
-                                        <div style="height: 60px;">
-                                            <a href="#" class="product-price">${{ product.price -
-                                                product.price*product.discount/100 }}</a>
-                                            {% if product.discount>0 %}
-                                            <a href="#" class="discounted-price">${{ product.price }}</a>
+                        {% endif %}
+
+                        <div class="price-box-large" style="margin-bottom: 35px;">
+                            <div id="display-price" style="font-size: 36px; font-weight: 900; color: var(--clr-primary); letter-spacing: -1px;">
+                                {{ (product.price - product.price*product.discount/100) | vnd }}
+                            </div>
+                            {% if product.discount > 0 %}
+                            <div style="display: flex; align-items: center; gap: 12px; margin-top: 8px;">
+                                <span id="display-original-price" style="text-decoration: line-through; color: #94a3b8; font-size: 20px; font-weight: 500;">{{ product.price | vnd }}</span>
+                                <span style="background: #fee2e2; color: #ef4444; padding: 4px 12px; border-radius: 8px; font-size: 14px; font-weight: 800;">TIẾT KIỆM {{ product.discount }}%</span>
+                            </div>
+                            {% endif %}
+                        </div>
+
+                        <form action="{{url_for('AddCart')}}" method="post" id="product-form">
+                            <input type="hidden" name="product_id" value="{{product.id}}">
+                            
+                            <div class="form-group-custom" style="margin-bottom: 20px;">
+                                <label style="display: block; font-weight: 800; font-size: 15px; margin-bottom: 12px; color: var(--clr-text); text-transform: uppercase; letter-spacing: 0.5px;">Chọn màu sắc:</label>
+                                <select name="color" class="form-control" style="border-radius: 16px; height: 52px; border: 2px solid #e2e8f0; font-weight: 700; background: #fff; cursor: pointer;">
+                                    {% for color in product.colors.split(',') %}
+                                    <option value="{{ color.strip() }}">{{ color.strip() }}</option>
+                                    {% endfor %}
+                                </select>
+                            </div>
+
+                            <div class="form-group-custom" style="margin-bottom: 30px;">
+                                <label style="display: block; font-weight: 800; font-size: 15px; margin-bottom: 12px; color: var(--clr-text); text-transform: uppercase; letter-spacing: 0.5px;">Chọn phiên bản dung lượng:</label>
+                                <select name="capacity" id="capacity-selector" class="form-control" style="border-radius: 16px; height: 52px; border: 2px solid #e2e8f0; font-weight: 700; background: #fff; cursor: pointer;">
+                                    {% if product.capacity and product.capacity.strip() != '' and product.capacity.strip() != 'Mặc định' %}
+                                        {% for item in product.capacity.split(',') %}
+                                            {% set parts = item.split(':') %}
+                                            {% if parts|length == 2 %}
+                                                <option value="{{ parts[0].strip() }}" data-price="{{ parts[1].strip() }}">
+                                                    Bản {{ parts[0].strip() }}
+                                                </option>
                                             {% endif %}
-                                            {% if product.discount >0 %}
-                                            <span class="offer-price">{{product.discount}}%off</span>
-                                            {% else %}
-                                            <span class="offer-price"></span>
-                                            {% endif %}
-                                        </div>
-
-                                        <div class="shopping-btn">
-                                            <form action="{{url_for('AddCart')}}" method="post">
-                                                <a href="#" class="product-btn btn-like"><i class="fa fa-heart"></i></a>
-                                                <button href="#" class="product-btn btn-cart"><i
-                                                        class="fa fa-shopping-cart"></i></button>
-                                                <BR>
-                                                <input type="hidden" name="product_id" value="{{product.id}}">
-                                                <input type="hidden" name="quantity" value="1" min="1" max="20">
-                                                {% set colors = product.colors.split(',') %}
-                                                <select name="colors" style="visibility: hidden;">
-                                                    {% for color in colors %}
-                                                    {% set col = color.split(':') %}
-                                                    <option value="{{col[0]}}">{{col[0] | capitalize }}</option>
-                                                    {% endfor %}
-                                                </select>
-                                            </form>
-                                        </div>
-                                        <div>
-                                            <div class="rating pt-3" style="color: #FFC107; margin-top: -20;">
-                                                {{ products['average'][product.id][0] }}/5
-                                                {% for i in range(products['average'][product.id][0]|int+1) %}
-                                                <span class="glyphicon glyphicon-star"></span>
-                                                {% endfor %}
-                                                {% for i in range(products['average'][product.id][0]|int + 1, 5) %}
-                                                <span class="glyphicon glyphicon-star-empty"></span>
-                                                {% endfor %}
-                                                {% if products['average'][product.id][1] != 0 %}
-                                                ({{ products['average'][product.id][1] }})
-                                                {% endif %}
-                                            </div>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                        {% endfor %}
-                    </div>
-                    <div class="clear"></div>
-                </div>
-            </div>
-
-            <div id="sidebar" class="col-md-4">
-                <div class="widget wid-categories">
-                    <div class="heading"><h4>Thể loại</h4></div>
-                    <div class="content">
-                        <ul>
-                            {% for category in categories %}
-                            <li><a href="{{url_for('get_category', name=category.name)}}">{{ category.name }}</a></li>
-                            {% endfor %}
-                        </ul>
-                    </div>
-                </div>
-                <div class="widget wid-discouts">
-                    <div class="heading"><h4>Giảm giá</h4></div>
-                    <div class="content">
-                        <ul>
-                            <li><a href="{{url_for('get_discount', start = 0, end = 20)}}">< 20%</a></li>
-                            <li><a href="{{url_for('get_discount', start = 20, end = 40)}}">20 - 40%</a></li>
-                            <li><a href="{{url_for('get_discount', start = 40, end = 60)}}">40 - 60%</a></li>
-                            <li><a href="{{url_for('get_discount', start = 60, end = 100)}}">> 60%</a></li>
-                        </ul>
-                    </div>
-                </div>
-                <div class="widget wid-brand">
-                    <div class="heading"><h4>BRAND</h4></div>
-                    <div class="content">
-                        <ul>
-                            {% for brand in brands %}
-                            <li><a href="{{url_for('get_brand', name=brand.name)}}">{{ brand.name }}</a></li>
-                            {% endfor %}
-                        </ul>
-                    </div>
-                </div>
-                <div class="widget wid-product">
-                    <div class="heading"><h4>Mới nhất</h4></div>
-                    <div class="content">
-                        {% for product in products['new'] %}
-                        <div class="product-block" style="height: 430px;">
-                            <div class="product-img">
-                                <img src="{{ url_for('static', filename='images/'+product.image_2) }}"
-                                     alt="{{ product.name}}"
-                                     style="padding:0 78px 0 58px; width:100%; text-align:center;height:100%;">
-                            </div>
-                            <div class="product-content">
-                                <h5 style="height: 35px;margin-top:-10">
-                                    <a href="{{url_for('detail', id = product.id)}}"
-                                       class="product-title">{{ product.name }}</a></h5>
-                                <div class="product-meta">
-                                    <a href="#" class="product-price">${{ product.price -
-                                        product.price*product.discount/100 }}</a>
-                                    {% if product.discount>0 %}
-                                    <a href="#" class="discounted-price">${{ product.price }}</a>
+                                        {% endfor %}
+                                    {% else %}
+                                        <option value="Standard" data-price="{{product.price}}">Bản tiêu chuẩn (Mặc định)</option>
                                     {% endif %}
+                                </select>
+                            </div>
+
+                            <div class="button-grid" style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin-bottom: 40px;">
+                                <button type="submit" class="btn-action btn-add-cart">
+                                    <i class="fa fa-shopping-cart"></i> THÊM GIỎ HÀNG
+                                </button>
+                                <a href="{{url_for('getCart')}}" id="buy-now-link" class="btn-action btn-buy-now">
+                                    <i class="fa fa-bolt"></i> MUA NGAY
+                                </a>
+                            </div>
+                        </form>
+
+                        <div class="trust-indicators" style="border-top: 2px solid #f1f5f9; padding-top: 30px;">
+                            <div class="row">
+                                <div class="col-sm-6">
+                                    <div class="commitment-box">
+                                        <div class="commitment-icon"><i class="fa fa-refresh"></i></div>
+                                        <div>
+                                            <strong style="display: block; font-size: 14px;">Đổi trả 30 ngày</strong>
+                                            <span style="font-size: 12px; color: #94a3b8;">Lỗi do nhà sản xuất</span>
+                                        </div>
+                                    </div>
                                 </div>
-                                <div class="shopping-btn">
-                                    <a href="#" class="product-btn btn-like"><i class="fa fa-heart"></i></a>
-                                    <a href="#" class="product-btn btn-cart"><i class="fa fa-shopping-cart"></i></a>
-                                </div>
-                                <div>
-                                    <div class="rating pt-3" style="color: #FFC107; margin-top: 20;">
-                                        {{ products['average'][product.id][0] }}/5
-                                        {% for i in range(products['average'][product.id][0]|int+1) %}
-                                        <span class="glyphicon glyphicon-star"></span>
-                                        {% endfor %}
-                                        {% for i in range(products['average'][product.id][0]|int + 1, 5) %}
-                                        <span class="glyphicon glyphicon-star-empty"></span>
-                                        {% endfor %}
-                                        {% if products['average'][product.id][1] != 0 %}
-                                        ({{ products['average'][product.id][1] }})
-                                        {% endif %}
+                                <div class="col-sm-6">
+                                    <div class="commitment-box">
+                                        <div class="commitment-icon"><i class="fa fa-shield"></i></div>
+                                        <div>
+                                            <strong style="display: block; font-size: 14px;">Bảo hành 12th</strong>
+                                            <span style="font-size: 12px; color: #94a3b8;">Chính hãng toàn quốc</span>
+                                        </div>
                                     </div>
                                 </div>
                             </div>
                         </div>
-                        {% endfor %}
                     </div>
                 </div>
             </div>
         </div>
     </div>
-</div>
+</section>
+
+<!-- SECTION 2: DESCRIPTION -->
+<section class="detail-section">
+    <div class="container">
+        <div class="detail-box">
+            <h2 style="font-size: 24px; font-weight: 900; margin-bottom: 25px; display: flex; align-items: center; gap: 12px;">
+                <span style="width: 4px; height: 24px; background: var(--clr-primary); border-radius: 2px;"></span>
+                Mô tả chi tiết sản phẩm
+            </h2>
+            <div class="description-rich-text" style="line-height: 1.8; color: #334155; font-size: 16px;">
+                {{ product.desc | safe }}
+            </div>
+        </div>
+    </div>
+</section>
+
+{% if product.review_video %}
+<!-- SECTION 2.5: USER REVIEW VIDEO -->
+<section class="detail-section">
+    <div class="container">
+        <div class="detail-box">
+            <h2 style="font-size: 24px; font-weight: 900; margin-bottom: 25px; display: flex; align-items: center; gap: 12px;">
+                <span style="width: 4px; height: 24px; background: #ff4757; border-radius: 2px;"></span>
+                Review sản phẩm từ người dùng
+            </h2>
+            <div class="video-review-wrapper" style="border-radius: 24px; overflow: hidden; box-shadow: 0 20px 40px rgba(0,0,0,0.1); background: #000;">
+                <iframe width="100%" height="500" 
+                    src="https://www.youtube.com/embed/{{ product.review_video.split('v=')[-1].split('&')[0] if 'v=' in product.review_video else product.review_video.split('/')[-1] }}" 
+                    frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen style="display: block;"></iframe>
+            </div>
+        </div>
+    </div>
+</section>
+{% endif %}
+
+{% macro render_product_list(prod_list, badge_text='', badge_class='badge-yellow') %}
+    <div class="row" style="margin: 0 -10px;">
+        {% for p in prod_list %}
+        <div class="col-md-3 col-sm-6" style="padding: 10px;">
+            <div class="related-card">
+                {% if badge_text %}
+                <div class="ai-badge {{ badge_class }}">{{ badge_text }}</div>
+                {% endif %}
+                <a href="{{url_for('detail', id=p.id)}}" style="text-decoration: none; color: inherit;">
+                    <div class="img-container">
+                        <img src="{{ url_for('static', filename='images/'+p.image_1) }}" alt="{{p.name}}">
+                    </div>
+                    <h5 style="font-size: 14px; font-weight: 800; height: 40px; overflow: hidden; margin-bottom: 8px; line-height: 1.4; color: var(--clr-text);">{{p.name}}</h5>
+                    <div style="display: flex; flex-direction: column; justify-content: center; height: 42px; margin-bottom: 8px;">
+                        <div style="color: var(--clr-primary); font-weight: 900; font-size: 16px;">{{ (p.price - p.price*p.discount/100) | vnd }}</div>
+                        {% if p.discount > 0 %}
+                        <div style="color: #94a3b8; text-decoration: line-through; font-size: 11px; font-weight: 600;">{{ p.price | vnd }}</div>
+                        {% endif %}
+                    </div>
+                    <div class="suggest-card-extra" style="margin-top: 8px;">
+                        <div class="tag-mini tag-mini-blue" style="padding: 2px 6px;">
+                            <i class="fa fa-credit-card"></i> Trả góp
+                        </div>
+                        <div class="tag-mini tag-mini-green" style="padding: 2px 6px;">
+                            <i class="fa fa-truck"></i> Giao nhanh
+                        </div>
+                    </div>
+                    <div style="color: #fbbf24; font-size: 11px; margin-top: 8px; display: flex; align-items: center; justify-content: space-between;">
+                        <div style="display: flex; align-items: center; gap: 2px;">
+                            <div class="stars {% if products['average'][p.id].count == 0 %}no-rating{% endif %}" style="display: flex; gap: 1px;">
+                                {% if products['average'][p.id].count > 0 %}
+                                    {% for i in range(products['average'][p.id].average|int) %} <i class="fa fa-star"></i> {% endfor %}
+                                    {% if products['average'][p.id].average % 1 >= 0.5 %} <i class="fa fa-star"></i> {% endif %}
+                                {% else %}
+                                    {% for i in range(5) %} <i class="fa fa-star"></i> {% endfor %}
+                                {% endif %}
+                            </div>
+                            <span style="color: #94a3b8; font-weight: 600;">({{ products['average'][p.id].count if products['average'][p.id].count > 0 else 0 }})</span>
+                        </div>
+                        <div style="color: #64748b; font-size: 11px; font-weight: 600; display: flex; align-items: center; gap: 4px;">
+                            <i class="fa fa-eye"></i> {{ products['view_counts'].get(p.id|string, 0) if products['view_counts'] else 0 }}
+                        </div>
+                    </div>
+                </a>
+                <div style="margin-top: 12px; padding-top: 12px; border-top: 1px solid #f1f5f9;">
+                    <a href="{{url_for('detail', id=p.id)}}" class="btn-view-suggest btn-block" style="height: 38px; font-size: 12px;">
+                        <i class="fa fa-eye"></i> Xem ngay
+                    </a>
+                </div>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+{% endmacro %}
+
+<!-- SECTION 3: SMART RECOMMENDATION SYSTEM -->
+{% if products.frequently_bought and products.frequently_bought|length > 0 %}
+<section class="detail-section">
+    <div class="container">
+        <div class="detail-box">
+            <h2 style="font-size: 24px; font-weight: 900; margin-bottom: 30px; display: flex; align-items: center; gap: 12px;">
+                <span style="width: 4px; height: 24px; background: #ec4899; border-radius: 2px;"></span>
+                Thường được mua cùng
+            </h2>
+            {{ render_product_list(products.frequently_bought, 'Combo', 'badge-pink') }}
+        </div>
+    </div>
+</section>
+{% endif %}
+
+{% if products.upsell and products.upsell|length > 0 %}
+<section class="detail-section">
+    <div class="container">
+        <div class="detail-box">
+            <h2 style="font-size: 24px; font-weight: 900; margin-bottom: 30px; display: flex; align-items: center; gap: 12px;">
+                <span style="width: 4px; height: 24px; background: #8b5cf6; border-radius: 2px;"></span>
+                Có thể bạn sẽ thích
+            </h2>
+            {{ render_product_list(products.upsell, 'Nâng cấp', 'badge-purple') }}
+        </div>
+    </div>
+</section>
+{% endif %}
+
+{% if products.ai_suggest and products.ai_suggest|length > 0 %}
+<section class="detail-section">
+    <div class="container">
+        <div class="detail-box">
+            <h2 style="font-size: 24px; font-weight: 900; margin-bottom: 30px; display: flex; align-items: center; gap: 12px;">
+                <span style="width: 4px; height: 24px; background: #fbbf24; border-radius: 2px;"></span>
+                Khách hàng cũng đã mua
+            </h2>
+            {{ render_product_list(products.ai_suggest, 'Gợi ý AI', 'badge-yellow') }}
+        </div>
+    </div>
+</section>
+{% endif %}
+
+{% if products.hot and products.hot|length > 0 %}
+<section class="detail-section">
+    <div class="container">
+        <div class="detail-box">
+            <h2 style="font-size: 24px; font-weight: 900; margin-bottom: 30px; display: flex; align-items: center; gap: 12px;">
+                <span style="width: 4px; height: 24px; background: #ef4444; border-radius: 2px;"></span>
+                Sản phẩm đang Hot
+            </h2>
+            {{ render_product_list(products.hot, 'Hot', 'badge-red') }}
+        </div>
+    </div>
+</section>
+{% endif %}
+
+{% if products.recently_viewed and products.recently_viewed|length > 0 %}
+<section class="detail-section">
+    <div class="container">
+        <div class="detail-box" style="background: #f8fafc; border-color: #cbd5e1;">
+            <h2 style="font-size: 24px; font-weight: 900; margin-bottom: 30px; display: flex; align-items: center; gap: 12px;">
+                <span style="width: 4px; height: 24px; background: #3b82f6; border-radius: 2px;"></span>
+                Sản phẩm bạn vừa xem
+            </h2>
+            {{ render_product_list(products.recently_viewed, 'Vừa xem', 'badge-blue') }}
+        </div>
+    </div>
+</section>
+{% endif %}
+
+<!-- SECTION 4: REVIEWS -->
+<section class="detail-section">
+    <div class="container">
+        <div class="detail-box">
+            <h2 style="font-size: 24px; font-weight: 900; margin-bottom: 35px; display: flex; align-items: center; gap: 12px;">
+                <span style="width: 4px; height: 24px; background: #10b981; border-radius: 2px;"></span>
+                Đánh giá từ khách hàng
+            </h2>
+            
+            <div class="row">
+                <!-- REVIEW LIST -->
+                <div class="col-md-7">
+                    <div class="reviews-container" style="max-height: 600px; overflow-y: auto; padding-right: 15px;">
+                        {% if rates|length == 0 %}
+                            <div style="text-align: center; padding: 40px; background: #f8fafc; border-radius: 20px; border: 2px dashed #e2e8f0;">
+                                <i class="fa fa-commenting-o" style="font-size: 40px; color: #cbd5e1; margin-bottom: 15px;"></i>
+                                <p style="color: #94a3b8; font-weight: 600; margin: 0;">Sản phẩm này chưa có đánh giá nào.</p>
+                                <p style="font-size: 13px; color: #cbd5e1;">Hãy là người đầu tiên chia sẻ cảm nhận!</p>
+                            </div>
+                        {% else %}
+                            {% for rate in rates %}
+                                <div class="review-card" style="background: #fff; padding: 25px; border-radius: 20px; border: 2.5px solid #f1f5f9; margin-bottom: 20px; transition: all 0.2s;">
+                                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;">
+                                        <div style="display: flex; align-items: center; gap: 12px;">
+                                            <div style="width: 40px; height: 40px; background: var(--clr-primary-glow); color: var(--clr-primary); border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: 800; font-size: 18px;">
+                                                {{ (rate.register.username[0] if rate.register else '?') | upper }}
+                                            </div>
+                                            <div>
+                                                <strong style="display: block; font-size: 15px; color: var(--clr-text);">{{rate.register.username if rate.register else 'Anonymous'}}</strong>
+                                                <small style="color: #94a3b8;">{{rate.time}}</small>
+                                            </div>
+                                        </div>
+                                        <div style="color: #fbbf24; font-size: 13px;">
+                                            {% for i in range(rate.rate_number) %}<i class="fa fa-star"></i>{% endfor %}
+                                        </div>
+                                    </div>
+                                    <p style="color: #475569; line-height: 1.7; margin: 0; font-size: 15px;">{{rate.desc}}</p>
+                                </div>
+                            {% endfor %}
+                        {% endif %}
+                    </div>
+                </div>
+                
+                <!-- ADD REVIEW FORM -->
+                <div class="col-md-5">
+                    <div class="write-review-box" style="background: #f8faff; padding: 35px; border-radius: 28px; border: 2.5px solid #e2e8f0; position: sticky; top: 20px;">
+                        <h4 style="font-size: 18px; font-weight: 900; margin-bottom: 25px; color: var(--clr-text);">Viết đánh giá của bạn</h4>
+                        <form action="{{url_for('addrate')}}" method="post" id="review-form">
+                            <input type="hidden" name="product_id" value="{{product.id}}">
+                            {% if current_user.is_authenticated %}
+                            <input type="hidden" name="register_id" value="{{current_user.id}}">
+                            {% endif %}
+                            
+                            <div class="rating-picker" style="display: flex; justify-content: center; gap: 15px; margin-bottom: 30px; font-size: 32px; color: #cbd5e1;">
+                                <i class="fa fa-star star-btn" data-value="1"></i>
+                                <i class="fa fa-star star-btn" data-value="2"></i>
+                                <i class="fa fa-star star-btn" data-value="3"></i>
+                                <i class="fa fa-star star-btn" data-value="4"></i>
+                                <i class="fa fa-star star-btn active" data-value="5"></i>
+                                <input type="hidden" name="select" id="rating-val" value="5">
+                            </div>
+                            
+                            <div class="form-group">
+                                <textarea name="desc" rows="5" class="form-control" style="border-radius: 16px; border: 2px solid #e2e8f0; padding: 15px; font-size: 15px; background: #fff; resize: none;" placeholder="Chia sẻ trải nghiệm của bạn về sản phẩm này..."></textarea>
+                            </div>
+                            
+                            {% if current_user.is_authenticated %}
+                                <button type="submit" class="btn btn-primary btn-block" style="height: 52px; border-radius: 16px; font-weight: 800; margin-top: 20px; font-size: 15px; background: var(--clr-primary); border: none; box-shadow: 0 4px 15px var(--clr-primary-glow);">
+                                    GỬI ĐÁNH GIÁ NGAY
+                                </button>
+                            {% else %}
+                                <div style="text-align: center; margin-top: 20px; padding: 15px; background: #fff; border-radius: 12px; border: 1.5px solid #e2e8f0;">
+                                    <p style="font-size: 14px; color: #64748b; margin-bottom: 10px;">Bạn cần đăng nhập để đánh giá</p>
+                                    <a href="{{url_for('unified_login')}}" class="btn btn-sm btn-outline-primary" style="font-weight: 800; padding: 8px 20px; border-radius: 10px;">ĐĂNG NHẬP</a>
+                                </div>
+                            {% endif %}
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- TOAST CONTAINER -->
+<div id="toast-wrapper" style="position: fixed; bottom: 40px; right: 40px; z-index: 9999; pointer-events: none;"></div>
+
 <script>
-    var b_image = document.getElementById('b_image');
-    var s_image = document.getElementById('s_image').getElementsByTagName('img');
-    for(var i = 0; i < s_image.length; i++){
-        s_image[i].addEventListener('click', full_image);
-    }
-    function full_image(){
-        var ImageSRC = this.getAttribute('src');
-        b_image.innerHTML = "<img src=" + ImageSRC + ">";
-    }
+    document.addEventListener("DOMContentLoaded", function() {
+        // --- 1. Gallery Logic ---
+        const mainImg = document.getElementById('main-product-img');
+        const videoContainer = document.getElementById('video-container');
+        const mainVideo = document.getElementById('main-product-video');
+        const thumbs = document.querySelectorAll('.thumb-item');
+        
+        let currentThumbIndex = 0;
+        let autoPlayInterval;
+        let isPaused = false;
 
-    $(document).ready(function(){
-        $(".nav-tabs a").click(function(){
-          $(this).tab('show');
+        function getYoutubeId(url) {
+            const regExp = /^.*(youtu.be\/|v\/|u\/\w\/|embed\/|watch\?v=|\&v=)([^#\&\?]*).*/;
+            const match = url.match(regExp);
+            return (match && match[2].length === 11) ? match[2] : null;
+        }
+
+        function switchImage(index) {
+            const thumb = thumbs[index];
+            if (!thumb) return;
+
+            // Remove active states
+            thumbs.forEach(t => {
+                t.style.borderColor = '#f1f5f9';
+                t.classList.remove('active');
+            });
+            thumb.style.borderColor = 'var(--clr-primary)';
+            thumb.classList.add('active');
+
+            // Fade effect
+            mainImg.style.opacity = '0.4';
+            mainImg.style.transform = 'scale(0.98)';
+
+            setTimeout(() => {
+                if (thumb.classList.contains('video-thumb')) {
+                    const videoUrl = thumb.getAttribute('data-video');
+                    const videoId = getYoutubeId(videoUrl);
+                    if (videoId) {
+                        mainImg.style.display = 'none';
+                        videoContainer.style.display = 'block';
+                        mainVideo.src = `https://www.youtube.com/embed/${videoId}`;
+                    }
+                } else {
+                    const newSrc = thumb.getAttribute('data-src');
+                    mainImg.src = newSrc;
+                    mainImg.style.display = 'block';
+                    if (videoContainer) {
+                        videoContainer.style.display = 'none';
+                        mainVideo.src = ''; 
+                    }
+                }
+                mainImg.style.opacity = '1';
+                mainImg.style.transform = 'scale(1)';
+            }, 150);
+        }
+
+        function startAutoPlay() {
+            if (autoPlayInterval) clearInterval(autoPlayInterval);
+            autoPlayInterval = setInterval(() => {
+                if (!isPaused) {
+                    currentThumbIndex = (currentThumbIndex + 1) % thumbs.length;
+                    switchImage(currentThumbIndex);
+                }
+            }, 3000);
+        }
+
+        thumbs.forEach((thumb, index) => {
+            thumb.addEventListener('click', function() {
+                currentThumbIndex = index;
+                switchImage(index);
+                
+                // Pause auto-play for 10 seconds after manual click
+                isPaused = true;
+                clearTimeout(window.resumeTimer);
+                window.resumeTimer = setTimeout(() => { isPaused = false; }, 10000);
+            });
         });
-        $('.nav-tabs a').on('show.bs.tab', function(){
+
+        // Add CSS transition for smooth fade
+        mainImg.style.transition = 'all 0.3s ease';
+
+        // Start auto-play on load
+        startAutoPlay();
+
+
+        // --- 2. Price Update Logic ---
+        const capacitySelect = document.getElementById('capacity-selector');
+        if (capacitySelect) {
+            capacitySelect.addEventListener('change', function() {
+                const selected = this.options[this.selectedIndex];
+                const basePrice = parseFloat(selected.getAttribute('data-price'));
+                const discount = parseInt("{{ product.discount | default(0) }}") || 0;
+                const finalPrice = basePrice - (basePrice * discount / 100);
+                
+                const format = (n) => n.toLocaleString('vi-VN') + 'đ';
+                
+                const priceEl = document.getElementById('display-price');
+                const oldPriceEl = document.getElementById('display-original-price');
+                const titleEl = document.getElementById('product-main-title');
+                
+                if (priceEl) priceEl.innerText = format(finalPrice);
+                if (oldPriceEl) oldPriceEl.innerText = format(basePrice);
+                
+                if (titleEl) {
+                    const originalName = titleEl.getAttribute('data-original-name');
+                    const capacityName = selected.value;
+                    if (capacityName && capacityName !== 'Standard' && capacityName !== 'Mặc định') {
+                        titleEl.innerText = `${originalName} ${capacityName}`;
+                    } else {
+                        titleEl.innerText = originalName;
+                    }
+                }
+            });
+            // Trigger change event on load to sync initial price and title
+            capacitySelect.dispatchEvent(new Event('change'));
+        }
+
+        // --- 3. Rating Star Picker ---
+        const stars = document.querySelectorAll('.star-btn');
+        const ratingInput = document.getElementById('rating-val');
+        
+        stars.forEach(star => {
+            star.addEventListener('click', function() {
+                const val = parseInt(this.getAttribute('data-value'));
+                ratingInput.value = val;
+                
+                stars.forEach(s => {
+                    const sVal = parseInt(s.getAttribute('data-value'));
+                    if (sVal <= val) {
+                        s.style.color = '#fbbf24';
+                    } else {
+                        s.style.color = '#cbd5e1';
+                    }
+                });
+            });
         });
+        // Initial color for 5 stars
+        stars.forEach(s => s.style.color = '#fbbf24');
+
+        // --- 4. AJAX Add to Cart & Toast ---
+        function showToast(msg) {
+            const wrapper = document.getElementById('toast-wrapper');
+            const toast = document.createElement('div');
+            toast.style.cssText = `
+                background: #10b981; color: #fff; padding: 18px 28px; border-radius: 16px;
+                box-shadow: 0 10px 25px rgba(16,185,129,0.25); margin-top: 15px; font-weight: 700;
+                display: flex; align-items: center; gap: 12px; transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+                transform: translateX(100px); opacity: 0; pointer-events: auto;
+            `;
+            toast.innerHTML = `<i class="fa fa-check-circle" style="font-size: 22px;"></i> ${msg}`;
+            wrapper.appendChild(toast);
+            
+            setTimeout(() => { toast.style.transform = 'translateX(0)'; toast.style.opacity = '1'; }, 10);
+            setTimeout(() => {
+                toast.style.transform = 'translateX(100px)'; toast.style.opacity = '0';
+                setTimeout(() => toast.remove(), 400);
+            }, 3000);
+        }
+
+        const form = document.getElementById('product-form');
+        if (form) {
+            form.addEventListener('submit', function(e) {
+                e.preventDefault();
+                const data = new FormData(this);
+                fetch(this.action, {
+                    method: 'POST',
+                    body: data,
+                    headers: { 'X-Requested-With': 'XMLHttpRequest' }
+                }).then(res => {
+                    if (res.ok) showToast("Đã thêm vào giỏ hàng thành công!");
+                });
+            });
+        }
+
+        const buyNow = document.getElementById('buy-now-link');
+        if (buyNow) {
+            buyNow.addEventListener('click', function(e) {
+                e.preventDefault();
+                const data = new FormData(form);
+                fetch(form.action, { method: 'POST', body: data, headers: { 'X-Requested-With': 'XMLHttpRequest' } })
+                .then(() => window.location.href = this.href);
+            });
+        }
     });
-
-    function test1() {
-        document.getElementById("1").className = "glyphicon glyphicon-star";
-        document.getElementById("2").className = "glyphicon glyphicon-star-empty";
-        document.getElementById("3").className = "glyphicon glyphicon-star-empty";
-        document.getElementById("4").className = "glyphicon glyphicon-star-empty";
-        document.getElementById("5").className = "glyphicon glyphicon-star-empty";
-        document.getElementById("select").value = 1;
-    }
-    function test2() {
-        document.getElementById("1").className = "glyphicon glyphicon-star";
-        document.getElementById("2").className = "glyphicon glyphicon-star";
-        document.getElementById("3").className = "glyphicon glyphicon-star-empty";
-        document.getElementById("4").className = "glyphicon glyphicon-star-empty";
-        document.getElementById("5").className = "glyphicon glyphicon-star-empty";
-        document.getElementById("select").value = 2;
-    }
-    function test3() {
-        document.getElementById("1").className = "glyphicon glyphicon-star";
-        document.getElementById("2").className = "glyphicon glyphicon-star";
-        document.getElementById("3").className = "glyphicon glyphicon-star";
-        document.getElementById("4").className = "glyphicon glyphicon-star-empty";
-        document.getElementById("5").className = "glyphicon glyphicon-star-empty";
-        document.getElementById("select").value = 3;
-    }
-    function test4() {
-        document.getElementById("1").className = "glyphicon glyphicon-star";
-        document.getElementById("2").className = "glyphicon glyphicon-star";
-        document.getElementById("3").className = "glyphicon glyphicon-star";
-        document.getElementById("4").className = "glyphicon glyphicon-star";
-        document.getElementById("5").className = "glyphicon glyphicon-star-empty";
-        document.getElementById("select").value = 4;
-    }
-    function test5() {
-        document.getElementById("1").className = "glyphicon glyphicon-star";
-        document.getElementById("2").className = "glyphicon glyphicon-star";
-        document.getElementById("3").className = "glyphicon glyphicon-star";
-        document.getElementById("4").className = "glyphicon glyphicon-star";
-        document.getElementById("5").className = "glyphicon glyphicon-star";
-        document.getElementById("select").value = 5;
-    }
 </script>
+
 {% include 'footer.html' %}
 {% endblock content %}

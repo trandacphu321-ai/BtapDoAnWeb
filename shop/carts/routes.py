@@ -11,14 +11,12 @@ import json
 
 
 def brands():
-    # brands = Brand.query.join(Addproduct, (Brand.id == Addproduct.brand_id)).all()
-    brands = Brand.query.all()
+    brands = Brand.objects().all()
     return brands
 
 
 def categories():
-    # categories = Category.query.join(Addproduct, (Category.id == Addproduct.category_id)).all()
-    categories = Category.query.order_by(Category.name.desc()).all()
+    categories = Category.objects().order_by('-name').all()
     return categories
 
 
@@ -35,57 +33,70 @@ def AddCart():
         product_id = request.form.get('product_id')
         quantity = int(request.form.get('quantity'))
         color = request.form.get('colors')
-        product = Addproduct.query.filter_by(id=product_id).first()
-        brand = Brand.query.filter_by(id=product.brand_id).first().name
+        capacity = request.form.get('capacity', '') # Get capacity from form
+        product = Addproduct.objects(id=product_id).first()
+        brand = product.brand.name if product and product.brand else ''
+        
+        # Calculate dynamic price based on capacity
+        selected_price = float(product.price)
+        if capacity and getattr(product, 'capacity', None):
+            caps = product.capacity.split(',')
+            for c in caps:
+                parts = c.split(':')
+                if parts[0].strip() == capacity and len(parts) > 1:
+                    try:
+                        selected_price = float(parts[1].strip())
+                    except ValueError:
+                        pass
+                    break
+
         if request.method == "POST":
+            # --- AI Tracking: Cart Product ---
+            if current_user.is_authenticated:
+                try:
+                    from shop.products.models import UserInteraction
+                    ui = UserInteraction(
+                        user_id=str(current_user.id), 
+                        product_id=str(product_id), 
+                        interaction_type='cart', 
+                        weight=3
+                    )
+                    ui.save()
+                except Exception as e:
+                    print("Error tracking cart interaction:", e)
+            # ---------------------------------
             # if product_id in orders
-            DictItems = {product_id: {'name': product.name, 'price': float(product.price), 'discount': product.discount,
-                                      'color': color, 'quantity': quantity, 'image': product.image_1,
-                                      'colors': product.colors, 'brand': brand}}
+            DictItems = {str(product_id): {'name': product.name, 'price': selected_price, 'discount': product.discount,
+                                      'color': color, 'capacity': capacity, 'quantity': quantity, 'image': product.image_1,
+                                      'colors': product.colors, 'capacities': getattr(product, 'capacity', ''), 'brand': brand}}
             if 'Shoppingcart' in session:
                 # print(session['Shoppingcart'])
-                if product_id in session['Shoppingcart']:
+                if str(product_id) in session['Shoppingcart']:
                     for key, item in session['Shoppingcart'].items():
-                        if int(key) == int(product_id):
+                        if str(key) == str(product_id):
                             session.modified = True
                             item['quantity'] += quantity;
                             if current_user.is_authenticated:
-                                orders = CustomerOrder.query.filter(
-                                    CustomerOrder.customer_id == current_user.id).filter(
-                                    CustomerOrder.status == None).order_by(CustomerOrder.id.desc()).all()
-                                for order in orders:
-                                    if product_id in order.orders:
-                                        customer_order = CustomerOrder.query.get_or_404(order.id)
-                                        customer_order.orders = {product_id: session['Shoppingcart'][product_id]}
-                                        db.session.commit()
+                                current_user.cart = session['Shoppingcart']
+                                current_user.save()
                 else:
                     session['Shoppingcart'] = MagerDicts(session['Shoppingcart'], DictItems)
                     if current_user.is_authenticated:
-                        customer_id = current_user.id
-                        invoice = secrets.token_hex(5)
-                        order = CustomerOrder(invoice=invoice, customer_id=customer_id,
-                                              orders={product_id: session['Shoppingcart'][product_id]},
-                                              status=None)
-                        db.session.add(order)
-                        db.session.commit()
+                        current_user.cart = session['Shoppingcart']
+                        current_user.save()
                     return redirect(request.referrer)
             else:
                 session['Shoppingcart'] = DictItems
                 if current_user.is_authenticated:
-                    customer_id = current_user.id
-                    invoice = secrets.token_hex(5)
-                    order = CustomerOrder(invoice=invoice, customer_id=customer_id,
-                                          orders={product_id: session['Shoppingcart'][product_id]},
-                                          status=None)
-                    db.session.add(order)
-                    db.session.commit()
+                    current_user.cart = session['Shoppingcart']
+                    current_user.save()
 
                 return redirect(request.referrer)
 
     except Exception as e:
         print("Loi", e)
-    finally:
-        return redirect(request.referrer)
+    
+    return redirect(request.referrer)
 
 
 @app.route('/carts')
@@ -123,52 +134,59 @@ def getCart():
     )
 
 
-@app.route('/updatecart/<int:code>', methods=['POST'])
+@app.route('/updatecart/<string:code>', methods=['POST'])
 def updatecart(code):
     if 'Shoppingcart' not in session or len(session['Shoppingcart']) <= 0:
         return redirect(url_for('getCart'))
     if request.method == "POST":
         quantity = request.form.get('quantity')
         color = request.form.get('color')
+        capacity = request.form.get('capacity', '')
         try:
             session.modified = True
             for key, item in session['Shoppingcart'].items():
-                if int(key) == code:
+                if str(key) == str(code):
                     item['quantity'] = quantity
                     item['color'] = color
+                    item['capacity'] = capacity
+                    
+                    # Update price based on new capacity
+                    product_obj = Addproduct.objects(id=code).first()
+                    new_price = float(product_obj.price)
+                    if capacity and getattr(product_obj, 'capacity', None):
+                        # Nếu capacity gửi lên có chứa giá (vd: "512GB:29000000")
+                        selected_cap_name = capacity.split(':')[0].strip() if ':' in capacity else capacity.strip()
+                        
+                        caps = product_obj.capacity.split(',')
+                        for c in caps:
+                            parts = c.split(':')
+                            if parts[0].strip() == selected_cap_name and len(parts) > 1:
+                                try:
+                                    new_price = float(parts[1].strip())
+                                except ValueError:
+                                    pass
+                                break
+                    item['price'] = new_price
                     if current_user.is_authenticated:
-                        orders = CustomerOrder.query.filter(
-                            CustomerOrder.customer_id == current_user.id).filter(
-                            CustomerOrder.status == None).order_by(CustomerOrder.id.desc()).all()
-                        for order in orders:
-                            if key in order.orders:
-                                customer_order = CustomerOrder.query.get_or_404(order.id)
-                                customer_order.orders = {key: session['Shoppingcart'][key]}
-                                db.session.commit()
+                        current_user.cart = session['Shoppingcart']
+                        current_user.save()
                     return redirect(url_for('getCart'))
         except Exception as e:
             print(e)
             return redirect(url_for('getCart'))
 
 
-@app.route('/deleteitem/<int:id>')
+@app.route('/deleteitem/<string:id>')
 def deleteitem(id):
     if 'Shoppingcart' not in session or len(session['Shoppingcart']) <= 0:
         return redirect(url_for('getCart'))
     try:
-        orders = CustomerOrder.query.filter(
-            CustomerOrder.customer_id == current_user.id).filter(
-            CustomerOrder.status == None).all()
-        for order in orders:
-            for key, item in order.orders.items():
-                if int(key) == id:
-                    customer = CustomerOrder.query.get_or_404(order.id)
-                    db.session.delete(customer)
-                    db.session.commit()
-                    break
+        if current_user.is_authenticated:
+            current_user.cart = session['Shoppingcart']
+            current_user.save()
         session.modified = True
         for key, item in session['Shoppingcart'].items():
-            if int(key) == id:
+            if str(key) == str(id):
                 session['Shoppingcart'].pop(key, None)
                 return redirect(url_for('getCart'))
     except Exception as e:
@@ -181,11 +199,8 @@ def clearcart():
     try:
         session.pop('Shoppingcart', None)
         if current_user.is_authenticated:
-            orders = CustomerOrder.query.filter(CustomerOrder.customer_id == current_user.id).filter(
-                CustomerOrder.status == None).order_by(CustomerOrder.id.desc()).all()
-            for order in orders:
-                db.session.delete(order)
-                db.session.commit()
+            current_user.cart = {}
+            current_user.save()
         return redirect(url_for('getCart'))
     except Exception as e:
         print(e)
