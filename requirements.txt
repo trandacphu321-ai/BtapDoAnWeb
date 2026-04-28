@@ -1,4 +1,4 @@
-﻿alembic==1.18.4
+alembic==1.18.4
 bcrypt==5.0.0
 blinker==1.9.0
 certifi==2026.2.25
@@ -25,6 +25,7 @@ google-crc32c==1.8.0
 google-resumable-media==2.8.2
 googleapis-common-protos==1.74.0
 greenlet==3.4.0
+gunicorn==20.1.0
 httplib2==0.31.2
 idna==3.11
 itsdangerous==2.2.0
