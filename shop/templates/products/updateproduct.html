@@ -38,25 +38,25 @@
                 <div class="container">
                     <div class="row">
                         <div class="col-md-4"><input type="file" name="image_1" id="image_1">
-                            <a href="{{url_for('static',filename='images/' + product.image_1)}}"> </a>
+                            <a href="{{product.image_1 | firebase_image}}"> </a>
                         </div>
                         <div class="col-md-4"><input type="file" name="image_2" id="image_2">
-                            <a href="{{url_for('static',filename='images/' + product.image_2)}}"></a>
+                            <a href="{{product.image_2 | firebase_image}}"></a>
                         </div>
 
                         <div class="col-md-4"><input type="file" name="image_3" id="image_3">
-                            <a href="{{url_for('static',filename='images/' + product.image_3)}}"> </a>
+                            <a href="{{product.image_3 | firebase_image}}"> </a>
                         </div>
                     </div>
                     <div class="row mt-2">
                         <div class="col-md-4"><input type="file" name="image_4" id="image_4">
                             {% if product.image_4 %}
-                            <a href="{{url_for('static',filename='images/' + product.image_4)}}"> </a>
+                            <a href="{{product.image_4 | firebase_image}}"> </a>
                             {% endif %}
                         </div>
                         <div class="col-md-4"><input type="file" name="image_5" id="image_5">
                             {% if product.image_5 %}
-                            <a href="{{url_for('static',filename='images/' + product.image_5)}}"> </a>
+                            <a href="{{product.image_5 | firebase_image}}"> </a>
                             {% endif %}
                         </div>
                     </div>

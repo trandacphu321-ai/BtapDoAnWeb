@@ -3,7 +3,7 @@
     <a href="{{url_for('detail', id = product.id)}}" class="product-card-link">
         <div class="product-card">
             <div class="product-card-img">
-                <img src="{{ url_for('static', filename='images/'+product.image_1) }}"
+                <img src="{{ product.image_1 | firebase_image }}"
                     alt="{{ product.name}}">
                 {% if product.discount > 0 %}
                 <span class="product-card-badge">-{{product.discount}}%</span>

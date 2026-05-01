@@ -440,22 +440,39 @@ def addproduct():
         if image_5:
             name_5 = secrets.token_hex(10) + "." + image_5.filename.split('.')[-1]
 
-        # PATH SAVE
-        path1 = os.path.join(current_app.root_path, "static/images", name_1)
-        path2 = os.path.join(current_app.root_path, "static/images", name_2)
-        path3 = os.path.join(current_app.root_path, "static/images", name_3)
+        # PATH SAVE TO /tmp (Vercel allows writing to /tmp)
+        import tempfile
+        tmp_dir = tempfile.gettempdir()
         
-        # SAVE FILE
+        path1 = os.path.join(tmp_dir, name_1)
+        path2 = os.path.join(tmp_dir, name_2)
+        path3 = os.path.join(tmp_dir, name_3)
+        
+        # SAVE FILE TEMPORARILY
         image_1.save(path1)
         image_2.save(path2)
         image_3.save(path3)
         
+        # UPLOAD TO FIREBASE
+        storage.child("images/" + name_1).put(path1)
+        storage.child("images/" + name_2).put(path2)
+        storage.child("images/" + name_3).put(path3)
+        
+        # CLEANUP /tmp
+        os.unlink(path1)
+        os.unlink(path2)
+        os.unlink(path3)
+        
         if image_4:
-            path4 = os.path.join(current_app.root_path, "static/images", name_4)
+            path4 = os.path.join(tmp_dir, name_4)
             image_4.save(path4)
+            storage.child("images/" + name_4).put(path4)
+            os.unlink(path4)
         if image_5:
-            path5 = os.path.join(current_app.root_path, "static/images", name_5)
+            path5 = os.path.join(tmp_dir, name_5)
             image_5.save(path5)
+            storage.child("images/" + name_5).put(path5)
+            os.unlink(path5)
 
         # LƯU DB
         brand_ref = Brand.objects(id=brand_id).first()
@@ -528,49 +545,42 @@ def updateproduct(id):
         if category_id: product.category = Category.objects(id=category_id).first()
         if brand_id: product.brand = Brand.objects(id=brand_id).first()
 
+        import tempfile
+        tmp_dir = tempfile.gettempdir()
+
         # Update images if provided
         if request.files.get('image_1'):
             image_1 = request.files.get('image_1')
             ext = image_1.filename.split('.')[-1]
             name_1 = secrets.token_hex(10) + "." + ext
 
-            try:
-                os.unlink(os.path.join(current_app.root_path, "static/images", product.image_1))
-            except Exception:
-                pass
-
-            path1 = os.path.join(current_app.root_path, "static/images", name_1)
+            # Attempt to delete old file from Firebase (Optional, keeping it simple here)
+            path1 = os.path.join(tmp_dir, name_1)
             image_1.save(path1)
+            storage.child("images/" + name_1).put(path1)
+            os.unlink(path1)
             product.image_1 = name_1
-            # storage.child("images/" + name_1).put(path1)
 
         if request.files.get('image_2'):
             image_2 = request.files.get('image_2')
             ext = image_2.filename.split('.')[-1]
             name_2 = secrets.token_hex(10) + "." + ext
 
-            try:
-                os.unlink(os.path.join(current_app.root_path, "static/images", product.image_2))
-            except Exception:
-                pass
-
-            path2 = os.path.join(current_app.root_path, "static/images", name_2)
+            path2 = os.path.join(tmp_dir, name_2)
             image_2.save(path2)
+            storage.child("images/" + name_2).put(path2)
+            os.unlink(path2)
             product.image_2 = name_2
-            # storage.child("images/" + name_2).put(path2)
 
         if request.files.get('image_3'):
             image_3 = request.files.get('image_3')
             ext = image_3.filename.split('.')[-1]
             name_3 = secrets.token_hex(10) + "." + ext
 
-            try:
-                os.unlink(os.path.join(current_app.root_path, "static/images", product.image_3))
-            except Exception:
-                pass
-
-            path3 = os.path.join(current_app.root_path, "static/images", name_3)
+            path3 = os.path.join(tmp_dir, name_3)
             image_3.save(path3)
+            storage.child("images/" + name_3).put(path3)
+            os.unlink(path3)
             product.image_3 = name_3
 
         if request.files.get('image_4'):
@@ -578,14 +588,10 @@ def updateproduct(id):
             ext = image_4.filename.split('.')[-1]
             name_4 = secrets.token_hex(10) + "." + ext
 
-            try:
-                if product.image_4:
-                    os.unlink(os.path.join(current_app.root_path, "static/images", product.image_4))
-            except Exception:
-                pass
-
-            path4 = os.path.join(current_app.root_path, "static/images", name_4)
+            path4 = os.path.join(tmp_dir, name_4)
             image_4.save(path4)
+            storage.child("images/" + name_4).put(path4)
+            os.unlink(path4)
             product.image_4 = name_4
 
         if request.files.get('image_5'):
@@ -593,14 +599,10 @@ def updateproduct(id):
             ext = image_5.filename.split('.')[-1]
             name_5 = secrets.token_hex(10) + "." + ext
 
-            try:
-                if product.image_5:
-                    os.unlink(os.path.join(current_app.root_path, "static/images", product.image_5))
-            except Exception:
-                pass
-
-            path5 = os.path.join(current_app.root_path, "static/images", name_5)
+            path5 = os.path.join(tmp_dir, name_5)
             image_5.save(path5)
+            storage.child("images/" + name_5).put(path5)
+            os.unlink(path5)
             product.image_5 = name_5
 
         product.save()
@@ -644,15 +646,15 @@ def deleteproduct(id):
     if not product: return "Not found", 404
 
     try:
-        os.unlink(os.path.join(current_app.root_path, "static/images", product.image_1))
-        os.unlink(os.path.join(current_app.root_path, "static/images", product.image_2))
-        os.unlink(os.path.join(current_app.root_path, "static/images", product.image_3))
+        storage.child("images/" + product.image_1).delete()
+        storage.child("images/" + product.image_2).delete()
+        storage.child("images/" + product.image_3).delete()
         if product.image_4:
-            os.unlink(os.path.join(current_app.root_path, "static/images", product.image_4))
+            storage.child("images/" + product.image_4).delete()
         if product.image_5:
-            os.unlink(os.path.join(current_app.root_path, "static/images", product.image_5))
-    except Exception:
-        pass
+            storage.child("images/" + product.image_5).delete()
+    except Exception as e:
+        print("Firebase delete error:", e)
 
     rates = Rate.objects(product=product).all()
     for rate in rates:

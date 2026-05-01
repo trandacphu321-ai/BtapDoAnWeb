@@ -38,7 +38,7 @@
                     <div class="product well col-12">
                         <div class="col-md-3">
                             <div class="image">
-                                <img src="{{ url_for('static', filename='images/' ~ product.image) }}"
+                                <img src="{{ product.image | firebase_image }}"
                                      alt="{{ product.name }}"/>
                             </div>
                         </div>

@@ -71,6 +71,16 @@ def vnd_format(value):
     except (ValueError, TypeError):
         return value
 
+@app.template_filter('firebase_image')
+def firebase_image(filename):
+    if not filename:
+        return ""
+    if str(filename).startswith("http"):
+        return filename
+    bucket = app.config.get("FIREBASE_STORAGE_BUCKET") or os.getenv("FIREBASE_STORAGE_BUCKET")
+    return f"https://firebasestorage.googleapis.com/v0/b/{bucket}/o/images%2F{filename}?alt=media"
+
+
 login_manager = LoginManager(app)
 login_manager.login_view = 'customer_login'
 login_manager.needs_refresh_message_category = 'danger'

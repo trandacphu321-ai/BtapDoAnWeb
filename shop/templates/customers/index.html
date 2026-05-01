@@ -103,7 +103,7 @@
                                 </div>
                                 <a href="{{url_for('detail', id=p.id)}}" style="display: block; text-decoration: none; color: inherit; outline: none;" class="no-drag-link">
                                     <div style="height: 140px; display: flex; align-items: center; justify-content: center; margin-bottom: 15px; pointer-events: none;">
-                                        <img src="{{ url_for('static', filename='images/'+p.image_1) }}" style="max-height: 100%; max-width: 100%; object-fit: contain; transition: transform 0.3s; pointer-events: none;">
+                                        <img src="{{ p.image_1 | firebase_image }}" style="max-height: 100%; max-width: 100%; object-fit: contain; transition: transform 0.3s; pointer-events: none;">
                                     </div>
                                     <div style="font-size: 14px; font-weight: 800; color: #334155; margin-bottom: 8px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; pointer-events: none;">{{p.name}}</div>
                                     <div style="color: var(--clr-primary); font-weight: 900; font-size: 16px; margin-bottom: 8px; pointer-events: none;">{{ (p.price - p.price*p.discount/100) | vnd }}</div>
@@ -308,7 +308,7 @@
                                     </div>
                                     
                                     <div class="ai-card-img">
-                                        <img src="{{ url_for('static', filename='images/'+product.image_1) }}" alt="{{ product.name}}">
+                                        <img src="{{ product.image_1 | firebase_image }}" alt="{{ product.name}}">
                                     </div>
 
                                     <div class="ai-card-body">
