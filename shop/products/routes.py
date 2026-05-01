@@ -446,8 +446,8 @@ def addproduct():
                 
                 try:
                     with open(path, "rb") as file:
-                        # Gửi data name để ImgBB hiển thị tên dễ nhìn
-                        response = requests.post(url, files={"image": file}, data={"name": title})
+                        # Ép tên file thành title để ImgBB nhận diện đúng tên
+                        response = requests.post(url, files={"image": (f"{title}.{ext}", file)}, data={"name": title})
                         data = response.json()
                         if response.status_code == 200:
                             # Trả về link ảnh trực tiếp từ ImgBB
@@ -567,7 +567,7 @@ def updateproduct(id):
                 
                 try:
                     with open(path, "rb") as file:
-                        response = requests.post(url, files={"image": file}, data={"name": title})
+                        response = requests.post(url, files={"image": (f"{title}.{ext}", file)}, data={"name": title})
                         data = response.json()
                         if response.status_code == 200:
                             return data["data"]["url"]
