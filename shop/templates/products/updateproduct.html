@@ -35,34 +35,81 @@
                 {{ render_field(form.description, class="form-control", rows="10") }}
                 {{ render_field(form.video_link, class="form-control", placeholder="Link YouTube") }}
                 {{ render_field(form.review_video, class="form-control", placeholder="Link YouTube Review") }}
-                <div class="container">
-                    <div class="row">
-                        <div class="col-md-4"><input type="file" name="image_1" id="image_1">
-                            <a href="{{product.image_1 | firebase_image}}"> </a>
-                        </div>
-                        <div class="col-md-4"><input type="file" name="image_2" id="image_2">
-                            <a href="{{product.image_2 | firebase_image}}"></a>
-                        </div>
+                <style>
+                    .image-upload-wrapper {
+                        position: relative;
+                        margin-bottom: 20px;
+                        border: 2px dashed #cbd5e0;
+                        border-radius: 12px;
+                        padding: 15px;
+                        transition: all 0.3s;
+                        background: #f8fafc;
+                        text-align: center;
+                    }
+                    .image-upload-wrapper:hover {
+                        border-color: #3182ce;
+                        background: #ebf8ff;
+                    }
+                    .image-upload-wrapper.has-image {
+                        border-style: solid;
+                        border-color: #48bb78;
+                        background: #f0fff4;
+                    }
+                    .image-preview {
+                        width: 100%;
+                        height: 120px;
+                        object-fit: contain;
+                        margin-bottom: 10px;
+                        border-radius: 8px;
+                    }
+                    .paste-btn {
+                        background: #4a5568;
+                        color: white;
+                        border: none;
+                        padding: 5px 12px;
+                        border-radius: 6px;
+                        font-size: 11px;
+                        cursor: pointer;
+                        margin-top: 5px;
+                        transition: 0.2s;
+                    }
+                    .paste-btn:hover { background: #2d3748; }
+                    .upload-label {
+                        font-weight: 700;
+                        font-size: 13px;
+                        display: block;
+                        margin-bottom: 5px;
+                    }
+                </style>
 
-                        <div class="col-md-4"><input type="file" name="image_3" id="image_3">
-                            <a href="{{product.image_3 | firebase_image}}"> </a>
+                <div class="container mt-4">
+                    <div class="row">
+                        {% for i in range(1, 6) %}
+                        {% set img_attr = 'image_' ~ i %}
+                        {% set img_val = product[img_attr] %}
+                        <div class="col-md-4 mb-3">
+                            <div class="image-upload-wrapper {% if img_val %}has-image{% endif %}" id="wrapper-image_{{i}}">
+                                <label class="upload-label">Ảnh {{i}}</label>
+                                <img src="{{ img_val | firebase_image if img_val else '' }}" 
+                                     class="image-preview" 
+                                     id="preview-image_{{i}}" 
+                                     style="{{ 'display:block' if img_val else 'display:none' }}">
+                                <input type="file" name="image_{{i}}" id="image_{{i}}" class="form-control-file" style="font-size: 11px;">
+                                <button type="button" class="paste-btn" onclick="setupPaste('image_{{i}}')">
+                                    <i class="fa fa-clipboard"></i> Click & Dán (Ctrl+V)
+                                </button>
+                                <div style="font-size: 10px; color: #718096; margin-top: 5px;">Hỗ trợ dán trực tiếp</div>
+                            </div>
                         </div>
-                    </div>
-                    <div class="row mt-2">
-                        <div class="col-md-4"><input type="file" name="image_4" id="image_4">
-                            {% if product.image_4 %}
-                            <a href="{{product.image_4 | firebase_image}}"> </a>
-                            {% endif %}
-                        </div>
-                        <div class="col-md-4"><input type="file" name="image_5" id="image_5">
-                            {% if product.image_5 %}
-                            <a href="{{product.image_5 | firebase_image}}"> </a>
-                            {% endif %}
-                        </div>
+                        {% endfor %}
                     </div>
                 </div>
 
-                <button type="submit" class="btn btn-outline-info mt-4">Update a product</button>
+                <div class="text-center">
+                    <button type="submit" class="btn btn-info btn-lg px-5 mt-4" style="border-radius: 12px; font-weight: 800; color: white;">
+                        <i class="fa fa-refresh"></i> CẬP NHẬT SẢN PHẨM
+                    </button>
+                </div>
             </form>
         </div>
         <div class="col-md-2"></div>
@@ -81,7 +128,61 @@ function myFunction() {
      $("#brand").append(newoptions);
 }
 
-// Auto-remove dots from Price and Capacity
+// --- PASTE IMAGE FROM CLIPBOARD LOGIC ---
+function setupPaste(inputId) {
+    const input = document.getElementById(inputId);
+    const wrapper = document.getElementById('wrapper-' + inputId);
+    const preview = document.getElementById('preview-' + inputId);
+
+    const originalText = wrapper.querySelector('.paste-btn').innerHTML;
+    wrapper.querySelector('.paste-btn').innerHTML = "<i class='fa fa-keyboard-o'></i> Chờ Ctrl+V...";
+    wrapper.style.borderColor = "#3182ce";
+    wrapper.focus();
+
+    const handlePaste = (e) => {
+        const items = e.clipboardData.items;
+        for (let i = 0; i < items.length; i++) {
+            if (items[i].type.indexOf("image") !== -1) {
+                const blob = items[i].getAsFile();
+                const file = new File([blob], "pasted_update_" + new Date().getTime() + ".png", { type: blob.type });
+                const dataTransfer = new DataTransfer();
+                dataTransfer.items.add(file);
+                input.files = dataTransfer.files;
+
+                const reader = new FileReader();
+                reader.onload = (event) => {
+                    preview.src = event.target.result;
+                    preview.style.display = 'block';
+                    wrapper.classList.add('has-image');
+                };
+                reader.readAsDataURL(blob);
+
+                wrapper.querySelector('.paste-btn').innerHTML = originalText;
+                document.removeEventListener('paste', handlePaste);
+                break;
+            }
+        }
+    };
+    document.addEventListener('paste', handlePaste, { once: true });
+}
+
+document.querySelectorAll('input[type="file"]').forEach(input => {
+    input.addEventListener('change', function() {
+        const id = this.id;
+        const preview = document.getElementById('preview-' + id);
+        const wrapper = document.getElementById('wrapper-' + id);
+        if (this.files && this.files[0]) {
+            const reader = new FileReader();
+            reader.onload = (e) => {
+                preview.src = e.target.result;
+                preview.style.display = 'block';
+                wrapper.classList.add('has-image');
+            };
+            reader.readAsDataURL(this.files[0]);
+        }
+    });
+});
+
 document.addEventListener('DOMContentLoaded', function() {
     const priceInput = document.getElementById('price');
     const capacityInput = document.getElementById('capacity');
