@@ -429,12 +429,11 @@ def addproduct():
         image_4 = request.files.get('image_4')
         image_5 = request.files.get('image_5')
 
-        def process_image(img, title):
-            if img and img.filename:
+        def process_image(img_data, title):
+            if img_data:
                 import base64
                 import requests
                 
-                img_data = img.read()
                 base64_image = base64.b64encode(img_data).decode('utf-8')
                 
                 imgbb_api_key = os.getenv("IMGBB_API_KEY", "YOUR_IMGBB_API_KEY_HERE")
@@ -462,17 +461,24 @@ def addproduct():
             import concurrent.futures
             safe_name = re.sub(r'[^a-zA-Z0-9]', '', form.name.data)
             
+            # Đọc dữ liệu file ở main thread để tránh lỗi crash của Gunicorn
+            img1_data = image_1.read() if image_1 and image_1.filename else None
+            img2_data = image_2.read() if image_2 and image_2.filename else None
+            img3_data = image_3.read() if image_3 and image_3.filename else None
+            img4_data = image_4.read() if image_4 and image_4.filename else None
+            img5_data = image_5.read() if image_5 and image_5.filename else None
+            
             tasks = [
-                (image_1, f"{safe_name}_1"),
-                (image_2, f"{safe_name}_2"),
-                (image_3, f"{safe_name}_3"),
-                (image_4, f"{safe_name}_4"),
-                (image_5, f"{safe_name}_5")
+                (img1_data, f"{safe_name}_1"),
+                (img2_data, f"{safe_name}_2"),
+                (img3_data, f"{safe_name}_3"),
+                (img4_data, f"{safe_name}_4"),
+                (img5_data, f"{safe_name}_5")
             ]
             
             results = []
             with concurrent.futures.ThreadPoolExecutor(max_workers=5) as executor:
-                futures = {executor.submit(process_image, img, title): idx for idx, (img, title) in enumerate(tasks)}
+                futures = {executor.submit(process_image, data, title): idx for idx, (data, title) in enumerate(tasks)}
                 
                 # Khởi tạo mảng rỗng để lưu kết quả theo đúng thứ tự
                 ordered_results = [""] * 5
@@ -564,12 +570,11 @@ def updateproduct(id):
         import tempfile
         tmp_dir = tempfile.gettempdir()
 
-        def process_update_image(img, old_name, title):
-            if img and img.filename:
+        def process_update_image(img_data, old_name, title):
+            if img_data:
                 import base64
                 import requests
                 
-                img_data = img.read()
                 base64_image = base64.b64encode(img_data).decode('utf-8')
                 
                 imgbb_api_key = os.getenv("IMGBB_API_KEY", "YOUR_IMGBB_API_KEY_HERE")
@@ -597,16 +602,28 @@ def updateproduct(id):
             safe_name = re.sub(r'[^a-zA-Z0-9]', '', form.name.data)
             import concurrent.futures
             
+            req_img_1 = request.files.get('image_1')
+            req_img_2 = request.files.get('image_2')
+            req_img_3 = request.files.get('image_3')
+            req_img_4 = request.files.get('image_4')
+            req_img_5 = request.files.get('image_5')
+            
+            img1_data = req_img_1.read() if req_img_1 and req_img_1.filename else None
+            img2_data = req_img_2.read() if req_img_2 and req_img_2.filename else None
+            img3_data = req_img_3.read() if req_img_3 and req_img_3.filename else None
+            img4_data = req_img_4.read() if req_img_4 and req_img_4.filename else None
+            img5_data = req_img_5.read() if req_img_5 and req_img_5.filename else None
+            
             tasks = [
-                (request.files.get('image_1'), product.image_1, f"{safe_name}_1"),
-                (request.files.get('image_2'), product.image_2, f"{safe_name}_2"),
-                (request.files.get('image_3'), product.image_3, f"{safe_name}_3"),
-                (request.files.get('image_4'), product.image_4, f"{safe_name}_4"),
-                (request.files.get('image_5'), product.image_5, f"{safe_name}_5")
+                (img1_data, product.image_1, f"{safe_name}_1"),
+                (img2_data, product.image_2, f"{safe_name}_2"),
+                (img3_data, product.image_3, f"{safe_name}_3"),
+                (img4_data, product.image_4, f"{safe_name}_4"),
+                (img5_data, product.image_5, f"{safe_name}_5")
             ]
             
             with concurrent.futures.ThreadPoolExecutor(max_workers=5) as executor:
-                futures = {executor.submit(process_update_image, img, old, title): idx for idx, (img, old, title) in enumerate(tasks)}
+                futures = {executor.submit(process_update_image, data, old, title): idx for idx, (data, old, title) in enumerate(tasks)}
                 ordered_results = [""] * 5
                 
                 for future in concurrent.futures.as_completed(futures):
