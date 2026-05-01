@@ -16,7 +16,7 @@ load_dotenv()
 
 # ---------- Firebase ----------
 config = {
-    "apiKey": os.getenv("FIREBASE_API_KEY", "AIzaSyCE0YWF...6iSUUXM"), # Thay thế phần bị che nếu cần
+    "apiKey": os.getenv("FIREBASE_API_KEY", "AIzaSyB2BNF5gBeIPMaB-z1jNs7y5ldubLiilEk"),
     "authDomain": os.getenv("FIREBASE_AUTH_DOMAIN", "myshop-dc0d3-835b2.firebaseapp.com"),
     "storageBucket": os.getenv("FIREBASE_STORAGE_BUCKET", "myshop-dc0d3-835b2.firebasestorage.app"),
     "databaseURL": os.getenv("FIREBASE_DATABASE_URL", "https://myshop-dc0d3-835b2.firebaseio.com"),
