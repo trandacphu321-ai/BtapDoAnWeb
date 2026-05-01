@@ -8,27 +8,9 @@ from flask_caching import Cache
 
 from .config import Config
 # from flask_login import LoginManager
-# from shop.products.models import Register 
-import pyrebase
 from dotenv import load_dotenv
-
 load_dotenv()
-
-# ---------- Firebase ----------
-config = {
-    "apiKey": os.getenv("FIREBASE_API_KEY", "AIzaSyB2BNF5gBeIPMaB-z1jNs7y5ldubLiilEk"),
-    "authDomain": os.getenv("FIREBASE_AUTH_DOMAIN", "myshop-dc0d3-835b2.firebaseapp.com"),
-    "storageBucket": os.getenv("FIREBASE_STORAGE_BUCKET", "myshop-dc0d3-835b2.firebasestorage.app"),
-    "databaseURL": os.getenv("FIREBASE_DATABASE_URL", "https://myshop-dc0d3-835b2.firebaseio.com"),
-    "projectId": os.getenv("FIREBASE_PROJECT_ID", "myshop-dc0d3-835b2"),
-    "messagingSenderId": os.getenv("FIREBASE_MESSAGING_SENDER_ID", "330579814492"),
-    "appId": os.getenv("FIREBASE_APP_ID", "1:330579814492:web:2010c7e5f320a5db061e99"),
-    "measurementId": os.getenv("FIREBASE_MEASUREMENT_ID", "G-DT7F0TNXCE")
-}
-
-firebase = pyrebase.initialize_app(config)
-storage = firebase.storage()
-# -------------------------------
+# Firebase has been replaced with ImgBB for image storage
 
 
 basedir = os.path.abspath(os.path.dirname(__file__))
