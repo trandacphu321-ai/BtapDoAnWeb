@@ -431,35 +431,30 @@ def addproduct():
 
         def process_image(img, title):
             if img and img.filename:
-                # Lưu file tạm để upload
-                import tempfile
-                tmp_dir = tempfile.gettempdir()
-                ext = img.filename.split('.')[-1]
-                name = secrets.token_hex(10) + "." + ext
-                path = os.path.join(tmp_dir, name)
-                img.save(path)
-                
-                # Upload lên ImgBB kèm theo tên (title)
+                import base64
                 import requests
+                
+                img_data = img.read()
+                base64_image = base64.b64encode(img_data).decode('utf-8')
+                
                 imgbb_api_key = os.getenv("IMGBB_API_KEY", "YOUR_IMGBB_API_KEY_HERE")
-                url = f"https://api.imgbb.com/1/upload?key={imgbb_api_key}"
+                url = "https://api.imgbb.com/1/upload"
+                payload = {
+                    "key": imgbb_api_key,
+                    "image": base64_image,
+                    "name": title
+                }
                 
                 try:
-                    with open(path, "rb") as file:
-                        # Ép tên file thành title để ImgBB nhận diện đúng tên
-                        response = requests.post(url, files={"image": (f"{title}.{ext}", file)}, data={"name": title})
-                        data = response.json()
-                        if response.status_code == 200:
-                            # Trả về link ảnh trực tiếp từ ImgBB
-                            return data["data"]["url"]
-                        else:
-                            raise Exception(data.get("error", {}).get("message", "Lỗi không xác định"))
+                    response = requests.post(url, data=payload)
+                    data = response.json()
+                    if response.status_code == 200:
+                        return data["data"]["url"]
+                    else:
+                        raise Exception(data.get("error", {}).get("message", "Lỗi không xác định"))
                 except Exception as e:
                     print("ImgBB Upload Error:", e)
                     raise Exception(f"Lỗi tải ảnh lên ImgBB: {e}")
-                finally:
-                    if os.path.exists(path):
-                        os.unlink(path)
             return ""
 
         try:
@@ -552,33 +547,30 @@ def updateproduct(id):
 
         def process_update_image(img, old_name, title):
             if img and img.filename:
-                # Lưu file tạm để upload
-                import tempfile
-                tmp_dir = tempfile.gettempdir()
-                ext = img.filename.split('.')[-1]
-                name = secrets.token_hex(10) + "." + ext
-                path = os.path.join(tmp_dir, name)
-                img.save(path)
-                
-                # Upload lên ImgBB kèm theo tên (title)
+                import base64
                 import requests
+                
+                img_data = img.read()
+                base64_image = base64.b64encode(img_data).decode('utf-8')
+                
                 imgbb_api_key = os.getenv("IMGBB_API_KEY", "YOUR_IMGBB_API_KEY_HERE")
-                url = f"https://api.imgbb.com/1/upload?key={imgbb_api_key}"
+                url = "https://api.imgbb.com/1/upload"
+                payload = {
+                    "key": imgbb_api_key,
+                    "image": base64_image,
+                    "name": title
+                }
                 
                 try:
-                    with open(path, "rb") as file:
-                        response = requests.post(url, files={"image": (f"{title}.{ext}", file)}, data={"name": title})
-                        data = response.json()
-                        if response.status_code == 200:
-                            return data["data"]["url"]
-                        else:
-                            raise Exception(data.get("error", {}).get("message", "Lỗi không xác định"))
+                    response = requests.post(url, data=payload)
+                    data = response.json()
+                    if response.status_code == 200:
+                        return data["data"]["url"]
+                    else:
+                        raise Exception(data.get("error", {}).get("message", "Lỗi không xác định"))
                 except Exception as e:
                     print("ImgBB Upload Error:", e)
                     raise Exception(f"Lỗi tải ảnh lên ImgBB: {e}")
-                finally:
-                    if os.path.exists(path):
-                        os.unlink(path)
             return old_name
 
         try:
