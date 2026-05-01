@@ -8,7 +8,7 @@ from flask import (
 )
 from flask_login import login_required, current_user
 
-from shop import app, db, photos, storage
+from shop import app, db, photos
 from .models import Category, Brand, Addproduct, Rate, Register
 from .forms import Addproducts, Rates
 from shop.admin.models import Admin

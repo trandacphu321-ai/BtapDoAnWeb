@@ -22,7 +22,7 @@ from flask_login import (
     login_required,
 )
 
-from shop import app, db, bcrypt, storage
+from shop import app, db, bcrypt
 from .form import (
     RegistrationForm,
     LoginForm,

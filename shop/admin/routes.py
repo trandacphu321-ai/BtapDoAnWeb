@@ -14,7 +14,7 @@ from flask import send_file
 
 
 from flask import render_template, session, redirect, request, url_for, flash, session, current_app
-from shop import app, db, bcrypt, storage
+from shop import app, db, bcrypt
 from .form import RegistrationForm, LoginForm, CustomerRegisterForm
 from .models import Admin
 from shop.customers.models import Register, CustomerOrder
