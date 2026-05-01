@@ -533,62 +533,32 @@ def updateproduct(id):
         import tempfile
         tmp_dir = tempfile.gettempdir()
 
-        # Update images if provided
-        if request.files.get('image_1'):
-            image_1 = request.files.get('image_1')
-            ext = image_1.filename.split('.')[-1]
-            name_1 = secrets.token_hex(10) + "." + ext
+        def process_update_image(img, old_name):
+            if img and img.filename:
+                ext = img.filename.split('.')[-1]
+                name = secrets.token_hex(10) + "." + ext
+                path = os.path.join(tmp_dir, name)
+                img.save(path)
+                try:
+                    storage.child("images/" + name).put(path)
+                except Exception as e:
+                    print("Firebase Upload Error:", e)
+                    raise Exception(f"Lỗi tải ảnh lên Firebase: {e}")
+                finally:
+                    if os.path.exists(path):
+                        os.unlink(path)
+                return name
+            return old_name
 
-            # Attempt to delete old file from Firebase (Optional, keeping it simple here)
-            path1 = os.path.join(tmp_dir, name_1)
-            image_1.save(path1)
-            storage.child("images/" + name_1).put(path1)
-            os.unlink(path1)
-            product.image_1 = name_1
-
-        if request.files.get('image_2'):
-            image_2 = request.files.get('image_2')
-            ext = image_2.filename.split('.')[-1]
-            name_2 = secrets.token_hex(10) + "." + ext
-
-            path2 = os.path.join(tmp_dir, name_2)
-            image_2.save(path2)
-            storage.child("images/" + name_2).put(path2)
-            os.unlink(path2)
-            product.image_2 = name_2
-
-        if request.files.get('image_3'):
-            image_3 = request.files.get('image_3')
-            ext = image_3.filename.split('.')[-1]
-            name_3 = secrets.token_hex(10) + "." + ext
-
-            path3 = os.path.join(tmp_dir, name_3)
-            image_3.save(path3)
-            storage.child("images/" + name_3).put(path3)
-            os.unlink(path3)
-            product.image_3 = name_3
-
-        if request.files.get('image_4'):
-            image_4 = request.files.get('image_4')
-            ext = image_4.filename.split('.')[-1]
-            name_4 = secrets.token_hex(10) + "." + ext
-
-            path4 = os.path.join(tmp_dir, name_4)
-            image_4.save(path4)
-            storage.child("images/" + name_4).put(path4)
-            os.unlink(path4)
-            product.image_4 = name_4
-
-        if request.files.get('image_5'):
-            image_5 = request.files.get('image_5')
-            ext = image_5.filename.split('.')[-1]
-            name_5 = secrets.token_hex(10) + "." + ext
-
-            path5 = os.path.join(tmp_dir, name_5)
-            image_5.save(path5)
-            storage.child("images/" + name_5).put(path5)
-            os.unlink(path5)
-            product.image_5 = name_5
+        try:
+            product.image_1 = process_update_image(request.files.get('image_1'), product.image_1)
+            product.image_2 = process_update_image(request.files.get('image_2'), product.image_2)
+            product.image_3 = process_update_image(request.files.get('image_3'), product.image_3)
+            product.image_4 = process_update_image(request.files.get('image_4'), product.image_4)
+            product.image_5 = process_update_image(request.files.get('image_5'), product.image_5)
+        except Exception as e:
+            flash(str(e), "danger")
+            return redirect(url_for('updateproduct', id=id))
 
         product.save()
         flash('Product updated successfully', 'success')
