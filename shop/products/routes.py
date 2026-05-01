@@ -97,7 +97,7 @@ def home():
 
     cat_query = {'category': category} if category else {}
 
-    products_all = Addproduct.objects(stock__gt=0, **cat_query).order_by('-id').paginate(page=page, per_page=4)
+    products_all = Addproduct.objects(stock__gt=0, **cat_query).order_by('-id').paginate(page=page, per_page=12)
     products_hot = Addproduct.objects(stock__gt=0, **cat_query).order_by('-price').limit(3)
     products_new = Addproduct.objects(stock__gt=0, **cat_query).order_by('-id')
     products_sell = Addproduct.objects(stock__gt=0, discount__gt=0, **cat_query).order_by('-discount').limit(10)
@@ -201,7 +201,7 @@ def get_all_category():
     """Trang liệt kê tất cả sản phẩm (dùng cho /category)."""
     page = request.args.get('page', 1, type=int)
 
-    products_all = Addproduct.objects(stock__gt=0).order_by('-id').paginate(page=page, per_page=9)
+    products_all = Addproduct.objects(stock__gt=0).order_by('-id').paginate(page=page, per_page=12)
     products_new = Addproduct.objects(stock__gt=0).order_by('-id').limit(2)
 
     products = {
@@ -234,7 +234,7 @@ def get_category(name):
     # Lấy sản phẩm thuộc category này, phân trang
     get_cat_prod_page = Addproduct.objects(category=get_cat).paginate(
         page=page,
-        per_page=9
+        per_page=12
     )
 
     # Một vài sản phẩm mới để hiển thị bên cạnh
