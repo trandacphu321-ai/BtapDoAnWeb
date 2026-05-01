@@ -16,14 +16,14 @@ load_dotenv()
 
 # ---------- Firebase ----------
 config = {
-    "apiKey": os.getenv("FIREBASE_API_KEY"),
-    "authDomain": os.getenv("FIREBASE_AUTH_DOMAIN"),
-    "storageBucket": os.getenv("FIREBASE_STORAGE_BUCKET"),
-    "databaseURL": os.getenv("FIREBASE_DATABASE_URL"),
-    "projectId": os.getenv("FIREBASE_PROJECT_ID"),
-    "messagingSenderId": os.getenv("FIREBASE_MESSAGING_SENDER_ID"),
-    "appId": os.getenv("FIREBASE_APP_ID"),
-    "measurementId": os.getenv("FIREBASE_MEASUREMENT_ID")
+    "apiKey": os.getenv("FIREBASE_API_KEY", "AIzaSyCE0YWF...6iSUUXM"), # Thay thế phần bị che nếu cần
+    "authDomain": os.getenv("FIREBASE_AUTH_DOMAIN", "myshop-dc0d3-835b2.firebaseapp.com"),
+    "storageBucket": os.getenv("FIREBASE_STORAGE_BUCKET", "myshop-dc0d3-835b2.firebasestorage.app"),
+    "databaseURL": os.getenv("FIREBASE_DATABASE_URL", "https://myshop-dc0d3-835b2.firebaseio.com"),
+    "projectId": os.getenv("FIREBASE_PROJECT_ID", "myshop-dc0d3-835b2"),
+    "messagingSenderId": os.getenv("FIREBASE_MESSAGING_SENDER_ID", "330579814492"),
+    "appId": os.getenv("FIREBASE_APP_ID", "1:330579814492:web:2010c7e5f320a5db061e99"),
+    "measurementId": os.getenv("FIREBASE_MEASUREMENT_ID", "G-DT7F0TNXCE")
 }
 
 firebase = pyrebase.initialize_app(config)
@@ -77,7 +77,7 @@ def firebase_image(filename):
         return ""
     if str(filename).startswith("http"):
         return filename
-    bucket = app.config.get("FIREBASE_STORAGE_BUCKET") or os.getenv("FIREBASE_STORAGE_BUCKET")
+    bucket = app.config.get("FIREBASE_STORAGE_BUCKET") or os.getenv("FIREBASE_STORAGE_BUCKET", "myshop-dc0d3-835b2.firebasestorage.app")
     return f"https://firebasestorage.googleapis.com/v0/b/{bucket}/o/images%2F{filename}?alt=media"
 
 
