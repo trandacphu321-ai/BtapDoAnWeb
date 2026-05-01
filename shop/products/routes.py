@@ -429,24 +429,36 @@ def addproduct():
         image_4 = request.files.get('image_4')
         image_5 = request.files.get('image_5')
 
-        import tempfile
-        tmp_dir = tempfile.gettempdir()
-        
         def process_image(img):
             if img and img.filename:
+                # Lưu file tạm để upload
+                import tempfile
+                tmp_dir = tempfile.gettempdir()
                 ext = img.filename.split('.')[-1]
                 name = secrets.token_hex(10) + "." + ext
                 path = os.path.join(tmp_dir, name)
                 img.save(path)
+                
+                # Upload lên ImgBB
+                import requests
+                imgbb_api_key = os.getenv("IMGBB_API_KEY", "YOUR_IMGBB_API_KEY_HERE")
+                url = f"https://api.imgbb.com/1/upload?key={imgbb_api_key}"
+                
                 try:
-                    storage.child("images/" + name).put(path)
+                    with open(path, "rb") as file:
+                        response = requests.post(url, files={"image": file})
+                        data = response.json()
+                        if response.status_code == 200:
+                            # Trả về link ảnh trực tiếp từ ImgBB
+                            return data["data"]["url"]
+                        else:
+                            raise Exception(data.get("error", {}).get("message", "Lỗi không xác định"))
                 except Exception as e:
-                    print("Firebase Upload Error:", e)
-                    raise Exception(f"Lỗi tải ảnh lên Firebase: {e}")
+                    print("ImgBB Upload Error:", e)
+                    raise Exception(f"Lỗi tải ảnh lên ImgBB: {e}")
                 finally:
                     if os.path.exists(path):
                         os.unlink(path)
-                return name
             return ""
 
         try:
@@ -535,19 +547,33 @@ def updateproduct(id):
 
         def process_update_image(img, old_name):
             if img and img.filename:
+                # Lưu file tạm để upload
+                import tempfile
+                tmp_dir = tempfile.gettempdir()
                 ext = img.filename.split('.')[-1]
                 name = secrets.token_hex(10) + "." + ext
                 path = os.path.join(tmp_dir, name)
                 img.save(path)
+                
+                # Upload lên ImgBB
+                import requests
+                imgbb_api_key = os.getenv("IMGBB_API_KEY", "YOUR_IMGBB_API_KEY_HERE")
+                url = f"https://api.imgbb.com/1/upload?key={imgbb_api_key}"
+                
                 try:
-                    storage.child("images/" + name).put(path)
+                    with open(path, "rb") as file:
+                        response = requests.post(url, files={"image": file})
+                        data = response.json()
+                        if response.status_code == 200:
+                            return data["data"]["url"]
+                        else:
+                            raise Exception(data.get("error", {}).get("message", "Lỗi không xác định"))
                 except Exception as e:
-                    print("Firebase Upload Error:", e)
-                    raise Exception(f"Lỗi tải ảnh lên Firebase: {e}")
+                    print("ImgBB Upload Error:", e)
+                    raise Exception(f"Lỗi tải ảnh lên ImgBB: {e}")
                 finally:
                     if os.path.exists(path):
                         os.unlink(path)
-                return name
             return old_name
 
         try:
@@ -600,16 +626,9 @@ def deleteproduct(id):
     product = Addproduct.objects(id=id).first()
     if not product: return "Not found", 404
 
-    try:
-        storage.child("images/" + product.image_1).delete()
-        storage.child("images/" + product.image_2).delete()
-        storage.child("images/" + product.image_3).delete()
-        if product.image_4:
-            storage.child("images/" + product.image_4).delete()
-        if product.image_5:
-            storage.child("images/" + product.image_5).delete()
-    except Exception as e:
-        print("Firebase delete error:", e)
+    # With ImgBB, we don't strictly need to delete the image from remote storage
+    # as it's hosted freely on ImgBB.
+    pass
 
     rates = Rate.objects(product=product).all()
     for rate in rates:
