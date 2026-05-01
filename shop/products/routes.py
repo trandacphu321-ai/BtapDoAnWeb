@@ -458,15 +458,34 @@ def addproduct():
             return ""
 
         try:
-            # Lấy tên sản phẩm làm tiền tố, loại bỏ ký tự đặc biệt
             import re
+            import concurrent.futures
             safe_name = re.sub(r'[^a-zA-Z0-9]', '', form.name.data)
             
-            name_1 = process_image(image_1, f"{safe_name}_1")
-            name_2 = process_image(image_2, f"{safe_name}_2")
-            name_3 = process_image(image_3, f"{safe_name}_3")
-            name_4 = process_image(image_4, f"{safe_name}_4")
-            name_5 = process_image(image_5, f"{safe_name}_5")
+            tasks = [
+                (image_1, f"{safe_name}_1"),
+                (image_2, f"{safe_name}_2"),
+                (image_3, f"{safe_name}_3"),
+                (image_4, f"{safe_name}_4"),
+                (image_5, f"{safe_name}_5")
+            ]
+            
+            results = []
+            with concurrent.futures.ThreadPoolExecutor(max_workers=5) as executor:
+                futures = {executor.submit(process_image, img, title): idx for idx, (img, title) in enumerate(tasks)}
+                
+                # Khởi tạo mảng rỗng để lưu kết quả theo đúng thứ tự
+                ordered_results = [""] * 5
+                
+                for future in concurrent.futures.as_completed(futures):
+                    idx = futures[future]
+                    try:
+                        ordered_results[idx] = future.result()
+                    except Exception as e:
+                        raise e
+            
+            name_1, name_2, name_3, name_4, name_5 = ordered_results
+
         except Exception as e:
             flash(str(e), "danger")
             return redirect(url_for('addproduct'))
@@ -576,11 +595,28 @@ def updateproduct(id):
         try:
             import re
             safe_name = re.sub(r'[^a-zA-Z0-9]', '', form.name.data)
-            product.image_1 = process_update_image(request.files.get('image_1'), product.image_1, f"{safe_name}_1")
-            product.image_2 = process_update_image(request.files.get('image_2'), product.image_2, f"{safe_name}_2")
-            product.image_3 = process_update_image(request.files.get('image_3'), product.image_3, f"{safe_name}_3")
-            product.image_4 = process_update_image(request.files.get('image_4'), product.image_4, f"{safe_name}_4")
-            product.image_5 = process_update_image(request.files.get('image_5'), product.image_5, f"{safe_name}_5")
+            import concurrent.futures
+            
+            tasks = [
+                (request.files.get('image_1'), product.image_1, f"{safe_name}_1"),
+                (request.files.get('image_2'), product.image_2, f"{safe_name}_2"),
+                (request.files.get('image_3'), product.image_3, f"{safe_name}_3"),
+                (request.files.get('image_4'), product.image_4, f"{safe_name}_4"),
+                (request.files.get('image_5'), product.image_5, f"{safe_name}_5")
+            ]
+            
+            with concurrent.futures.ThreadPoolExecutor(max_workers=5) as executor:
+                futures = {executor.submit(process_update_image, img, old, title): idx for idx, (img, old, title) in enumerate(tasks)}
+                ordered_results = [""] * 5
+                
+                for future in concurrent.futures.as_completed(futures):
+                    idx = futures[future]
+                    try:
+                        ordered_results[idx] = future.result()
+                    except Exception as e:
+                        raise e
+            
+            product.image_1, product.image_2, product.image_3, product.image_4, product.image_5 = ordered_results
         except Exception as e:
             flash(str(e), "danger")
             return redirect(url_for('updateproduct', id=id))
