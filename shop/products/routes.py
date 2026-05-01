@@ -429,7 +429,7 @@ def addproduct():
         image_4 = request.files.get('image_4')
         image_5 = request.files.get('image_5')
 
-        def process_image(img):
+        def process_image(img, title):
             if img and img.filename:
                 # Lưu file tạm để upload
                 import tempfile
@@ -439,14 +439,15 @@ def addproduct():
                 path = os.path.join(tmp_dir, name)
                 img.save(path)
                 
-                # Upload lên ImgBB
+                # Upload lên ImgBB kèm theo tên (title)
                 import requests
                 imgbb_api_key = os.getenv("IMGBB_API_KEY", "YOUR_IMGBB_API_KEY_HERE")
                 url = f"https://api.imgbb.com/1/upload?key={imgbb_api_key}"
                 
                 try:
                     with open(path, "rb") as file:
-                        response = requests.post(url, files={"image": file})
+                        # Gửi data name để ImgBB hiển thị tên dễ nhìn
+                        response = requests.post(url, files={"image": file}, data={"name": title})
                         data = response.json()
                         if response.status_code == 200:
                             # Trả về link ảnh trực tiếp từ ImgBB
@@ -462,11 +463,15 @@ def addproduct():
             return ""
 
         try:
-            name_1 = process_image(image_1)
-            name_2 = process_image(image_2)
-            name_3 = process_image(image_3)
-            name_4 = process_image(image_4)
-            name_5 = process_image(image_5)
+            # Lấy tên sản phẩm làm tiền tố, loại bỏ ký tự đặc biệt
+            import re
+            safe_name = re.sub(r'[^a-zA-Z0-9]', '', form.name.data)
+            
+            name_1 = process_image(image_1, f"{safe_name}_1")
+            name_2 = process_image(image_2, f"{safe_name}_2")
+            name_3 = process_image(image_3, f"{safe_name}_3")
+            name_4 = process_image(image_4, f"{safe_name}_4")
+            name_5 = process_image(image_5, f"{safe_name}_5")
         except Exception as e:
             flash(str(e), "danger")
             return redirect(url_for('addproduct'))
@@ -545,7 +550,7 @@ def updateproduct(id):
         import tempfile
         tmp_dir = tempfile.gettempdir()
 
-        def process_update_image(img, old_name):
+        def process_update_image(img, old_name, title):
             if img and img.filename:
                 # Lưu file tạm để upload
                 import tempfile
@@ -555,14 +560,14 @@ def updateproduct(id):
                 path = os.path.join(tmp_dir, name)
                 img.save(path)
                 
-                # Upload lên ImgBB
+                # Upload lên ImgBB kèm theo tên (title)
                 import requests
                 imgbb_api_key = os.getenv("IMGBB_API_KEY", "YOUR_IMGBB_API_KEY_HERE")
                 url = f"https://api.imgbb.com/1/upload?key={imgbb_api_key}"
                 
                 try:
                     with open(path, "rb") as file:
-                        response = requests.post(url, files={"image": file})
+                        response = requests.post(url, files={"image": file}, data={"name": title})
                         data = response.json()
                         if response.status_code == 200:
                             return data["data"]["url"]
@@ -577,11 +582,13 @@ def updateproduct(id):
             return old_name
 
         try:
-            product.image_1 = process_update_image(request.files.get('image_1'), product.image_1)
-            product.image_2 = process_update_image(request.files.get('image_2'), product.image_2)
-            product.image_3 = process_update_image(request.files.get('image_3'), product.image_3)
-            product.image_4 = process_update_image(request.files.get('image_4'), product.image_4)
-            product.image_5 = process_update_image(request.files.get('image_5'), product.image_5)
+            import re
+            safe_name = re.sub(r'[^a-zA-Z0-9]', '', form.name.data)
+            product.image_1 = process_update_image(request.files.get('image_1'), product.image_1, f"{safe_name}_1")
+            product.image_2 = process_update_image(request.files.get('image_2'), product.image_2, f"{safe_name}_2")
+            product.image_3 = process_update_image(request.files.get('image_3'), product.image_3, f"{safe_name}_3")
+            product.image_4 = process_update_image(request.files.get('image_4'), product.image_4, f"{safe_name}_4")
+            product.image_5 = process_update_image(request.files.get('image_5'), product.image_5, f"{safe_name}_5")
         except Exception as e:
             flash(str(e), "danger")
             return redirect(url_for('updateproduct', id=id))
