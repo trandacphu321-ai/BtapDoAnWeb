@@ -429,54 +429,39 @@ def addproduct():
         image_4 = request.files.get('image_4')
         image_5 = request.files.get('image_5')
 
-        # RANDOM NAMES
-        name_1 = secrets.token_hex(10) + "." + image_1.filename.split('.')[-1]
-        name_2 = secrets.token_hex(10) + "." + image_2.filename.split('.')[-1]
-        name_3 = secrets.token_hex(10) + "." + image_3.filename.split('.')[-1]
-        name_4 = ""
-        if image_4:
-            name_4 = secrets.token_hex(10) + "." + image_4.filename.split('.')[-1]
-        name_5 = ""
-        if image_5:
-            name_5 = secrets.token_hex(10) + "." + image_5.filename.split('.')[-1]
-
-        # PATH SAVE TO /tmp (Vercel allows writing to /tmp)
         import tempfile
         tmp_dir = tempfile.gettempdir()
         
-        path1 = os.path.join(tmp_dir, name_1)
-        path2 = os.path.join(tmp_dir, name_2)
-        path3 = os.path.join(tmp_dir, name_3)
-        
-        # SAVE FILE TEMPORARILY
-        image_1.save(path1)
-        image_2.save(path2)
-        image_3.save(path3)
-        
-        # UPLOAD TO FIREBASE
-        storage.child("images/" + name_1).put(path1)
-        storage.child("images/" + name_2).put(path2)
-        storage.child("images/" + name_3).put(path3)
-        
-        # CLEANUP /tmp
-        os.unlink(path1)
-        os.unlink(path2)
-        os.unlink(path3)
-        
-        if image_4:
-            path4 = os.path.join(tmp_dir, name_4)
-            image_4.save(path4)
-            storage.child("images/" + name_4).put(path4)
-            os.unlink(path4)
-        if image_5:
-            path5 = os.path.join(tmp_dir, name_5)
-            image_5.save(path5)
-            storage.child("images/" + name_5).put(path5)
-            os.unlink(path5)
+        def process_image(img):
+            if img and img.filename:
+                ext = img.filename.split('.')[-1]
+                name = secrets.token_hex(10) + "." + ext
+                path = os.path.join(tmp_dir, name)
+                img.save(path)
+                try:
+                    storage.child("images/" + name).put(path)
+                except Exception as e:
+                    print("Firebase Upload Error:", e)
+                    raise Exception(f"Lỗi tải ảnh lên Firebase: {e}")
+                finally:
+                    if os.path.exists(path):
+                        os.unlink(path)
+                return name
+            return ""
+
+        try:
+            name_1 = process_image(image_1)
+            name_2 = process_image(image_2)
+            name_3 = process_image(image_3)
+            name_4 = process_image(image_4)
+            name_5 = process_image(image_5)
+        except Exception as e:
+            flash(str(e), "danger")
+            return redirect(url_for('addproduct'))
 
         # LƯU DB
-        brand_ref = Brand.objects(id=brand_id).first()
-        cat_ref = Category.objects(id=category_id).first()
+        brand_ref = Brand.objects(id=brand_id).first() if brand_id else None
+        cat_ref = Category.objects(id=category_id).first() if category_id else None
 
         product = Addproduct(
             name=name,
