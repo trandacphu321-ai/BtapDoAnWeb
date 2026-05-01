@@ -70,7 +70,102 @@
         </div>
         {% endif %}
 
-        <div class="row">
+        <!-- ===== ADVANCED FILTER PANEL (Collapsible) ===== -->
+        <div class="row" style="margin-bottom: 20px;">
+            <div class="col-md-12">
+                <!-- Toggle button -->
+                <button id="filter-toggle-btn" onclick="toggleFilter()" style="
+                    display:flex; align-items:center; gap:10px;
+                    background:#fff; border:2px solid #e2e8f0; border-radius:12px;
+                    padding:10px 20px; cursor:pointer; font-weight:700; color:#475569;
+                    font-size:14px; transition:all 0.2s; margin-bottom:10px;
+                    box-shadow:0 2px 8px rgba(0,0,0,0.04);
+                ">
+                    <i class="fa fa-sliders"></i>
+                    <span id="filter-btn-label">Bộ lọc nâng cao</span>
+                    <span id="filter-active-count" style="display:none; background:#2563eb; color:#fff; border-radius:20px; font-size:12px; padding:1px 8px; font-weight:800;"></span>
+                    <i class="fa fa-chevron-down" id="filter-toggle-icon" style="margin-left:auto; transition:transform 0.3s;"></i>
+                </button>
+
+                <!-- Collapsible panel body -->
+                <div id="advanced-filter-panel" style="
+                    background:#fff; border-radius:16px; border:1px solid #e2e8f0;
+                    box-shadow:0 2px 12px rgba(0,0,0,0.05); overflow:hidden;
+                    max-height:0; transition:max-height 0.35s ease, padding 0.35s ease;
+                    padding:0 24px;
+                ">
+                    <div style="display:flex; flex-wrap:wrap; gap:28px; align-items:flex-start; padding:18px 0;">
+
+                        <!-- Filter: Mức giá -->
+                        <div style="flex:1; min-width:180px;">
+                            <p style="font-weight:800; font-size:12px; text-transform:uppercase; color:#64748b; margin-bottom:10px; letter-spacing:0.5px;">
+                                <i class="fa fa-dollar" style="color:#2563eb;"></i> Mức giá
+                            </p>
+                            <div class="filter-group" id="price-group">
+                                <div class="filter-chip" data-filter="price" data-min="0" data-max="5000000">Dưới 5 triệu</div>
+                                <div class="filter-chip" data-filter="price" data-min="5000000" data-max="10000000">5 – 10 triệu</div>
+                                <div class="filter-chip" data-filter="price" data-min="10000000" data-max="20000000">10 – 20 triệu</div>
+                                <div class="filter-chip" data-filter="price" data-min="20000000" data-max="999999999">Trên 20 triệu</div>
+                            </div>
+                        </div>
+
+                        <!-- Filter: Dung lượng -->
+                        <div style="flex:1; min-width:180px;">
+                            <p style="font-weight:800; font-size:12px; text-transform:uppercase; color:#64748b; margin-bottom:10px; letter-spacing:0.5px;">
+                                <i class="fa fa-hdd-o" style="color:#2563eb;"></i> Dung lượng
+                            </p>
+                            <div class="filter-group" id="capacity-filter-options">
+                                <!-- JS fill -->
+                            </div>
+                        </div>
+
+                        <!-- Filter: Ưu đãi -->
+                        <div style="flex:0; min-width:150px;">
+                            <p style="font-weight:800; font-size:12px; text-transform:uppercase; color:#64748b; margin-bottom:10px; letter-spacing:0.5px;">
+                                <i class="fa fa-tag" style="color:#ef4444;"></i> Ưu đãi
+                            </p>
+                            <div class="filter-group">
+                                <div class="filter-chip" data-filter="discount" data-min="1">Đang giảm giá</div>
+                            </div>
+                        </div>
+
+                        <!-- Reset -->
+                        <div style="display:flex; align-items:flex-end; padding-bottom:2px;">
+                            <button onclick="resetFilters()" style="
+                                background:none; border:2px solid #fecaca; border-radius:10px;
+                                padding:8px 18px; color:#ef4444; font-weight:700; cursor:pointer;
+                                font-size:13px; transition:all 0.2s;
+                            " onmouseover="this.style.background='#fef2f2'" onmouseout="this.style.background='none'">
+                                <i class="fa fa-times"></i> Xóa lọc
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Result count -->
+                <div id="filter-count" style="margin-top:8px; font-size:13px; font-weight:600; color:#64748b; display:none;">
+                    Đang hiển thị <strong id="fc-num">0</strong> sản phẩm phù hợp.
+                </div>
+            </div>
+        </div>
+
+        <style>
+        .filter-group { display:flex; flex-wrap:wrap; gap:7px; }
+        .filter-chip {
+            display: inline-flex; align-items: center;
+            padding: 6px 14px; border-radius: 20px; cursor: pointer;
+            font-size: 13px; font-weight: 700; color: #475569;
+            background: #f1f5f9; border: 2px solid transparent;
+            transition: all 0.18s; user-select: none;
+        }
+        .filter-chip:hover { background: #e2e8f0; }
+        .filter-chip.active {
+            background: #eff6ff; border-color: #2563eb;
+            color: #2563eb; box-shadow: 0 2px 8px rgba(37,99,235,0.15);
+        }
+        </style>
+
+
             <div id="main-content" class="col-md-12">
                 {%if products['all'].items|length <=0 %}
                 {% if get_search %}
@@ -81,9 +176,17 @@
                 {% else %}
                 <div class="product-grid" style="grid-template-columns: repeat(4, 1fr);">
                     {% for product in products['all'].items %}
-                    <div class="product-grid-item">
+                    <div class="product-grid-item"
+                         data-price="{{ product.effective_price | int }}"
+                         data-discount="{{ product.discount }}"
+                         data-capacity="{{ product.capacity if product.capacity else '' }}">
                         <a href="{{url_for('detail', id = product.id)}}" class="product-card-link">
-                            <div class="product-card">
+                            <div class="product-card" style="position:relative;">
+                                {% if product.is_flash_active %}
+                                <div style="position:absolute; top:10px; left:10px; z-index:5; background:linear-gradient(135deg,#ff4757,#c0392b); color:#fff; font-size:10px; font-weight:800; padding:3px 8px; border-radius:6px;">
+                                    ⚡ FLASH SALE
+                                </div>
+                                {% endif %}
                                 <div class="product-card-img">
                                     <img src="{{ product.image_1 | firebase_image }}"
                                         alt="{{ product.name}}">
@@ -94,9 +197,8 @@
                                 <div class="product-card-info">
                                     <h5 class="product-card-name">{{ product.name }}</h5>
                                     <div class="product-card-pricing">
-                                        <span class="product-card-price">{{ (product.price -
-                                            product.price*product.discount/100) | vnd }}</span>
-                                        {% if product.discount > 0 %}
+                                        <span class="product-card-price">{{ product.effective_price | vnd }}</span>
+                                        {% if product.is_flash_active or product.discount > 0 %}
                                         <span class="product-card-original">{{ (product.price) | vnd }}</span>
                                         {% endif %}
                                     </div>
@@ -270,5 +372,117 @@
         </div>
     </div>
 </div>
+<script>
+// ===== ADVANCED FILTER LOGIC (Collapsible & Chips) =====
+function toggleFilter() {
+    const panel = document.getElementById('advanced-filter-panel');
+    const icon = document.getElementById('filter-toggle-icon');
+    if (panel.style.maxHeight && panel.style.maxHeight !== '0px') {
+        panel.style.maxHeight = '0px';
+        panel.style.padding = '0 24px';
+        icon.style.transform = 'rotate(0deg)';
+    } else {
+        panel.style.maxHeight = panel.scrollHeight + 'px';
+        panel.style.padding = '18px 24px';
+        icon.style.transform = 'rotate(180deg)';
+    }
+}
+
+document.addEventListener('DOMContentLoaded', function() {
+    // Build capacity options from product data
+    const allCards = document.querySelectorAll('.product-grid-item[data-capacity]');
+    const capSet = new Set();
+    allCards.forEach(card => {
+        const cap = card.dataset.capacity || '';
+        if (!cap || cap === 'Mặc định') return;
+        cap.split(',').forEach(part => {
+            const label = part.split(':')[0].trim();
+            if (label) capSet.add(label);
+        });
+    });
+    
+    const capContainer = document.getElementById('capacity-filter-options');
+    capSet.forEach(c => {
+        const chip = document.createElement('div');
+        chip.className = 'filter-chip';
+        chip.dataset.filter = 'capacity';
+        chip.dataset.value = c;
+        chip.textContent = c;
+        capContainer.appendChild(chip);
+    });
+
+    // Attach filter events using event delegation
+    document.getElementById('advanced-filter-panel').addEventListener('click', function(e) {
+        if (e.target.classList.contains('filter-chip')) {
+            e.target.classList.toggle('active');
+            applyFilters();
+        }
+    });
+
+    function applyFilters() {
+        const activePrice  = [...document.querySelectorAll('.filter-chip[data-filter="price"].active')];
+        const activeCap    = [...document.querySelectorAll('.filter-chip[data-filter="capacity"].active')];
+        const activeDisc   = [...document.querySelectorAll('.filter-chip[data-filter="discount"].active')];
+
+        const activeCount = activePrice.length + activeCap.length + activeDisc.length;
+        const badge = document.getElementById('filter-active-count');
+        if (activeCount > 0) {
+            badge.textContent = activeCount;
+            badge.style.display = 'inline-block';
+        } else {
+            badge.style.display = 'none';
+        }
+
+        const noFilter = activeCount === 0;
+        let visibleCount = 0;
+
+        document.querySelectorAll('.product-grid-item').forEach(card => {
+            if (noFilter) { card.style.display = ''; visibleCount++; return; }
+
+            const price    = parseInt(card.dataset.price) || 0;
+            const discount = parseInt(card.dataset.discount) || 0;
+            const capStr   = card.dataset.capacity || '';
+
+            let passPrice = !activePrice.length;
+            activePrice.forEach(lbl => {
+                const mn = parseInt(lbl.dataset.min), mx = parseInt(lbl.dataset.max);
+                if (price >= mn && price <= mx) passPrice = true;
+            });
+
+            let passCap = !activeCap.length;
+            activeCap.forEach(lbl => {
+                if (capStr.includes(lbl.dataset.value)) passCap = true;
+            });
+
+            let passDisc = !activeDisc.length;
+            if (activeDisc.length) passDisc = discount >= 1;
+
+            if (passPrice && passCap && passDisc) {
+                card.style.display = '';
+                visibleCount++;
+            } else {
+                card.style.display = 'none';
+            }
+        });
+
+        const countEl = document.getElementById('filter-count');
+        const numEl = document.getElementById('fc-num');
+        if (!noFilter) {
+            countEl.style.display = 'block';
+            numEl.textContent = visibleCount;
+        } else {
+            countEl.style.display = 'none';
+        }
+    }
+});
+
+function resetFilters() {
+    document.querySelectorAll('.filter-chip.active').forEach(l => l.classList.remove('active'));
+    document.querySelectorAll('.product-grid-item').forEach(c => c.style.display = '');
+    document.getElementById('filter-count').style.display = 'none';
+    document.getElementById('filter-active-count').style.display = 'none';
+}
+</script>
+
 {% include 'footer.html' %}
 {% endblock content%}

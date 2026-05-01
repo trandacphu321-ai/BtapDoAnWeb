@@ -39,7 +39,11 @@ def AddCart():
         
         # Calculate dynamic price based on capacity
         selected_price = float(product.price)
-        if capacity and getattr(product, 'capacity', None):
+        is_flash = product.is_flash_active
+        
+        if is_flash:
+            selected_price = product.flash_price
+        elif capacity and getattr(product, 'capacity', None):
             caps = product.capacity.split(',')
             for c in caps:
                 parts = c.split(':')
@@ -153,7 +157,9 @@ def updatecart(code):
                     # Update price based on new capacity
                     product_obj = Addproduct.objects(id=code).first()
                     new_price = float(product_obj.price)
-                    if capacity and getattr(product_obj, 'capacity', None):
+                    if product_obj.is_flash_active:
+                        new_price = product_obj.flash_price
+                    elif capacity and getattr(product_obj, 'capacity', None):
                         # Nếu capacity gửi lên có chứa giá (vd: "512GB:29000000")
                         selected_cap_name = capacity.split(':')[0].strip() if ':' in capacity else capacity.strip()
                         

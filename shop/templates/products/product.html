@@ -291,16 +291,38 @@
                         </div>
                         {% endif %}
 
+                        {% if product.is_flash_active %}
+                        <!-- Flash Sale Header -->
+                        <div style="background: linear-gradient(135deg, #ff4757, #c0392b); border-radius: 16px; padding: 15px 20px; margin-bottom: 25px; display: flex; align-items: center; justify-content: space-between; color: #fff; box-shadow: 0 8px 20px rgba(255, 71, 87, 0.2);">
+                            <div style="display: flex; align-items: center; gap: 10px;">
+                                <i class="fa fa-bolt" style="font-size: 24px; color: #fbbf24;"></i>
+                                <div>
+                                    <div style="font-weight: 900; font-size: 16px; text-transform: uppercase;">Flash Sale Đang Diễn Ra</div>
+                                    <div style="font-size: 12px; color: rgba(255,255,255,0.8);">Giá sốc có hạn!</div>
+                                </div>
+                            </div>
+                            <div style="text-align: right;">
+                                <div style="font-size: 11px; font-weight: 700; margin-bottom: 4px; text-transform: uppercase; color: rgba(255,255,255,0.9);">Kết thúc sau:</div>
+                                <div style="display: flex; gap: 4px; font-family: monospace; font-weight: 900; font-size: 16px;" id="flash-detail-countdown">
+                                    <span id="fd-h">00</span>:<span id="fd-m">00</span>:<span id="fd-s">00</span>
+                                </div>
+                            </div>
+                        </div>
+                        {% endif %}
+
                         <div class="price-box-large" style="margin-bottom: 35px;">
                             <div id="display-price" style="font-size: 36px; font-weight: 900; color: var(--clr-primary); letter-spacing: -1px;">
-                                {{ (product.price - product.price*product.discount/100) | vnd }}
+                                {{ product.effective_price | vnd }}
                             </div>
-                            {% if product.discount > 0 %}
-                            <div style="display: flex; align-items: center; gap: 12px; margin-top: 8px;">
+                            <div id="price-extras" style="display: flex; align-items: center; gap: 12px; margin-top: 8px;">
                                 <span id="display-original-price" style="text-decoration: line-through; color: #94a3b8; font-size: 20px; font-weight: 500;">{{ product.price | vnd }}</span>
-                                <span style="background: #fee2e2; color: #ef4444; padding: 4px 12px; border-radius: 8px; font-size: 14px; font-weight: 800;">TIẾT KIỆM {{ product.discount }}%</span>
+                                {% if product.is_flash_active %}
+                                    {% set pct = ((product.price - product.flash_price) / product.price * 100) | round | int %}
+                                    <span style="background: #fee2e2; color: #ef4444; padding: 4px 12px; border-radius: 8px; font-size: 14px; font-weight: 800;">GIẢM FLASH SALE {{ pct }}%</span>
+                                {% elif product.discount > 0 %}
+                                    <span style="background: #fee2e2; color: #ef4444; padding: 4px 12px; border-radius: 8px; font-size: 14px; font-weight: 800;">TIẾT KIỆM {{ product.discount }}%</span>
+                                {% endif %}
                             </div>
-                            {% endif %}
                         </div>
 
                         <form action="{{url_for('AddCart')}}" method="post" id="product-form">
@@ -541,6 +563,35 @@
                 Đánh giá từ khách hàng
             </h2>
             
+            <!-- Rating breakdown bars -->
+            {% set avg_info = products['average'][product.id] %}
+            {% if avg_info.count > 0 %}
+            <div style="background:#f8faff; border-radius:16px; padding:20px 24px; margin-bottom:30px; display:flex; gap:30px; align-items:center; flex-wrap:wrap;">
+                <div style="text-align:center; flex-shrink:0;">
+                    <div style="font-size:52px; font-weight:900; color:#2563eb; line-height:1;">{{ avg_info.average | round(1) }}</div>
+                    <div style="color:#fbbf24; font-size:18px; margin:4px 0;">
+                        {% for i in range(avg_info.average|int) %}<i class="fa fa-star"></i>{% endfor %}
+                        {% if avg_info.average % 1 >= 0.5 %}<i class="fa fa-star-half-o"></i>{% endif %}
+                    </div>
+                    <div style="color:#94a3b8; font-size:13px; font-weight:600;">{{ avg_info.count }} đánh giá</div>
+                </div>
+                <div style="flex:1; min-width:200px;">
+                    {% for star in [5,4,3,2,1] %}
+                    {% set star_count = rates | selectattr('rate_number', 'equalto', star) | list | length %}
+                    {% set pct = (star_count / avg_info.count * 100) | round | int %}
+                    <div style="display:flex; align-items:center; gap:10px; margin-bottom:8px;">
+                        <span style="font-size:13px; font-weight:700; color:#475569; width:16px;">{{ star }}</span>
+                        <i class="fa fa-star" style="color:#fbbf24; font-size:13px;"></i>
+                        <div style="flex:1; background:#e2e8f0; border-radius:10px; height:8px; overflow:hidden;">
+                            <div style="width:{{ pct }}%; background:linear-gradient(90deg,#fbbf24,#f59e0b); height:100%; border-radius:10px; transition:width 1s ease;"></div>
+                        </div>
+                        <span style="font-size:12px; color:#94a3b8; font-weight:600; width:28px;">{{ star_count }}</span>
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+            {% endif %}
+
             <div class="row">
                 <!-- REVIEW LIST -->
                 <div class="col-md-7">
@@ -552,6 +603,7 @@
                                 <p style="font-size: 13px; color: #cbd5e1;">Hãy là người đầu tiên chia sẻ cảm nhận!</p>
                             </div>
                         {% else %}
+
                             {% for rate in rates %}
                                 <div class="review-card" style="background: #fff; padding: 25px; border-radius: 20px; border: 2.5px solid #f1f5f9; margin-bottom: 20px; transition: all 0.2s;">
                                     <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;">
@@ -707,12 +759,23 @@
 
         // --- 2. Price Update Logic ---
         const capacitySelect = document.getElementById('capacity-selector');
+        const isFlash = {{ 'true' if product.is_flash_active else 'false' }};
+        const flashPrice = {{ product.flash_price if product.flash_price else 0 }};
+
         if (capacitySelect) {
             capacitySelect.addEventListener('change', function() {
                 const selected = this.options[this.selectedIndex];
-                const basePrice = parseFloat(selected.getAttribute('data-price'));
-                const discount = parseInt("{{ product.discount | default(0) }}") || 0;
-                const finalPrice = basePrice - (basePrice * discount / 100);
+                let basePrice = parseFloat(selected.getAttribute('data-price'));
+                let finalPrice;
+
+                if (isFlash) {
+                    // Trong Flash Sale, ưu tiên giá Flash (hoặc có thể cộng thêm chênh lệch capacity nếu muốn phức tạp hơn)
+                    finalPrice = flashPrice;
+                    // basePrice vẫn để giá gốc để gạch đi
+                } else {
+                    const discount = parseInt("{{ product.discount | default(0) }}") || 0;
+                    finalPrice = basePrice - (basePrice * discount / 100);
+                }
                 
                 const format = (n) => n.toLocaleString('vi-VN') + 'đ';
                 
@@ -735,6 +798,28 @@
             });
             // Trigger change event on load to sync initial price and title
             capacitySelect.dispatchEvent(new Event('change'));
+        }
+
+        // --- 2.5 Flash Sale Detail Countdown ---
+        if (isFlash) {
+            const endStr = '{{ product.flash_end_time.isoformat() if product.flash_end_time else "" }}';
+            const end = new Date(endStr);
+            function updateDetailCountdown() {
+                const diff = end - new Date();
+                if (diff <= 0) {
+                    location.reload(); // Reload to revert to normal price
+                    return;
+                }
+                const h = Math.floor(diff / 3600000);
+                const m = Math.floor((diff % 3600000) / 60000);
+                const s = Math.floor((diff % 60000) / 1000);
+                const fmt = n => String(n).padStart(2, '0');
+                document.getElementById('fd-h').textContent = fmt(h);
+                document.getElementById('fd-m').textContent = fmt(m);
+                document.getElementById('fd-s').textContent = fmt(s);
+            }
+            setInterval(updateDetailCountdown, 1000);
+            updateDetailCountdown();
         }
 
         // --- 3. Rating Star Picker ---
@@ -804,6 +889,142 @@
             });
         }
     });
+</script>
+
+<!-- ===== STICKY ADD TO CART BAR ===== -->
+<div id="sticky-cart-bar" style="
+    position:fixed; bottom:-100px; left:0; right:0; z-index:8000;
+    background:#fff; border-top:2px solid #e2e8f0;
+    box-shadow:0 -4px 20px rgba(0,0,0,0.10);
+    padding:12px 0;
+    transition: bottom 0.35s cubic-bezier(0.4,0,0.2,1);
+">
+    <div class="container">
+        <div style="display:flex; align-items:center; gap:20px; flex-wrap:wrap;">
+            <div style="display:flex; align-items:center; gap:14px; flex:1; min-width:0;">
+                <img src="{{ product.image_1 }}" alt="{{ product.name }}" style="width:48px; height:48px; object-fit:contain; border-radius:10px; background:#f8fafc; padding:4px; flex-shrink:0;">
+                <div style="min-width:0;">
+                    <div style="font-weight:800; font-size:14px; color:#0f172a; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;">{{ product.name }}</div>
+                    <div style="font-weight:900; font-size:16px; color:#2563eb;">{{ (product.price - product.price*product.discount/100) | vnd }}</div>
+                </div>
+            </div>
+            <form action="{{ url_for('AddCart') }}" method="post" style="display:flex; gap:10px; flex-shrink:0;">
+                <input type="hidden" name="product_id" value="{{ product.id }}">
+                <input type="hidden" name="color" value="">
+                <input type="hidden" name="capacity" value="">
+                <button type="submit" style="
+                    background:linear-gradient(135deg,#2563eb,#7c3aed);
+                    color:#fff; font-weight:800; padding:10px 24px;
+                    border-radius:12px; border:none; cursor:pointer;
+                    font-size:14px; display:flex; align-items:center; gap:8px;
+                    transition:all 0.2s;
+                " onmouseover="this.style.transform='translateY(-2px)'" onmouseout="this.style.transform=''">
+                    <i class="fa fa-shopping-cart"></i> THÊM GIỎ HÀNG
+                </button>
+            </form>
+        </div>
+    </div>
+</div>
+
+<style>
+/* Image Magnifier */
+.gallery-frame { overflow: visible !important; }
+.gallery-frame img { cursor: crosshair; }
+#img-magnifier-glass {
+    position: absolute;
+    border: 3px solid #2563eb;
+    border-radius: 50%;
+    cursor: none;
+    width: 90px;
+    height: 90px;
+    box-shadow: 0 0 0 3px #fff, 0 8px 30px rgba(37,99,235,0.3);
+    pointer-events: none;
+    display: none;
+    z-index: 100;
+    background-repeat: no-repeat;
+}
+</style>
+
+<script>
+// ===== STICKY CART BAR =====
+(function() {
+    const bar = document.getElementById('sticky-cart-bar');
+    const form = document.getElementById('product-form');
+    if (!bar || !form) return;
+
+    const observer = new IntersectionObserver((entries) => {
+        entries.forEach(entry => {
+            if (!entry.isIntersecting) {
+                bar.style.bottom = '0';
+            } else {
+                bar.style.bottom = '-100px';
+            }
+        });
+    }, { threshold: 0 });
+
+    observer.observe(form);
+
+    // Sync color/capacity from main form to sticky bar
+    const colorSel = form.querySelector('select[name="color"]');
+    const capSel = form.querySelector('select[name="capacity"]');
+    const stickyColor = bar.querySelector('input[name="color"]');
+    const stickyCap = bar.querySelector('input[name="capacity"]');
+
+    if (colorSel && stickyColor) {
+        colorSel.addEventListener('change', () => stickyColor.value = colorSel.value);
+        stickyColor.value = colorSel.value;
+    }
+    if (capSel && stickyCap) {
+        capSel.addEventListener('change', () => stickyCap.value = capSel.value);
+        stickyCap.value = capSel.value;
+    }
+})();
+
+// ===== IMAGE MAGNIFIER =====
+(function() {
+    const galleryFrame = document.querySelector('.gallery-frame');
+    const mainImg = document.getElementById('main-product-img');
+    if (!galleryFrame || !mainImg) return;
+
+    let glass = document.createElement('div');
+    glass.id = 'img-magnifier-glass';
+    galleryFrame.style.position = 'relative';
+    galleryFrame.appendChild(glass);
+
+    const zoom = 2.5;
+
+    function moveMagnifier(e) {
+        const rect = mainImg.getBoundingClientRect();
+        const frameRect = galleryFrame.getBoundingClientRect();
+        let x = e.clientX - frameRect.left;
+        let y = e.clientY - frameRect.top;
+
+        const hw = glass.offsetWidth / 2;
+        const hh = glass.offsetHeight / 2;
+
+        const imgX = e.clientX - rect.left;
+        const imgY = e.clientY - rect.top;
+
+        glass.style.left = (x - hw) + 'px';
+        glass.style.top  = (y - hh) + 'px';
+
+        const bw = glass.offsetWidth * zoom;
+        const bh = glass.offsetHeight * zoom;
+        const bgX = -(imgX * zoom - hw);
+        const bgY = -(imgY * zoom - hh);
+
+        glass.style.backgroundImage  = `url('${mainImg.src}')`;
+        glass.style.backgroundSize   = `${rect.width * zoom}px ${rect.height * zoom}px`;
+        glass.style.backgroundPosition = `${bgX}px ${bgY}px`;
+    }
+
+    galleryFrame.addEventListener('mousemove', function(e) {
+        if (mainImg.style.display === 'none') return; // don't show on video
+        glass.style.display = 'block';
+        moveMagnifier(e);
+    });
+    galleryFrame.addEventListener('mouseleave', () => glass.style.display = 'none');
+})();
 </script>
 
 {% include 'footer.html' %}

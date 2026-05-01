@@ -1,0 +1,110 @@
+{% extends "base.html" %}
+{%block content%}
+{% include 'header.html' %}
+
+<div id="page-content" class="single-page">
+    <div class="container" style="padding-top:30px; padding-bottom:50px;">
+
+        <!-- Flash Sale Header -->
+        <div style="
+            background: linear-gradient(135deg, #ff4757, #c0392b);
+            border-radius: 24px; padding: 28px 36px; margin-bottom: 30px;
+            display: flex; align-items: center; justify-content: space-between;
+            flex-wrap: wrap; gap: 20px; position: relative; overflow: hidden;
+            box-shadow: 0 12px 40px rgba(255,71,87,0.3);
+        ">
+            <div style="position:absolute;top:-30px;right:-30px;width:180px;height:180px;background:rgba(255,255,255,0.05);border-radius:50%;"></div>
+            <div style="z-index:1;">
+                <h1 style="color:#fff;font-weight:900;font-size:32px;margin:0;letter-spacing:-0.5px;">
+                    <i class="fa fa-bolt" style="color:#fbbf24;"></i> FLASH SALE
+                </h1>
+                <p style="color:rgba(255,255,255,0.8);margin:6px 0 0; font-weight:600;">{{ products|length }} sản phẩm đang giảm giá cực sốc!</p>
+            </div>
+            {% if flash_end_time %}
+            <div style="display:flex; align-items:center; gap:10px; z-index:1;">
+                <span style="color:rgba(255,255,255,0.8);font-size:14px;font-weight:600;white-space:nowrap;">Kết thúc sau:</span>
+                <div style="display:flex;gap:8px;">
+                    <div class="flash-time-box" id="fs-h">00</div>
+                    <span style="color:#fff;font-weight:900;font-size:22px;align-self:center;">:</span>
+                    <div class="flash-time-box" id="fs-m">00</div>
+                    <span style="color:#fff;font-weight:900;font-size:22px;align-self:center;">:</span>
+                    <div class="flash-time-box" id="fs-s">00</div>
+                </div>
+            </div>
+            {% endif %}
+        </div>
+
+        {% if products|length == 0 %}
+        <div style="text-align:center; padding:80px 20px; background:#fff; border-radius:20px; border:2px dashed #fecaca;">
+            <i class="fa fa-bolt" style="font-size:48px; color:#fecaca; margin-bottom:16px;"></i>
+            <h3 style="font-weight:800; color:#ef4444;">Hiện chưa có Flash Sale nào đang diễn ra</h3>
+            <p style="color:#94a3b8;">Hãy quay lại sau nhé!</p>
+            <a href="{{ url_for('home') }}" class="btn btn-danger" style="border-radius:12px; margin-top:10px;">Về trang chủ</a>
+        </div>
+        {% else %}
+        <div class="product-grid" style="grid-template-columns: repeat(4,1fr);">
+            {% for p in products %}
+            <div class="product-grid-item">
+                <a href="{{ url_for('detail', id=p.id) }}" class="product-card-link">
+                    <div class="product-card" style="position:relative;">
+                        <!-- Flash Sale badge -->
+                        <div style="position:absolute;top:10px;left:10px;z-index:5;background:linear-gradient(135deg,#ff4757,#c0392b);color:#fff;font-size:11px;font-weight:800;padding:4px 10px;border-radius:8px;letter-spacing:0.5px;">
+                            ⚡ FLASH SALE
+                        </div>
+                        <div class="product-card-img">
+                            <img src="{{ p.image_1 | firebase_image }}" alt="{{ p.name }}">
+                        </div>
+                        <div class="product-card-info">
+                            <h5 class="product-card-name">{{ p.name }}</h5>
+                            <div class="product-card-pricing">
+                                <span class="product-card-price" style="color:#ff4757;">{{ p.flash_price|vnd }}</span>
+                                <span class="product-card-original">{{ p.price|vnd }}</span>
+                            </div>
+                            {% set pct = ((p.price - p.flash_price) / p.price * 100)|round|int %}
+                            <div style="margin-top:6px;">
+                                <span style="background:#fef2f2;color:#ef4444;font-weight:800;font-size:12px;padding:3px 10px;border-radius:6px;">Tiết kiệm {{ pct }}%</span>
+                            </div>
+                        </div>
+                    </div>
+                </a>
+            </div>
+            {% endfor %}
+        </div>
+        {% endif %}
+
+    </div>
+</div>
+
+<style>
+.flash-time-box {
+    background: rgba(255,255,255,0.15); color: #fff; font-weight: 900; font-size: 22px;
+    min-width: 52px; height: 52px; border-radius: 12px;
+    display: flex; align-items: center; justify-content: center;
+    border: 2px solid rgba(255,255,255,0.3); font-variant-numeric: tabular-nums;
+}
+.product-grid { display:grid; gap:16px; }
+@media(max-width:992px){ .product-grid { grid-template-columns: repeat(3,1fr) !important; } }
+@media(max-width:768px){ .product-grid { grid-template-columns: repeat(2,1fr) !important; } }
+@media(max-width:480px){ .product-grid { grid-template-columns: 1fr !important; } }
+</style>
+
+<script>
+(function() {
+    const endStr = '{{ flash_end_time or "" }}';
+    if (!endStr) return;
+    const end = new Date(endStr);
+    function tick() {
+        const diff = end - new Date();
+        if (diff <= 0) return;
+        const h = Math.floor(diff/3600000), m = Math.floor((diff%3600000)/60000), s = Math.floor((diff%60000)/1000);
+        const fmt = n => String(n).padStart(2,'0');
+        document.getElementById('fs-h').textContent = fmt(h);
+        document.getElementById('fs-m').textContent = fmt(m);
+        document.getElementById('fs-s').textContent = fmt(s);
+    }
+    tick(); setInterval(tick, 1000);
+})();
+</script>
+
+{% include 'footer.html' %}
+{% endblock content %}

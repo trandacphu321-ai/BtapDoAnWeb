@@ -1,17 +1,11 @@
 {% extends 'admin/layout.html' %}
 {% block content  %}
 {%include 'admin/header.html'%}
-<!-- Content Wrapper. Contains page content -->
 <div class="content-wrapper">
-    <!-- Main content -->
-
-    <!-- Main content -->
     <section class="content">
         <div class="container-fluid">
             <div class="row mb-2">
-                <div class="col-sm-6">
-                    <h1></h1>
-                </div>
+                <div class="col-sm-6"><h1><i class="fas fa-users-cog text-primary"></i> Quản lý Quản trị viên</h1></div>
                 <div class="col-sm-6">
                     <ol class="breadcrumb float-sm-right">
                         <li class="breadcrumb-item"><a href="{{url_for('admin_manager')}}">Trang chủ</a></li>
@@ -19,21 +13,32 @@
                     </ol>
                 </div>
             </div>
-        </div><!-- /.container-fluid -->
+        </div>
     </section>
+
     <section class="content">
         <div class="container-fluid">
+            <!-- RBAC Legend -->
+            <div class="alert alert-info d-flex align-items-center" style="border-radius:12px;">
+                <i class="fas fa-shield-alt fa-2x mr-3"></i>
+                <div>
+                    <strong>Hệ thống Phân quyền (RBAC):</strong>
+                    <span class="badge badge-dark ml-2">👑 Superadmin</span> Toàn quyền &nbsp;|&nbsp;
+                    <span class="badge badge-primary">🏢 Manager</span> Xem doanh thu + Quản lý đơn &nbsp;|&nbsp;
+                    <span class="badge badge-warning">📦 NV Kho</span> Quản lý sản phẩm &nbsp;|&nbsp;
+                    <span class="badge badge-info">🎧 CSKH</span> Chỉ xem đơn hàng
+                </div>
+            </div>
+
             <div class="row">
                 <div class="col-12">
-                    <!-- /.card -->
-                    <div class="card">
+                    <div class="card shadow-sm" style="border-radius:15px;">
                         <div class="card-header">
-                            <h3 class="card-title">Quản lý quản trị viên</h3>
+                            <h3 class="card-title">Danh sách Quản trị viên</h3>
                         </div>
                         <div class="row justify-content-center">
-                            <div style=" margin-top: 20px; margin-bottom: -45px; ">{%include '_messages.html'%}</div>
+                            <div style="margin-top:20px;margin-bottom:-45px;">{%include '_messages.html'%}</div>
                         </div>
-                        <!-- /.card-header -->
                         <div class="card-body">
                             <table id="example1" class="table table-bordered table-striped">
                                 <thead>
@@ -42,54 +47,65 @@
                                     <th>Tên</th>
                                     <th>Tên người dùng</th>
                                     <th>Email</th>
-                                    <th>Xóa</th>
+                                    <th>Vai trò</th>
+                                    <th>Thao tác</th>
                                 </tr>
                                 </thead>
                                 <tbody>
                                 {%for admin in admins%}
                                 <tr>
                                     <td>{{loop.index}}</td>
-                                    <td>{{admin.name}}</td>
+                                    <td><strong>{{admin.name}}</strong></td>
                                     <td>{{admin.username}}</td>
                                     <td>{{admin.email}}</td>
                                     <td>
-                                        {% if admin.name != user.name%}
-                                        <button type="button" class="btn  btn-danger" data-toggle="modal"
-                                                data-target="#staticBackdrop-{{admin.id}}">
-                                            Xóa
-                                        </button>
+                                        {% if admin.role == 'superadmin' %}
+                                        <span class="badge badge-dark">👑 Superadmin</span>
+                                        {% elif admin.role == 'manager' %}
+                                        <span class="badge badge-primary">🏢 Manager</span>
+                                        {% elif admin.role == 'staff_warehouse' %}
+                                        <span class="badge badge-warning">📦 NV Kho</span>
+                                        {% elif admin.role == 'staff_support' %}
+                                        <span class="badge badge-info">🎧 CSKH</span>
                                         {% else %}
-                                        <button type="button" class="btn  btn-dark btn" data-toggle="modal"
-                                                data-target="#staticBackdrop-{{admin.id}}" disabled>
-                                            Xóa
-                                        </button>
+                                        <span class="badge badge-secondary">{{ admin.role or 'superadmin' }}</span>
+                                        {% endif %}
+                                    </td>
+                                    <td style="display:flex;gap:6px;flex-wrap:wrap;">
+                                        {% if user.is_superadmin and admin.name != user.name %}
+                                        <form action="{{ url_for('change_admin_role', id=admin.id) }}" method="POST" style="display:flex;gap:6px;">
+                                            <select name="role" class="form-control form-control-sm" style="width:140px;border-radius:8px;">
+                                                <option value="superadmin" {% if admin.role=='superadmin' %}selected{% endif %}>👑 Superadmin</option>
+                                                <option value="manager" {% if admin.role=='manager' %}selected{% endif %}>🏢 Manager</option>
+                                                <option value="staff_warehouse" {% if admin.role=='staff_warehouse' %}selected{% endif %}>📦 NV Kho</option>
+                                                <option value="staff_support" {% if admin.role=='staff_support' %}selected{% endif %}>🎧 CSKH</option>
+                                            </select>
+                                            <button type="submit" class="btn btn-sm btn-primary" style="border-radius:8px;">Lưu</button>
+                                        </form>
+                                        {% endif %}
+                                        {% if admin.name != user.name %}
+                                        <button type="button" class="btn btn-sm btn-danger" data-toggle="modal" data-target="#modal-{{admin.id}}" style="border-radius:8px;">Xóa</button>
+                                        {% else %}
+                                        <button class="btn btn-sm btn-secondary" disabled style="border-radius:8px;">Bạn</button>
                                         {% endif %}
                                     </td>
                                 </tr>
-                                <!-- Modal -->
-                                <div class="modal fade" id="staticBackdrop-{{admin.id}}" data-backdrop="static"
-                                     data-keyboard="false"
-                                     tabindex="-1" aria-labelledby="staticBackdropLabel" aria-hidden="true">
+                                <!-- Delete Modal -->
+                                <div class="modal fade" id="modal-{{admin.id}}" data-backdrop="static" tabindex="-1">
                                     <div class="modal-dialog">
-                                        <div class="modal-content">
+                                        <div class="modal-content" style="border-radius:15px;">
                                             <div class="modal-header">
-                                                <h5 class="modal-title" id="staticBackdropLabel">{{admin.name}}</h5>
-                                                <button type="button" class="close" data-dismiss="modal"
-                                                        aria-label="Close">
-                                                    <span aria-hidden="true">&times;</span>
-                                                </button>
+                                                <h5 class="modal-title">Xóa quản trị viên</h5>
+                                                <button type="button" class="close" data-dismiss="modal"><span>&times;</span></button>
                                             </div>
                                             <div class="modal-body">
-                                                <span class="text-danger">Bạn có chắc chắn xóa quản trị viên không {{admin.name}}</span>
+                                                <span class="text-danger">Bạn có chắc chắn xóa <strong>{{admin.name}}</strong>?</span>
                                             </div>
                                             <div class="modal-footer">
-                                                <button type="button" class="btn btn-warning  btn-secondary"
-                                                        data-dismiss="modal">Hủy bỏ
-                                                </button>
+                                                <button type="button" class="btn btn-secondary" data-dismiss="modal">Hủy</button>
                                                 <form action="{{url_for('delete_admin', id=admin.id)}}" method="POST">
                                                     <button type="submit" class="btn btn-danger">Xóa</button>
                                                 </form>
-
                                             </div>
                                         </div>
                                     </div>
@@ -98,16 +114,11 @@
                                 </tbody>
                             </table>
                         </div>
-                        <!-- /.card-body -->
                     </div>
-                    <!-- /.card -->
                 </div>
             </div>
         </div>
-
     </section>
-    <!-- /.content -->
-
 </div>
 {%include 'admin/footer.html'%}
 {% endblock content %}

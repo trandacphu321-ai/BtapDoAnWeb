@@ -249,6 +249,30 @@ def delete_admin(id):
     return redirect(url_for('admin_manager'))
 
 
+@app.route('/admin/change-role/<string:id>', methods=['POST'])
+def change_admin_role(id):
+    if 'email' not in session:
+        flash('Please login first', 'danger')
+        return redirect(url_for('unified_login'))
+    current_user = Admin.objects(email=session['email']).first()
+    if not current_user or not current_user.is_superadmin:
+        flash('Bạn không có quyền thực hiện thao tác này!', 'danger')
+        return redirect(url_for('admin_manager'))
+    target_admin = Admin.objects(id=id).first()
+    if not target_admin:
+        flash('Không tìm thấy quản trị viên!', 'warning')
+        return redirect(url_for('admin_manager'))
+    new_role = request.form.get('role', 'superadmin')
+    valid_roles = ['superadmin', 'manager', 'staff_warehouse', 'staff_support']
+    if new_role not in valid_roles:
+        flash('Vai trò không hợp lệ!', 'danger')
+        return redirect(url_for('admin_manager'))
+    target_admin.role = new_role
+    target_admin.save()
+    flash(f'Đã cập nhật vai trò của {target_admin.name} thành {new_role}!', 'success')
+    return redirect(url_for('admin_manager'))
+
+
 @app.route('/product')
 def product():
     if 'email' not in session:
@@ -335,6 +359,62 @@ def logout_old():
     else:
         session.pop('email', None)
     return redirect(url_for('unified_login'))
+
+
+# ======================================================================
+#  FLASH SALE MANAGEMENT
+# ======================================================================
+@app.route('/admin/flash-sale')
+def manage_flash_sale():
+    if 'email' not in session:
+        flash('Please login first', 'danger')
+        return redirect(url_for('unified_login'))
+    user = Admin.objects(email=session['email']).first()
+    from datetime import datetime
+
+    all_products = Addproduct.objects(stock__gt=0).order_by('name').all()
+    flash_products = [p for p in all_products if p.is_flash_active]
+    expired_count = len([p for p in all_products if p.flash_sale and not p.is_flash_active])
+
+    return render_template('admin/manage_flash_sale.html',
+                           title='Flash Sale',
+                           user=user,
+                           all_products=all_products,
+                           flash_products=flash_products,
+                           expired_count=expired_count)
+
+
+@app.route('/admin/flash-sale/toggle/<string:id>', methods=['POST'])
+def toggle_flash_sale(id):
+    if 'email' not in session:
+        flash('Please login first', 'danger')
+        return redirect(url_for('unified_login'))
+    from datetime import datetime
+
+    product = Addproduct.objects(id=id).first()
+    if not product:
+        flash('Không tìm thấy sản phẩm!', 'danger')
+        return redirect(url_for('manage_flash_sale'))
+
+    action = request.form.get('action', 'off')
+
+    if action == 'on':
+        flash_price = request.form.get('flash_price', 0)
+        flash_end_str = request.form.get('flash_end_time', '')
+        try:
+            product.flash_price = float(flash_price)
+            product.flash_end_time = datetime.strptime(flash_end_str, '%Y-%m-%dT%H:%M')
+            product.flash_sale = True
+            product.save()
+            flash(f'✅ Đã bật Flash Sale cho "{product.name}"!', 'success')
+        except Exception as e:
+            flash(f'Lỗi: {str(e)}', 'danger')
+    else:
+        product.flash_sale = False
+        product.save()
+        flash(f'🔕 Đã tắt Flash Sale cho "{product.name}".', 'warning')
+
+    return redirect(url_for('manage_flash_sale'))
 
 
 # ======================================================================

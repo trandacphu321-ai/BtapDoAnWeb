@@ -93,9 +93,8 @@ def medium():
 @app.route('/')
 def home():
     page = request.args.get('page', 1, type=int)
-    category = Category.objects(name="Điện thoại di động").first() # Thay đổi do mình setup DB mẫu theo tiếng việt
+    category = Category.objects(name="Điện thoại di động").first()
 
-    # Nếu không tìm thấy dùng category đầu tiên
     cat_query = {'category': category} if category else {}
 
     products_all = Addproduct.objects(stock__gt=0, **cat_query).order_by('-id').paginate(page=page, per_page=4)
@@ -103,21 +102,31 @@ def home():
     products_new = Addproduct.objects(stock__gt=0, **cat_query).order_by('-id')
     products_sell = Addproduct.objects(stock__gt=0, discount__gt=0, **cat_query).order_by('-discount').limit(10)
 
-    # --- AI Recommendation: Dành riêng cho bạn (Collaborative) ---
+    # ===== FLASH SALE =====
+    from datetime import datetime
+    flash_sale_products = list(Addproduct.objects(flash_sale=True, stock__gt=0).all())
+    flash_sale_products = [p for p in flash_sale_products if p.is_flash_active]
+    # Lấy thời điểm kết thúc gần nhất trong các sản phẩm Flash Sale
+    flash_end_time = None
+    if flash_sale_products:
+        ends = [p.flash_end_time for p in flash_sale_products if p.flash_end_time]
+        if ends:
+            flash_end_time = min(ends)  # Lấy thời gian kết thúc sớm nhất
+
+    # --- AI Recommendation ---
     ai_suggest = []
     if current_user.is_authenticated:
         ai_suggest = get_collaborative_recommendations(current_user.id, limit=4)
-    # -------------------------------------------------------------
 
     avg_data = medium()
     top_rated_ids = [pid for pid, data in avg_data.items() if data['count'] > 0]
     top_rated_ids.sort(key=lambda pid: (avg_data[pid]['average'], avg_data[pid]['count']), reverse=True)
-    
+
     top_rated_prods = []
     for pid in top_rated_ids[:6]:
         p = Addproduct.objects(id=pid, stock__gt=0).first()
         if p: top_rated_prods.append(p)
-        
+
     if len(top_rated_prods) < 4:
         top_rated_prods = list(Addproduct.objects(stock__gt=0).order_by('-id').limit(6))
 
@@ -128,7 +137,9 @@ def home():
         'sell': products_sell,
         'average': avg_data,
         'ai_suggest': ai_suggest,
-        'top_rated': top_rated_prods
+        'top_rated': top_rated_prods,
+        'flash_sale': flash_sale_products,
+        'flash_end_time': flash_end_time.isoformat() if flash_end_time else None,
     }
 
     return render_template(
@@ -137,6 +148,28 @@ def home():
         brands=brands(),
         categories=categories()
     )
+
+
+@app.route('/flash-sale')
+def flash_sale_page():
+    """Trang hiển thị tất cả sản phẩm đang Flash Sale"""
+    from datetime import datetime
+    all_fs = list(Addproduct.objects(flash_sale=True, stock__gt=0).all())
+    active_fs = [p for p in all_fs if p.is_flash_active]
+    flash_end_time = None
+    if active_fs:
+        ends = [p.flash_end_time for p in active_fs if p.flash_end_time]
+        if ends:
+            flash_end_time = min(ends)
+
+    avg_data = medium()
+    return render_template('customers/flash_sale.html',
+                           title='Flash Sale',
+                           products=active_fs,
+                           average=avg_data,
+                           flash_end_time=flash_end_time.isoformat() if flash_end_time else None,
+                           brands=brands(),
+                           categories=categories())
 
 
 @app.route('/load_more')
@@ -815,6 +848,29 @@ def detail(id):
 # ===================================================================
 #  SEARCH
 # ===================================================================
+
+# ===================================================================
+#  LIVE SEARCH API (AJAX)
+# ===================================================================
+
+@app.route('/api/search')
+def api_search():
+    from flask import jsonify
+    q = request.args.get('q', '').strip()
+    if len(q) < 2:
+        return jsonify([])
+    results = Addproduct.objects(name__icontains=q).limit(6)
+    data = []
+    for p in results:
+        final_price = p.price - p.price * p.discount / 100
+        data.append({
+            'id': str(p.id),
+            'name': p.name,
+            'price': f"{int(final_price):,}đ",
+            'image': p.image_1 or '',
+        })
+    return jsonify(data)
+
 
 @app.route('/search', methods=['GET', 'POST'])
 def search():

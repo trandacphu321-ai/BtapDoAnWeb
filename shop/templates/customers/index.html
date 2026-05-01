@@ -280,7 +280,115 @@
         display: none;
     }
     </style>
+
+    <!-- ========== FLASH SALE COUNTDOWN BANNER ========== -->
+    {% if products.get('flash_sale') and products['flash_sale']|length > 0 %}
+    <section id="flash-sale-section" style="padding: 10px 0 20px;">
+        <div class="container">
+            <div style="
+                background: linear-gradient(135deg, #ff4757, #c0392b);
+                border-radius: 24px; padding: 20px 30px;
+                display: flex; align-items: center; justify-content: space-between;
+                flex-wrap: wrap; gap: 16px;
+                box-shadow: 0 10px 40px rgba(255,71,87,0.35);
+                position: relative; overflow: hidden;
+            ">
+                <div style="position:absolute; top:-30px; right:-30px; width:160px; height:160px; background:rgba(255,255,255,0.06); border-radius:50%;"></div>
+                <div style="position:absolute; bottom:-40px; right:120px; width:100px; height:100px; background:rgba(255,255,255,0.04); border-radius:50%;"></div>
+
+                <!-- Title + Product count -->
+                <div style="display:flex; align-items:center; gap:16px; z-index:1;">
+                    <div style="background:rgba(255,255,255,0.15); border-radius:16px; padding:12px 16px; display:flex; align-items:center; gap:10px;">
+                        <i class="fa fa-bolt" style="color:#fbbf24; font-size:24px;"></i>
+                        <div>
+                            <div style="color:#fff; font-weight:900; font-size:20px; text-transform:uppercase; letter-spacing:1px;">Flash Sale</div>
+                            <div style="color:rgba(255,255,255,0.8); font-size:12px; font-weight:600;">{{ products['flash_sale']|length }} sản phẩm đang giảm!</div>
+                        </div>
+                    </div>
+                    <!-- Mini product thumbnails -->
+                    <div style="display:flex; gap:6px; z-index:1;">
+                        {% for p in products['flash_sale'][:3] %}
+                        <a href="{{ url_for('detail', id=p.id) }}" style="display:block;">
+                            <img src="{{ p.image_1 }}" style="width:44px; height:44px; object-fit:contain; background:rgba(255,255,255,0.9); border-radius:10px; border:2px solid rgba(255,255,255,0.5);">
+                        </a>
+                        {% endfor %}
+                        {% if products['flash_sale']|length > 3 %}
+                        <div style="width:44px; height:44px; background:rgba(255,255,255,0.15); border-radius:10px; display:flex; align-items:center; justify-content:center; color:#fff; font-weight:800; font-size:13px; border:2px solid rgba(255,255,255,0.3);">+{{ products['flash_sale']|length - 3 }}</div>
+                        {% endif %}
+                    </div>
+                </div>
+
+                <!-- Countdown (real end time) -->
+                <div style="display:flex; align-items:center; gap:10px; z-index:1;">
+                    <span style="color:rgba(255,255,255,0.8); font-size:14px; font-weight:600; white-space:nowrap;">Kết thúc sau:</span>
+                    <div style="display:flex; gap:8px;">
+                        <div class="flash-time-box" id="fs-hours">00</div>
+                        <span style="color:#fff; font-weight:900; font-size:20px; align-self:center;">:</span>
+                        <div class="flash-time-box" id="fs-minutes">00</div>
+                        <span style="color:#fff; font-weight:900; font-size:20px; align-self:center;">:</span>
+                        <div class="flash-time-box" id="fs-seconds">00</div>
+                    </div>
+                </div>
+
+                <!-- CTA -->
+                <a href="{{ url_for('flash_sale_page') }}" style="
+                    background:#fff; color:#ff4757; font-weight:800; padding:12px 28px;
+                    border-radius:14px; text-decoration:none; font-size:14px;
+                    box-shadow:0 4px 15px rgba(0,0,0,0.15); z-index:1; transition:all 0.2s; white-space:nowrap;
+                " onmouseover="this.style.transform='translateY(-2px)'" onmouseout="this.style.transform=''">
+                    <i class="fa fa-shopping-bag"></i> Mua ngay
+                </a>
+            </div>
+        </div>
+    </section>
+    <style>
+    .flash-time-box {
+        background: rgba(255,255,255,0.15); color: #fff; font-weight: 900; font-size: 22px;
+        min-width: 48px; height: 52px; border-radius: 12px;
+        display: flex; align-items: center; justify-content: center;
+        border: 2px solid rgba(255,255,255,0.25);
+        font-variant-numeric: tabular-nums; transition: transform 0.1s;
+    }
+    </style>
+    <script>
+    (function() {
+        // Dùng thời gian kết thúc thực từ backend
+        const endStr = '{{ products["flash_end_time"] or "" }}';
+        const end = endStr ? new Date(endStr) : null;
+        if (!end) return;
+
+        function updateCountdown() {
+            const diff = end - new Date();
+            if (diff <= 0) {
+                ['fs-hours','fs-minutes','fs-seconds'].forEach(id => document.getElementById(id).textContent = '00');
+                document.getElementById('flash-sale-section').style.opacity = '0.5';
+                return;
+            }
+            const h = Math.floor(diff / 3600000);
+            const m = Math.floor((diff % 3600000) / 60000);
+            const s = Math.floor((diff % 60000) / 1000);
+            const fmt = n => String(n).padStart(2, '0');
+
+            const sEl = document.getElementById('fs-seconds');
+            if (sEl.textContent !== fmt(s)) {
+                sEl.style.transform = 'scale(1.2)';
+                setTimeout(() => sEl.style.transform = '', 100);
+            }
+            document.getElementById('fs-hours').textContent = fmt(h);
+            document.getElementById('fs-minutes').textContent = fmt(m);
+            sEl.textContent = fmt(s);
+        }
+
+        updateCountdown();
+        setInterval(updateCountdown, 1000);
+    })();
+    </script>
+    {% endif %}
+
+
     {% if products.get('ai_suggest') and products['ai_suggest']|length > 0 %}
+
+
     <section class="ai-recommender-section">
         <div class="container">
             <div class="ai-container-box">

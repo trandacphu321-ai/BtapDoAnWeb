@@ -14,6 +14,11 @@ class Addproduct(db.Document):
     desc = db.StringField(required=True)
     pub_date = db.DateTimeField(default=datetime.utcnow)
 
+    # ===== FLASH SALE =====
+    flash_sale = db.BooleanField(default=False)          # Có đang trong Flash Sale không
+    flash_price = db.FloatField(default=0)               # Giá Flash Sale (0 = chưa đặt)
+    flash_end_time = db.DateTimeField(required=False)    # Thời điểm kết thúc Flash Sale
+
     category = db.ReferenceField('Category', required=True)
     brand = db.ReferenceField('Brand', required=True)
 
@@ -28,8 +33,25 @@ class Addproduct(db.Document):
     meta = {
         'collection': 'products', 
         'strict': False,
-        'indexes': ['name', 'category', 'brand', 'price']
+        'indexes': ['name', 'category', 'brand', 'price', 'flash_sale']
     }
+
+    @property
+    def effective_price(self):
+        """Giá thực tế: ưu tiên giá Flash Sale nếu đang diễn ra"""
+        from datetime import datetime
+        if self.flash_sale and self.flash_price and self.flash_price > 0:
+            if self.flash_end_time and datetime.utcnow() < self.flash_end_time:
+                return self.flash_price
+        return self.price - self.price * self.discount / 100
+
+    @property
+    def is_flash_active(self):
+        """Kiểm tra Flash Sale còn hiệu lực không"""
+        from datetime import datetime
+        if not self.flash_sale or not self.flash_end_time:
+            return False
+        return datetime.utcnow() < self.flash_end_time
 
     def __repr__(self):
         return '<Addproduct %r>' % self.name

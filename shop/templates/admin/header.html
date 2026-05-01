@@ -205,6 +205,16 @@
                     </li>
 
                     <li class="nav-item">
+                        <a href="{{ url_for('manage_flash_sale')}}"
+                           class="nav-link {% if request.endpoint == 'manage_flash_sale' %} active {% endif %}">
+                            <i class="nav-icon fas fa-bolt" style="color: #ffc107;"></i>
+                            <p>
+                                Quản lý Flash Sale
+                            </p>
+                        </a>
+                    </li>
+
+                    <li class="nav-item">
                         <a href="{{ url_for('orders_manager')}}"
                            class="nav-link {% if request.endpoint == 'orders' %} active {% endif %}">
                             <i class="nav-icon fas fa-inbox"></i>
