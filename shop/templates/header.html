@@ -195,7 +195,7 @@
         <div class="row">
 
             <!-- logo -->
-            <div class="col-lg-3 col-md-3 col-sm-3 col-xs-8">
+            <div class="col-lg-3 col-md-3 col-sm-3 col-xs-5">
                 <div class="logo" style="margin-top:4px">
                     <a href="{{ url_for('home') }}" class="logo-text">
                         <div class="logo-icon">M</div>
@@ -208,8 +208,9 @@
             </div>
 
             <!-- search -->
-            <div class="col-lg-6 col-md-6 col-sm-6 col-xs-12">
-                <div class="search-bg">
+            <!-- Chỉnh lại tỷ lệ cột cho search nhỏ lại một chút để nhường chỗ cho Giỏ hàng & Đăng nhập -->
+            <div class="col-lg-5 col-md-4 col-sm-4 col-xs-12">
+                <div class="search-bg" style="margin-top: 5px;">
                     <form action="{{ url_for('search')}}" method="post">
                         <input type="text" class="form-control" name="search" placeholder="Search Here">
                         <button type="Submit" style="margin-bottom: 6px;"><i class="fa fa-search"></i></button>
@@ -218,9 +219,10 @@
             </div>
 
             <!-- account -->
-            <div class="col-lg-3 col-md-3 col-sm-3 col-xs-12">
+            <!-- Tăng tỷ lệ cột cho phần account để không bị ép chữ -->
+            <div class="col-lg-4 col-md-5 col-sm-5 col-xs-7">
                 <div class="account-section">
-                    <div class="header-site-actions">
+                    <div class="header-site-actions" style="white-space: nowrap;">
                         <!-- Giỏ hàng -->
                         <a href="{{ url_for('getCart') }}" class="cart-btn-link">
                             <div class="cart-icon-box">

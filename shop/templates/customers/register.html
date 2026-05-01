@@ -3,69 +3,95 @@
     {% include 'header.html' %}
     {% from "_formhelpers.html" import render_field %}
 
-    <div id="page-content" class="single-page">
+    <div id="page-content" class="single-page" style="padding: 30px 0 60px 0;">
         <div class="container">
             <!-- Breadcrumb -->
-<div class="breadcrumb-wrapper">
-    <div class="container">
-        <ul class="breadcrumb">
-            <li><a href="{{ url_for('home') }}"><i class="fa fa-home"></i> Trang chủ</a></li>
-            <li class="active">Đăng ký tài khoản</li>
-        </ul>
-    </div>
-</div>
+            <div class="breadcrumb-wrapper" style="margin-bottom: 40px;">
+                <ul class="breadcrumb" style="background: transparent; padding: 0;">
+                    <li><a href="{{ url_for('home') }}" style="color: #6c757d;"><i class="fa fa-home"></i> Trang chủ</a></li>
+                    <li class="active" style="color: #333; font-weight: 500;">Đăng ký tài khoản</li>
+                </ul>
+            </div>
 
-            <div class="row">
-                <div class="col-md-3"></div>
-
-                <div class="col-md-6">
-                    <div class="heading"><h2>Đăng ký tài khoản mới</h2></div>
+            <div class="row" style="display: flex; justify-content: center;">
+                <div style="width: 100%; max-width: 600px; padding: 0 15px;">
+                    
+                    <div class="heading" style="margin-bottom: 25px;">
+                        <h2 style="font-weight: 700; color: #111;">Đăng ký tài khoản mới</h2>
+                    </div>
 
                     {% include '_messages.html' %}
 
                     <form action="{{ url_for('customer_register_route') }}" method="post" name="form_register" id="ff1">
                         {{ form.hidden_tag() }}
 
-                        <div class="form-group">
-                            {{ render_field(form.username, class="form-control", placeholder="Username") }}
+                        <div class="form-group" style="margin-bottom: 20px;">
+                            <label style="font-weight: 700; color: #333; margin-bottom: 8px; display: block;">Username</label>
+                            {{ form.username(class="form-control", placeholder="Username", style="border-radius: 4px; padding: 10px 15px; height: 45px; border: 1px solid #e0e0e0; background-color: #fafafa; box-shadow: none;") }}
+                            {% if form.username.errors %}<ul class="text-danger" style="list-style: none; padding-left: 0; margin-top: 5px; font-size: 13px;">{% for error in form.username.errors %}<li>{{ error }}</li>{% endfor %}</ul>{% endif %}
                         </div>
-                        <div class="form-group">
-                            {{ render_field(form.first_name, class="form-control", placeholder="Họ") }}
-                        </div>
-                        <div class="form-group">
-                            {{ render_field(form.last_name, class="form-control", placeholder="Tên") }}
-                        </div>
-                        <div class="form-group">
-                            {{ render_field(form.email, class="form-control", placeholder="Email address") }}
-                        </div>
-                        <div class="form-group">
-                            {{ render_field(form.phone_number, class="form-control", placeholder="Số điện thoại") }}
-                        </div>
-                        <div class="form-group">
-                            {{ render_field(form.password, class="form-control", placeholder="Mật khẩu") }}
-                        </div>
-                        <div class="form-group">
-                            {{ render_field(form.confirm, class="form-control", placeholder="Nhập lại mật khẩu") }}
-                        </div>
-                        <div class="form-group">
-                            <label>Giới tính:</label>
-                            {{ render_field(form.gender, class="form-control") }}
+                        
+                        <div style="display: flex; gap: 15px; margin-bottom: 20px;">
+                            <div class="form-group" style="flex: 1; margin-bottom: 0;">
+                                <label style="font-weight: 700; color: #333; margin-bottom: 8px; display: block;">Họ</label>
+                                {{ form.first_name(class="form-control", placeholder="Họ", style="border-radius: 4px; padding: 10px 15px; height: 45px; border: 1px solid #e0e0e0; background-color: #fafafa; box-shadow: none;") }}
+                                {% if form.first_name.errors %}<ul class="text-danger" style="list-style: none; padding-left: 0; margin-top: 5px; font-size: 13px;">{% for error in form.first_name.errors %}<li>{{ error }}</li>{% endfor %}</ul>{% endif %}
+                            </div>
+                            <div class="form-group" style="flex: 1; margin-bottom: 0;">
+                                <label style="font-weight: 700; color: #333; margin-bottom: 8px; display: block;">Tên</label>
+                                {{ form.last_name(class="form-control", placeholder="Tên", style="border-radius: 4px; padding: 10px 15px; height: 45px; border: 1px solid #e0e0e0; background-color: #fafafa; box-shadow: none;") }}
+                                {% if form.last_name.errors %}<ul class="text-danger" style="list-style: none; padding-left: 0; margin-top: 5px; font-size: 13px;">{% for error in form.last_name.errors %}<li>{{ error }}</li>{% endfor %}</ul>{% endif %}
+                            </div>
                         </div>
 
-                        <div class="form-group" style="display: flex; justify-content: flex-end;">
-                            <a href="{{ url_for('customer_login') }}" style="color:#207fcaba">
+                        <div class="form-group" style="margin-bottom: 20px;">
+                            <label style="font-weight: 700; color: #333; margin-bottom: 8px; display: block;">Email</label>
+                            {{ form.email(class="form-control", placeholder="Email address", style="border-radius: 4px; padding: 10px 15px; height: 45px; border: 1px solid #e0e0e0; background-color: #fafafa; box-shadow: none;") }}
+                            {% if form.email.errors %}<ul class="text-danger" style="list-style: none; padding-left: 0; margin-top: 5px; font-size: 13px;">{% for error in form.email.errors %}<li>{{ error }}</li>{% endfor %}</ul>{% endif %}
+                        </div>
+
+                        <div class="form-group" style="margin-bottom: 20px;">
+                            <label style="font-weight: 700; color: #333; margin-bottom: 8px; display: block;">Số điện thoại</label>
+                            {{ form.phone_number(class="form-control", placeholder="Số điện thoại", style="border-radius: 4px; padding: 10px 15px; height: 45px; border: 1px solid #e0e0e0; background-color: #fafafa; box-shadow: none;") }}
+                            {% if form.phone_number.errors %}<ul class="text-danger" style="list-style: none; padding-left: 0; margin-top: 5px; font-size: 13px;">{% for error in form.phone_number.errors %}<li>{{ error }}</li>{% endfor %}</ul>{% endif %}
+                        </div>
+
+                        <div class="form-group" style="margin-bottom: 20px;">
+                            <label style="font-weight: 700; color: #333; margin-bottom: 8px; display: block;">Mật khẩu</label>
+                            {{ form.password(class="form-control", placeholder="Mật khẩu", style="border-radius: 4px; padding: 10px 15px; height: 45px; border: 1px solid #e0e0e0; background-color: #fafafa; box-shadow: none;") }}
+                            {% if form.password.errors %}<ul class="text-danger" style="list-style: none; padding-left: 0; margin-top: 5px; font-size: 13px;">{% for error in form.password.errors %}<li>{{ error }}</li>{% endfor %}</ul>{% endif %}
+                        </div>
+
+                        <div class="form-group" style="margin-bottom: 20px;">
+                            <label style="font-weight: 700; color: #333; margin-bottom: 8px; display: block;">Nhập lại mật khẩu</label>
+                            {{ form.confirm(class="form-control", placeholder="Nhập lại mật khẩu", style="border-radius: 4px; padding: 10px 15px; height: 45px; border: 1px solid #e0e0e0; background-color: #fafafa; box-shadow: none;") }}
+                            {% if form.confirm.errors %}<ul class="text-danger" style="list-style: none; padding-left: 0; margin-top: 5px; font-size: 13px;">{% for error in form.confirm.errors %}<li>{{ error }}</li>{% endfor %}</ul>{% endif %}
+                        </div>
+
+                        <div class="form-group" style="margin-bottom: 25px;">
+                            <label style="font-weight: 700; color: #333; margin-bottom: 10px; display: block;">Giới tính</label>
+                            <div style="display: flex; gap: 30px; padding: 5px 0;">
+                                {% for subfield in form.gender %}
+                                    <label style="font-weight: 500; cursor: pointer; display: flex; align-items: center; gap: 8px; color: #555;">
+                                        {{ subfield() }} {{ subfield.label.text }}
+                                    </label>
+                                {% endfor %}
+                            </div>
+                            {% if form.gender.errors %}<ul class="text-danger" style="list-style: none; padding-left: 0; margin-top: 5px; font-size: 13px;">{% for error in form.gender.errors %}<li>{{ error }}</li>{% endfor %}</ul>{% endif %}
+                        </div>
+
+                        <div class="form-group" style="display: flex; justify-content: flex-end; margin-bottom: 30px;">
+                            <a href="{{ url_for('customer_login') }}" style="color:#5bc0de; font-size: 14px; font-weight: bold;">
                                 Đã có tài khoản? Đăng nhập ngay
                             </a>
                         </div>
 
-                        <button type="submit" class="btn btn-2" style="padding: 5px 26px;">
-                            Đăng ký
+                        <button type="submit" class="btn btn-2" style="padding: 10px 30px; border-radius: 20px; font-weight: bold; text-transform: uppercase;">
+                            ĐĂNG KÝ
                         </button>
                     </form>
 
                 </div>
-
-                <div class="col-md-3"></div>
             </div>
         </div>
     </div>
