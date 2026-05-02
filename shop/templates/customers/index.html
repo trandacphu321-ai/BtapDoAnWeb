@@ -525,7 +525,7 @@
                 
                 <div class="load-more-wrapper" style="text-align: center; margin-top: 40px;">
                     {% if products['all'].has_next %}
-                    <button id="btn-load-more" data-page="2" class="btn-load-more">
+                    <button id="btn-load-more" data-page="{{ products['all'].next_num }}" class="btn-load-more">
                         <span class="btn-text">Xem thêm sản phẩm</span>
                         <div class="btn-loader" style="display: none;"><i class="fa fa-spinner fa-spin"></i></div>
                     </button>

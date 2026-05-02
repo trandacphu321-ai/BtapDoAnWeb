@@ -99,7 +99,7 @@ def home():
 
     products_all = Addproduct.objects(stock__gt=0, **cat_query).order_by('-id').paginate(page=page, per_page=12)
     products_hot = Addproduct.objects(stock__gt=0, **cat_query).order_by('-price').limit(3)
-    products_new = Addproduct.objects(stock__gt=0, **cat_query).order_by('-id')
+    products_new = Addproduct.objects(stock__gt=0, **cat_query).order_by('-id').limit(10)
     products_sell = Addproduct.objects(stock__gt=0, discount__gt=0, **cat_query).order_by('-discount').limit(10)
 
     # ===== FLASH SALE =====
@@ -178,7 +178,7 @@ def load_more():
     category = Category.objects(name="Điện thoại di động").first()
     cat_query = {'category': category} if category else {}
     
-    products_all = Addproduct.objects(stock__gt=0, **cat_query).order_by('-id').paginate(page=page, per_page=4)
+    products_all = Addproduct.objects(stock__gt=0, **cat_query).order_by('-id').paginate(page=page, per_page=12)
     
     html = render_template(
         'customers/_product_cards.html', 
