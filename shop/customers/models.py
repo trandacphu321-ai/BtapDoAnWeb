@@ -62,15 +62,15 @@ class Register(db.Document, UserMixin):
             total_spent = sum(order.total_amount for order in orders if order.total_amount)
             
             if total_spent < 5000000:
-                return {"name": "Đồng", "color": "#cd7f32", "icon": "fa-award", "spent": total_spent, "next": 5000000}
+                return {"name": "Đồng", "color": "#cd7f32", "icon": "fa-shield", "spent": total_spent, "next": 5000000}
             elif total_spent < 20000000:
-                return {"name": "Bạc", "color": "#a8a29e", "icon": "fa-medal", "spent": total_spent, "next": 20000000}
+                return {"name": "Bạc", "color": "#94a3b8", "icon": "fa-star", "spent": total_spent, "next": 20000000}
             elif total_spent < 50000000:
-                return {"name": "Vàng", "color": "#fbbf24", "icon": "fa-crown", "spent": total_spent, "next": 50000000}
+                return {"name": "Vàng", "color": "#fbbf24", "icon": "fa-trophy", "spent": total_spent, "next": 50000000}
             else:
-                return {"name": "Kim Cương", "color": "#22d3ee", "icon": "fa-gem", "spent": total_spent, "next": None}
+                return {"name": "Kim Cương", "color": "#22d3ee", "icon": "fa-diamond", "spent": total_spent, "next": None}
         except:
-            return {"name": "Đồng", "color": "#cd7f32", "icon": "fa-award", "spent": 0, "next": 5000000}
+            return {"name": "Đồng", "color": "#cd7f32", "icon": "fa-shield", "spent": 0, "next": 5000000}
 
     def to_dict(self) -> Dict[str, Any]:
         return {
