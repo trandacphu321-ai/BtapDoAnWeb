@@ -45,6 +45,19 @@ def registers():
     rated_users_ids = Rate.objects().distinct('user_id')
     return Register.objects(id__in=rated_users_ids).all()
 
+class SafeDict(dict):
+    def __missing__(self, key):
+        return {
+            'average': 5.0,
+            'count': 0,
+            'star_dist': {5: 0, 4: 0, 3: 0, 2: 0, 1: 0},
+            'experience': {
+                'performance': 5.0,
+                'battery': 5.0,
+                'camera': 5.0
+            }
+        }
+
 _medium_cache = None
 _medium_cache_time = None
 
@@ -112,12 +125,12 @@ def medium():
                     'camera': round(cam_avg, 1)
                 }
             }
-        _medium_cache = dst
+        _medium_cache = SafeDict(dst)
         _medium_cache_time = now
-        return dst
+        return _medium_cache
     except Exception as e:
         print("Error in medium():", e)
-        return {}
+        return SafeDict()
 
 
 # ===================================================================
