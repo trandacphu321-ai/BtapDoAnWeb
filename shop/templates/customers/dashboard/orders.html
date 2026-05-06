@@ -1,49 +1,132 @@
 {% extends "customers/dashboard/layout.html" %}
 {% block dashboard_content %}
 
-<div style="margin-bottom: 28px;">
-    <h3 style="font-weight: 700; color: #1e293b; margin: 0;">Lịch sử mua hàng</h3>
+<div style="margin-bottom: 40px;">
+    <h1 style="font-weight: 900; color: #1e293b; margin-bottom: 12px; font-size: 3.2rem;">Lịch sử mua hàng</h1>
 </div>
 
 <div class="ov-table-wrap">
     <table class="table" style="margin-bottom: 0;">
         <thead>
             <tr>
-                <th style="padding-left: 20px;">Mã đơn</th>
-                <th>Sản phẩm</th>
-                <th>Tổng cộng</th>
-                <th>Ngày đặt</th>
-                <th>Trạng thái</th>
+                <th style="padding-left: 30px; width: 15%;">Mã đơn</th>
+                <th style="width: 30%;">Sản phẩm</th>
+                <th style="text-align: right; width: 15%;">Tổng cộng</th>
+                <th style="text-align: center; width: 20%;">Ngày đặt</th>
+                <th style="text-align: center; width: 20%;">Trạng thái & Chi tiết</th>
             </tr>
         </thead>
         <tbody>
             {% for order in orders %}
             <tr>
-                <td style="padding-left: 20px;">
+                <td style="padding-left: 30px;">
                     <span class="ov-invoice">#{{ order.invoice }}</span>
                 </td>
                 <td>
-                    {% for key, product in order.orders.items() %}
-                    <span class="ord-product-pill">
-                        {{ product.name }} <strong>x{{ product.quantity }}</strong>
-                    </span>
-                    {% endfor %}
+                    <div style="display: flex; flex-direction: column; gap: 8px;">
+                        {% for key, product in order.orders.items() %}
+                        <div class="ord-product-item">
+                            <span class="product-name">{{ product.name }}</span> 
+                            <span class="product-qty">x{{ product.quantity }}</span>
+                        </div>
+                        {% endfor %}
+                    </div>
                 </td>
-                <td style="color: #1e293b; font-weight: 700;">{{ order.total_amount|vnd if order.total_amount else '---' }}</td>
-                <td>
-                    <span style="color: #1e293b;">{{ order.date_created.strftime('%d/%m/%Y') }}</span><br>
-                    <span style="color: #94a3b8; font-size: .8rem;">{{ order.date_created.strftime('%H:%M') }}</span>
+                <td style="color: #1e293b; font-weight: 800; text-align: right; font-size: 1.2rem;">
+                    {{ order.total_amount|vnd if order.total_amount else '---' }}
                 </td>
-                <td>
-                    {% if order.status == 'Pending' %}
-                        <span class="ov-badge ov-badge--warn"><i class="fa fa-clock-o"></i> Đang chờ</span>
-                    {% elif order.status == 'Accepted' %}
-                        <span class="ov-badge ov-badge--ok"><i class="fa fa-check"></i> Đã duyệt</span>
-                    {% elif order.status == 'Cancelled' %}
-                        <span class="ov-badge ov-badge--danger"><i class="fa fa-times"></i> Đã hủy</span>
-                    {% else %}
-                        <span class="ov-badge ov-badge--muted">{{ order.status }}</span>
-                    {% endif %}
+                <td style="text-align: center;">
+                    <div style="color: #334155; font-weight: 600;">{{ order.date_created.strftime('%d/%m/%Y') }}</div>
+                    <div style="color: #94a3b8; font-size: .9rem; margin-top: 4px;">{{ order.date_created.strftime('%H:%M') }}</div>
+                </td>
+                <td style="text-align: center;">
+                    <div style="display: flex; flex-direction: column; align-items: center; gap: 10px;">
+                        {% if order.status == 'Pending' %}
+                            <span class="ov-badge ov-badge--warn"><i class="fa fa-clock-o"></i> Đang chờ</span>
+                        {% elif order.status == 'Accepted' %}
+                            <span class="ov-badge ov-badge--ok"><i class="fa fa-check"></i> Đã duyệt</span>
+                        {% elif order.status == 'Cancelled' %}
+                            <span class="ov-badge ov-badge--danger"><i class="fa fa-times"></i> Đã hủy</span>
+                        {% else %}
+                            <span class="ov-badge ov-badge--muted">{{ order.status }}</span>
+                        {% endif %}
+                        <button class="btn-action-detail" type="button" data-toggle="collapse" data-target="#order-detail-{{ order.invoice }}" aria-expanded="false" aria-controls="order-detail-{{ order.invoice }}">
+                            Xem chi tiết <i class="fa fa-angle-down"></i>
+                        </button>
+                    </div>
+                </td>
+            </tr>
+            <!-- Dòng Chi tiết đơn hàng ẩn (Collapse) -->
+            <tr id="order-detail-{{ order.invoice }}" class="collapse" style="background: #f8fafc;">
+                <td colspan="5" style="padding: 30px;">
+                    <!-- Trạng thái đơn hàng (Order Tracking) -->
+                    <div style="background: #fff; border-radius: 16px; border: 1px solid #e2e8f0; padding: 30px; margin-bottom: 20px;">
+                        <h4 style="font-weight: 800; color: #1e293b; margin-bottom: 25px; font-size: 1.2rem;">Tiến trình xử lý</h4>
+                        <div class="tracking-timeline">
+                            {% set steps = ['Pending', 'Accepted', 'Shipping', 'Delivered'] %}
+                            {% set step_names = ['Chờ xác nhận', 'Đã duyệt', 'Đang giao hàng', 'Hoàn thành'] %}
+                            {% set icons = ['fa-clock-o', 'fa-check-circle-o', 'fa-truck', 'fa-star'] %}
+                            
+                            {% if order.status == 'Cancelled' %}
+                                <div class="alert alert-danger" style="border-radius: 12px; font-weight: 600; padding: 15px; margin:0;">
+                                    <i class="fa fa-times-circle" style="margin-right: 10px;"></i> Đơn hàng này đã bị huỷ.
+                                </div>
+                            {% else %}
+                                {% set current_step = 0 %}
+                                {% if order.status == 'Pending' %}{% set current_step = 0 %}{% endif %}
+                                {% if order.status == 'Accepted' %}{% set current_step = 1 %}{% endif %}
+                                {% if order.status == 'Shipping' %}{% set current_step = 2 %}{% endif %}
+                                {% if order.status == 'Delivered' %}{% set current_step = 3 %}{% endif %}
+                                
+                                <div class="timeline-container">
+                                    <div class="timeline-line-bg"></div>
+                                    <div class="timeline-line" style="width: {{ current_step * 33.33 }}%;"></div>
+                                    
+                                    {% for i in range(4) %}
+                                    <div class="timeline-step {% if i <= current_step %}active{% endif %}">
+                                        <div class="timeline-icon"><i class="fa {{ icons[i] }}"></i></div>
+                                        <div class="timeline-text">{{ step_names[i] }}</div>
+                                    </div>
+                                    {% endfor %}
+                                </div>
+                            {% endif %}
+                        </div>
+                    </div>
+
+                    <!-- Thông tin giao hàng & Sản phẩm -->
+                    <div style="display: flex; gap: 20px; flex-wrap: wrap;">
+                        <div style="flex: 1; min-width: 300px; background: #fff; border-radius: 16px; border: 1px solid #e2e8f0; padding: 25px;">
+                            <h5 style="font-weight: 800; margin-bottom: 15px;">Thông tin nhận hàng</h5>
+                            <div style="font-size: 1.05rem; color: #334155; line-height: 1.6;">
+                                <p><strong>Người nhận:</strong> {{ current_user.full_name() or current_user.username }}</p>
+                                <p><strong>Điện thoại:</strong> {{ order.phone_number }}</p>
+                                <p><strong>Địa chỉ:</strong> {{ order.address }}</p>
+                                <p><strong>Thời gian đặt:</strong> {{ order.date_created.strftime('%H:%M - %d/%m/%Y') }}</p>
+                            </div>
+                        </div>
+                        <div style="flex: 2; min-width: 400px; background: #fff; border-radius: 16px; border: 1px solid #e2e8f0; padding: 25px;">
+                            <h5 style="font-weight: 800; margin-bottom: 15px;">Sản phẩm đã đặt</h5>
+                            <div>
+                                {% for key, product in order.orders.items() %}
+                                <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #f1f5f9; padding-bottom: 10px; margin-bottom: 10px;">
+                                    <div>
+                                        <div style="font-weight: 700; font-size: 1.1rem; color: #1e293b;">{{ product.name }}</div>
+                                        <div style="color: #64748b; font-size: 0.95rem;">Số lượng: <strong>{{ product.quantity }}</strong></div>
+                                    </div>
+                                    <div style="font-weight: 800; color: #4f46e5; font-size: 1.15rem;">
+                                        {% set price_str = product.price|string %}
+                                        {% set clean_price = price_str|replace('.','')|replace('đ','')|replace(',','')|int %}
+                                        {{ (clean_price * product.quantity)|vnd }}
+                                    </div>
+                                </div>
+                                {% endfor %}
+                                <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 15px;">
+                                    <span style="font-size: 1.2rem; font-weight: 700; color: #334155;">Tổng cộng:</span>
+                                    <span style="font-size: 1.5rem; font-weight: 900; color: #ef4444;">{{ order.total_amount|vnd }}</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
                 </td>
             </tr>
             {% endfor %}
@@ -64,64 +147,184 @@
 
 <style>
 .ov-table-wrap {
-    border: 1px solid #e2e8f0;
-    border-radius: 12px;
-    overflow: hidden;
+    background: #fff;
+    border: 1px solid rgba(226, 232, 240, 0.8);
+    border-radius: 20px;
+    overflow-x: auto;
+    box-shadow: 0 10px 25px -5px rgba(0,0,0,0.05);
 }
+.ov-table-wrap .table { width: 100%; border-collapse: separate; border-spacing: 0; }
 .ov-table-wrap .table thead th {
     background: #f8fafc;
     border: none;
-    color: #64748b;
-    font-size: .75rem;
-    font-weight: 600;
+    border-bottom: 2px solid #e2e8f0;
+    color: #475569;
+    font-size: 1.15rem;
+    font-weight: 800;
     text-transform: uppercase;
-    letter-spacing: .5px;
-    padding: 14px 12px;
+    letter-spacing: 1.5px;
+    padding: 25px 20px;
 }
 .ov-table-wrap .table tbody td {
-    padding: 16px 12px;
+    padding: 25px 15px;
     border-bottom: 1px solid #f1f5f9;
-    font-size: .9rem;
+    font-size: 1.15rem;
     vertical-align: middle;
+    color: #334155;
+    font-weight: 500;
 }
 .ov-table-wrap .table tbody tr:last-child td { border-bottom: none; }
-.ov-table-wrap .table tbody tr:hover { background: #fafaff; }
+.ov-table-wrap .table tbody tr:hover { background: #f8fafc; }
 
 .ov-invoice {
     background: #eef2ff;
     color: #4f46e5;
-    padding: 4px 10px;
-    border-radius: 6px;
-    font-weight: 700;
-    font-size: .82rem;
+    padding: 8px 14px;
+    border-radius: 8px;
+    font-weight: 800;
+    font-size: 1.05rem;
+    display: inline-block;
+    letter-spacing: 0.5px;
 }
 
-.ord-product-pill {
-    display: inline-block;
-    background: #f1f5f9;
-    padding: 3px 10px;
-    border-radius: 6px;
-    font-size: .8rem;
-    margin: 2px 4px 2px 0;
-    color: #475569;
+.ord-product-item {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    background: #f8fafc;
+    border: 1px solid #e2e8f0;
+    padding: 8px 14px;
+    border-radius: 10px;
+    font-size: 1.05rem;
+    max-width: 250px;
 }
-.ord-product-pill strong {
-    color: #6366f1;
-    margin-left: 4px;
+.ord-product-item .product-name {
+    color: #475569;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    margin-right: 10px;
+}
+.ord-product-item .product-qty {
+    background: #eef2ff;
+    color: #4f46e5;
+    font-weight: 800;
+    padding: 2px 8px;
+    border-radius: 6px;
+    font-size: 0.9rem;
 }
 
 .ov-badge {
     display: inline-flex;
     align-items: center;
-    gap: 5px;
-    padding: 5px 10px;
-    border-radius: 6px;
-    font-size: .75rem;
-    font-weight: 600;
+    justify-content: center;
+    gap: 8px;
+    padding: 8px 16px;
+    border-radius: 8px;
+    font-size: 0.95rem;
+    font-weight: 700;
+    letter-spacing: 0.5px;
+    min-width: 120px;
 }
-.ov-badge--warn   { background: #fff7ed; color: #ea580c; }
-.ov-badge--ok     { background: #f0fdf4; color: #16a34a; }
-.ov-badge--danger { background: #fef2f2; color: #dc2626; }
-.ov-badge--muted  { background: #f1f5f9; color: #64748b; }
+.ov-badge--warn   { background: #fff7ed; color: #ea580c; border: 1px solid #fed7aa; }
+.ov-badge--ok     { background: #f0fdf4; color: #16a34a; border: 1px solid #bbf7d0; }
+.ov-badge--danger { background: #fef2f2; color: #dc2626; border: 1px solid #fecaca; }
+.ov-badge--muted  { background: #f1f5f9; color: #64748b; border: 1px solid #e2e8f0; }
+
+.btn-action-detail {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 10px 18px;
+    background: #fff;
+    border: 1px solid #cbd5e1;
+    border-radius: 10px;
+    color: #4f46e5;
+    font-weight: 700;
+    font-size: 1rem;
+    text-decoration: none !important;
+    transition: all 0.2s ease;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.02);
+    cursor: pointer;
+}
+.btn-action-detail:hover, .btn-action-detail:focus {
+    background: #eef2ff;
+    border-color: #a5b4fc;
+    color: #4338ca;
+    transform: translateY(-1px);
+    box-shadow: 0 4px 6px rgba(0,0,0,0.05);
+    outline: none;
+}
+
+/* Order Tracking Timeline */
+.tracking-timeline { padding: 10px 0 20px; }
+.timeline-container {
+    display: flex;
+    justify-content: space-between;
+    position: relative;
+    padding: 0 40px;
+}
+.timeline-line-bg {
+    position: absolute;
+    top: 25px;
+    left: 40px;
+    right: 40px;
+    height: 4px;
+    background: #e2e8f0;
+    z-index: 1;
+    border-radius: 2px;
+}
+.timeline-line {
+    position: absolute;
+    top: 25px;
+    left: 40px;
+    height: 4px;
+    background: linear-gradient(90deg, #4f46e5, #8b5cf6);
+    z-index: 2;
+    border-radius: 2px;
+    transition: width 0.5s ease;
+}
+.timeline-step {
+    position: relative;
+    z-index: 3;
+    text-align: center;
+    width: 120px;
+}
+.timeline-icon {
+    width: 54px;
+    height: 54px;
+    background: #fff;
+    border: 3px solid #e2e8f0;
+    border-radius: 50%;
+    margin: 0 auto 10px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.4rem;
+    color: #94a3b8;
+    transition: all 0.3s ease;
+}
+.timeline-step.active .timeline-icon {
+    border-color: #4f46e5;
+    background: #4f46e5;
+    color: #fff;
+    box-shadow: 0 0 0 4px rgba(79, 70, 229, 0.2);
+}
+.timeline-text {
+    font-weight: 700;
+    font-size: 0.95rem;
+    color: #64748b;
+}
+.timeline-step.active .timeline-text {
+    color: #1e293b;
+}
+
+.collapse {
+    display: none;
+}
+.collapse.in {
+    display: table-row;
+}
+
 </style>
 {% endblock dashboard_content %}

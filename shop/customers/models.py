@@ -42,6 +42,7 @@ class Register(db.Document, UserMixin):
     date_created = db.DateTimeField(default=datetime.utcnow)
     lock = db.BooleanField(default=False)
     cart = db.DictField()
+    wishlist = db.ListField(db.StringField())
 
     meta = {'collection': 'register'}
 

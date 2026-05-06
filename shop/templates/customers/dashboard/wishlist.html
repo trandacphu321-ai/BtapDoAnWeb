@@ -1,0 +1,117 @@
+{% extends "customers/dashboard/layout.html" %}
+{% block dashboard_content %}
+
+<div style="margin-bottom: 40px;">
+    <h1 style="font-weight: 900; color: #1e293b; margin-bottom: 12px; font-size: 3.2rem;">Danh sách yêu thích</h1>
+    <p style="color: #64748b; font-size: 1.3rem; margin: 0;">Những sản phẩm bạn đã lưu để mua sau.</p>
+</div>
+
+<div class="row">
+    {% for product in products %}
+    <div class="col-md-4" id="wishlist-item-{{ product.id }}">
+        <div class="ov-card wishlist-card">
+            <button class="remove-wishlist-btn" onclick="toggleWishlist('{{ product.id }}')">
+                <i class="fa fa-times"></i>
+            </button>
+            <div class="wishlist-img">
+                <img src="{{ url_for('static', filename='images/' + product.image_1) }}" alt="{{ product.name }}" style="max-width: 100%; height: auto; border-radius: 12px;">
+            </div>
+            <h5 class="wishlist-name">{{ product.name }}</h5>
+            <div class="wishlist-price">{{ product.price|vnd }}</div>
+            <a href="{{ url_for('single_page', id=product.id) }}" class="ov-card__btn" style="display: block; text-align: center; margin-top: 15px;">Xem chi tiết</a>
+        </div>
+    </div>
+    {% else %}
+    <div class="col-md-12 text-center" style="padding: 60px 20px;">
+        <i class="fa fa-heart-o" style="font-size: 5rem; color: #e2e8f0; margin-bottom: 20px;"></i>
+        <h4 style="font-weight: 700; color: #64748b; font-size: 1.5rem;">Danh sách yêu thích của bạn đang trống!</h4>
+        <a href="{{ url_for('home') }}" class="ov-card__btn" style="margin-top: 20px;">Khám phá sản phẩm</a>
+    </div>
+    {% endfor %}
+</div>
+
+<style>
+.wishlist-card {
+    position: relative;
+    padding: 25px;
+    text-align: center;
+    border-radius: 20px;
+    background: #fff;
+    border: 1px solid #e2e8f0;
+    box-shadow: 0 10px 20px rgba(0,0,0,0.05);
+    margin-bottom: 30px;
+    transition: transform 0.3s ease;
+}
+.wishlist-card:hover {
+    transform: translateY(-5px);
+    border-color: #cbd5e1;
+}
+.wishlist-img {
+    height: 180px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-bottom: 20px;
+}
+.wishlist-img img {
+    max-height: 100%;
+}
+.wishlist-name {
+    font-weight: 800;
+    font-size: 1.2rem;
+    color: #1e293b;
+    margin-bottom: 10px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+.wishlist-price {
+    font-weight: 800;
+    color: #ef4444;
+    font-size: 1.3rem;
+}
+.remove-wishlist-btn {
+    position: absolute;
+    top: 15px;
+    right: 15px;
+    width: 35px;
+    height: 35px;
+    border-radius: 50%;
+    background: #f1f5f9;
+    border: none;
+    color: #64748b;
+    font-size: 1.2rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: all 0.2s;
+    z-index: 10;
+}
+.remove-wishlist-btn:hover {
+    background: #fee2e2;
+    color: #ef4444;
+}
+</style>
+
+<script>
+function toggleWishlist(productId) {
+    fetch('/api/toggle-wishlist/' + productId, {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json'
+        }
+    })
+    .then(response => response.json())
+    .then(data => {
+        if(data.success && data.action === 'removed') {
+            document.getElementById('wishlist-item-' + productId).remove();
+            if(document.querySelectorAll('.col-md-4').length === 0) {
+                location.reload();
+            }
+        }
+    });
+}
+</script>
+
+{% endblock dashboard_content %}

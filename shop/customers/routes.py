@@ -418,6 +418,37 @@ def customer_dashboard_warranty():
 def customer_dashboard_support():
     return render_template('customers/dashboard/support.html', title="Góp ý & Hỗ trợ")
 
+@app.route('/customer/dashboard/order/<string:invoice>')
+@login_required
+def customer_dashboard_order_detail(invoice):
+    order = CustomerOrder.objects(invoice=invoice, customer_id=str(current_user.id)).first()
+    if not order:
+        flash("Không tìm thấy đơn hàng", "danger")
+        return redirect(url_for('customer_dashboard_orders'))
+    return render_template('customers/dashboard/order_detail.html', order=order, title=f"Đơn hàng #{invoice}")
+
+@app.route('/customer/dashboard/wishlist')
+@login_required
+def customer_dashboard_wishlist():
+    from shop.products.models import Addproduct
+    wishlist_ids = getattr(current_user, 'wishlist', [])
+    products = Addproduct.objects(id__in=wishlist_ids).all() if wishlist_ids else []
+    return render_template('customers/dashboard/wishlist.html', products=products, title="Danh sách yêu thích")
+
+@app.route('/api/toggle-wishlist/<string:product_id>', methods=['POST'])
+@login_required
+def toggle_wishlist(product_id):
+    wishlist = getattr(current_user, 'wishlist', [])
+    if product_id in wishlist:
+        wishlist.remove(product_id)
+        action = 'removed'
+    else:
+        wishlist.append(product_id)
+        action = 'added'
+    current_user.wishlist = wishlist
+    current_user.save()
+    return jsonify({'success': True, 'action': action, 'count': len(wishlist)})
+
 
 # ======================================================================
 #  CHECKOUT – CHỈ MỘT ROUTE DUY NHẤT
