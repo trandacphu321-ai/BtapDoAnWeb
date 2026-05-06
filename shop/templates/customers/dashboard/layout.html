@@ -11,7 +11,11 @@
                     <!-- Avatar & Info -->
                     <div class="db-user-block">
                         <div class="db-avatar">
+                            {% if current_user.profile and current_user.profile != 'profile.jpg' %}
+                            <img src="{{ url_for('static', filename='images/' + current_user.profile) }}" alt="Avatar">
+                            {% else %}
                             <img src="https://ui-avatars.com/api/?name={{ current_user.username }}&background=6366f1&color=fff&size=80&bold=true&font-size=0.4" alt="Avatar">
+                            {% endif %}
                         </div>
                         <h5 class="db-user-name">{{ current_user.username }}</h5>
                         <div style="margin-bottom: 10px;">

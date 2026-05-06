@@ -45,56 +45,79 @@ def registers():
     rated_users_ids = Rate.objects().distinct('user_id')
     return Register.objects(id__in=rated_users_ids).all()
 
+_medium_cache = None
+_medium_cache_time = None
+
 def medium():
-    """Tính điểm trung bình + số lượng đánh giá cho từng sản phẩm + phân bổ sao và chỉ số chi tiết."""
-    products = Addproduct.objects(stock__gt=0).all()
-    rates = Rate.objects().all()
-    
-    # Nhóm rate theo product_id (giải quyết N+1 query)
-    rate_map = {}
-    for rate in rates:
-        pid = str(rate.product.id) if hasattr(rate.product, 'id') else str(rate.product)
-        if pid not in rate_map:
-            rate_map[pid] = []
-        rate_map[pid].append(rate)
+    """Tính điểm trung bình + số lượng đánh giá cho từng sản phẩm + phân bổ sao và chỉ số chi tiết (Đã tối ưu hóa lưu RAM & Cache 5 phút)."""
+    global _medium_cache, _medium_cache_time
+    from datetime import datetime, timedelta
+    now = datetime.now()
+    if _medium_cache and _medium_cache_time and now - _medium_cache_time < timedelta(minutes=5):
+        return _medium_cache
+
+    try:
+        products = Addproduct.objects(stock__gt=0).only('id').all()
+        # Sử dụng as_pymongo() để truy vấn thô siêu nhanh và tiết kiệm RAM vượt trội
+        rates = Rate.objects().only('product', 'rate_number', 'performance_rate', 'battery_rate', 'camera_rate').as_pymongo()
         
-    dst = {}
-    for product in products:
-        pid = str(product.id)
-        p_rates = rate_map.get(pid, [])
-        length = len(p_rates)
-        
-        star_dist = {5: 0, 4: 0, 3: 0, 2: 0, 1: 0}
-        perf_sum, batt_sum, cam_sum = 0, 0, 0
-        
-        if length == 0:
-            average = 5
-            perf_avg, batt_avg, cam_avg = 5.0, 5.0, 5.0
-        else:
-            sum_value = 0
-            for rate in p_rates:
-                sum_value += rate.rate_number
-                star_dist[rate.rate_number] = star_dist.get(rate.rate_number, 0) + 1
-                perf_sum += getattr(rate, 'performance_rate', 5)
-                batt_sum += getattr(rate, 'battery_rate', 5)
-                cam_sum += getattr(rate, 'camera_rate', 5)
+        rate_map = {}
+        for rate in rates:
+            p_ref = rate.get('product')
+            if hasattr(p_ref, 'id'):
+                pid = str(p_ref.id)
+            elif isinstance(p_ref, dict) and '$id' in p_ref:
+                pid = str(p_ref['$id'])
+            else:
+                pid = str(p_ref)
                 
-            average = sum_value / length
-            perf_avg = perf_sum / length
-            batt_avg = batt_sum / length
-            cam_avg = cam_sum / length
+            if pid not in rate_map:
+                rate_map[pid] = []
+            rate_map[pid].append(rate)
             
-        dst[product.id] = {
-            'average': average,
-            'count': length,
-            'star_dist': star_dist,
-            'experience': {
-                'performance': round(perf_avg, 1),
-                'battery': round(batt_avg, 1),
-                'camera': round(cam_avg, 1)
+        dst = {}
+        for product in products:
+            pid = str(product.id)
+            p_rates = rate_map.get(pid, [])
+            length = len(p_rates)
+            
+            star_dist = {5: 0, 4: 0, 3: 0, 2: 0, 1: 0}
+            perf_sum, batt_sum, cam_sum = 0, 0, 0
+            
+            if length == 0:
+                average = 5
+                perf_avg, batt_avg, cam_avg = 5.0, 5.0, 5.0
+            else:
+                sum_value = 0
+                for rate in p_rates:
+                    r_num = rate.get('rate_number', 5)
+                    sum_value += r_num
+                    star_dist[r_num] = star_dist.get(r_num, 0) + 1
+                    perf_sum += rate.get('performance_rate', 5)
+                    batt_sum += rate.get('battery_rate', 5)
+                    cam_sum += rate.get('camera_rate', 5)
+                    
+                average = sum_value / length
+                perf_avg = perf_sum / length
+                batt_avg = batt_sum / length
+                cam_avg = cam_sum / length
+                
+            dst[product.id] = {
+                'average': average,
+                'count': length,
+                'star_dist': star_dist,
+                'experience': {
+                    'performance': round(perf_avg, 1),
+                    'battery': round(batt_avg, 1),
+                    'camera': round(cam_avg, 1)
+                }
             }
-        }
-    return dst
+        _medium_cache = dst
+        _medium_cache_time = now
+        return dst
+    except Exception as e:
+        print("Error in medium():", e)
+        return {}
 
 
 # ===================================================================

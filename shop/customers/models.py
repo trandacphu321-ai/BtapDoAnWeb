@@ -43,6 +43,7 @@ class Register(db.Document, UserMixin):
     lock = db.BooleanField(default=False)
     cart = db.DictField()
     wishlist = db.ListField(db.StringField())
+    profile = db.StringField(default='profile.jpg')
 
     meta = {'collection': 'register'}
 

@@ -6,8 +6,12 @@
         <div class="hero-glow"></div>
         <div class="hero-content">
             <div class="user-avatar-wrapper">
-                <div class="avatar-circle">
-                    <i class="fa fa-user-secret"></i>
+                <div class="avatar-circle" style="overflow: hidden; padding: 0;">
+                    {% if current_user.profile and current_user.profile != 'profile.jpg' %}
+                    <img src="{{ url_for('static', filename='images/' + current_user.profile) }}" alt="Avatar" style="width: 100%; height: 100%; object-fit: cover; border-radius: inherit;">
+                    {% else %}
+                    <img src="https://ui-avatars.com/api/?name={{ current_user.username }}&background=6366f1&color=fff&size=80&bold=true&font-size=0.4" alt="Avatar" style="width: 100%; height: 100%; object-fit: cover; border-radius: inherit;">
+                    {% endif %}
                 </div>
                 <div class="status-indicator"></div>
             </div>
@@ -20,7 +24,7 @@
 
     <!-- Main Content Form -->
     <div class="profile-glass-form">
-        <form action="{{ url_for('customer_dashboard_profile') }}" method="POST">
+        <form action="{{ url_for('customer_dashboard_profile') }}" method="POST" enctype="multipart/form-data">
             <div class="section-divider mb-4">
                 <i class="fa fa-id-card-o"></i>
                 <span>Thông tin định danh</span>
@@ -68,6 +72,13 @@
                         <textarea name="address" class="floating-input" rows="3" placeholder=" ">{{ current_user.address or '' }}</textarea>
                         <label class="floating-label">Địa chỉ nhận hàng mặc định</label>
                         <i class="fa fa-map-marker input-icon"></i>
+                    </div>
+                </div>
+                <div class="col-md-12 mb-5">
+                    <div class="floating-group" style="margin-top: 10px;">
+                        <input type="file" name="profile" class="floating-input" accept="image/*" style="padding-top: 14px;">
+                        <label class="floating-label" style="top: -12px; left: 15px; font-size: 12px; font-weight: 800; color: #6366f1; background: #fff; padding: 0 8px;">Thay đổi ảnh đại diện (Tùy chọn)</label>
+                        <i class="fa fa-image input-icon"></i>
                     </div>
                 </div>
             </div>

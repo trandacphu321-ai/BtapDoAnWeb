@@ -56,8 +56,8 @@ def get_collaborative_recommendations(user_id, limit=4):
     Nâng cấp: Phân tích thói quen dựa trên trọng số hành động (View=1, Cart=3, Purchase=5).
     """
     try:
-        # Lấy toàn bộ tương tác
-        interactions = UserInteraction.objects().all()
+        # Lấy tối đa 2000 tương tác gần nhất để tránh quá tải bộ nhớ và treo máy khi có nhiều dữ liệu
+        interactions = UserInteraction.objects().order_by('-timestamp').limit(2000)
         if not interactions:
             return get_fallback_recommendations(limit)
 

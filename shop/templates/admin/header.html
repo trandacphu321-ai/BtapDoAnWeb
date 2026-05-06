@@ -52,8 +52,11 @@
             <div class="user-panel mt-3 pb-3 mb-3 d-flex">
                 {% if user %}
                 <div class="image">
-                    <img src="{{url_for('static',filename='images/avatar.jpg')}}" class="img-circle elevation-2"
-                         alt="Admin Image">
+                    {% if user.profile and user.profile != 'profile.jpg' %}
+                    <img src="{{ url_for('static', filename='images/' + user.profile) }}" class="img-circle elevation-2" alt="Admin Image" style="width: 35px; height: 35px; object-fit: cover;">
+                    {% else %}
+                    <img src="{{ url_for('static', filename='images/avatar.jpg') }}" class="img-circle elevation-2" alt="Admin Image" style="width: 35px; height: 35px; object-fit: cover;">
+                    {% endif %}
                 </div>
                 <div class="info">
                     <a href="{{url_for('admin_manager')}}" class="d-block">{{user.name}}</a>

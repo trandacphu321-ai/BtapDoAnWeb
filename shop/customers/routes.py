@@ -403,6 +403,18 @@ def customer_dashboard_profile():
         current_user.last_name = request.form.get('last_name')
         current_user.phone_number = request.form.get('phone')
         current_user.address = request.form.get('address')
+        
+        profile_file = request.files.get('profile')
+        if profile_file and profile_file.filename != '':
+            try:
+                from shop import photos
+                import secrets
+                filename = secrets.token_hex(8) + "_" + profile_file.filename
+                photos.save(profile_file, name=filename)
+                current_user.profile = filename
+            except Exception as e:
+                flash(f'Lỗi tải ảnh: {str(e)}', 'danger')
+
         current_user.save()
         flash('Cập nhật thông tin thành công!', 'success')
         return redirect(url_for('customer_dashboard_profile'))

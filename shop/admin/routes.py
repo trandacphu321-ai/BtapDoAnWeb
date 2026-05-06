@@ -308,17 +308,34 @@ def changes_password():
         flash(f'please login first', 'danger')
         return redirect(url_for('unified_login'))
     user = Admin.objects(email=session['email']).first()
-    old_password = request.form.get('oldpassword')
-    new_password = request.form.get('newpassword')
+    
     if request.method == "POST":
-        if not bcrypt.check_password_hash(user.password, old_password.encode('utf8')):
-            flash(f'Old passwords do not match!', 'danger')
-            return redirect(url_for('changes_password'))
-        user.password = bcrypt.generate_password_hash(new_password).decode('utf8')
-        flash(f'Change Password Complete!', 'success')
-        user.save()
+        old_password = request.form.get('oldpassword')
+        new_password = request.form.get('newpassword')
+        
+        profile_file = request.files.get('profile')
+        if profile_file and profile_file.filename != '':
+            try:
+                from shop import photos
+                import secrets
+                filename = secrets.token_hex(8) + "_" + profile_file.filename
+                photos.save(profile_file, name=filename)
+                user.profile = filename
+                user.save()
+                flash('Cập nhật ảnh đại diện thành công!', 'success')
+            except Exception as e:
+                flash(f'Lỗi tải ảnh: {str(e)}', 'danger')
+
+        if old_password and new_password:
+            if not bcrypt.check_password_hash(user.password, old_password.encode('utf8')):
+                flash(f'Old passwords do not match!', 'danger')
+                return redirect(url_for('changes_password'))
+            user.password = bcrypt.generate_password_hash(new_password).decode('utf8')
+            flash(f'Change Password Complete!', 'success')
+            user.save()
+            
         return redirect(url_for('changes_password'))
-    return render_template('admin/change_password.html', title='Change Password', user=user)
+    return render_template('admin/change_password.html', title='Thông tin & Mật khẩu', user=user)
 
 @app.route('/admin/register', methods=['GET', 'POST'])
 def register():
