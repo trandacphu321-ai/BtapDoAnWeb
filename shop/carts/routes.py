@@ -47,16 +47,16 @@ def AddCart():
             caps = product.capacity.split(',')
             for c in caps:
                 parts = c.split(':')
-                        selected_cap_name = capacity.split(':')[0].strip() if ':' in capacity else capacity.strip()
-                        if parts[0].strip() == selected_cap_name and len(parts) > 1:
-                            import re
-                            clean_price = re.sub(r'[^\d.]', '', parts[1])
-                            if clean_price:
-                                try:
-                                    selected_price = float(clean_price)
-                                except ValueError:
-                                    pass
-                                break
+                selected_cap_name = capacity.split(':')[0].strip() if ':' in capacity else capacity.strip()
+                if parts[0].strip() == selected_cap_name and len(parts) > 1:
+                    import re
+                    clean_price = re.sub(r'[^\d.]', '', parts[1])
+                    if clean_price:
+                        try:
+                            selected_price = float(clean_price)
+                        except ValueError:
+                            pass
+                        break
 
         if request.method == "POST":
             # --- AI Tracking: Cart Product ---
