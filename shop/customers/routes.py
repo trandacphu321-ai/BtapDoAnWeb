@@ -407,11 +407,34 @@ def customer_dashboard_profile():
         profile_file = request.files.get('profile')
         if profile_file and profile_file.filename != '':
             try:
-                from shop import photos
-                import secrets
-                filename = secrets.token_hex(8) + "_" + profile_file.filename
-                photos.save(profile_file, name=filename)
-                current_user.profile = filename
+                import base64
+                import requests
+                import os
+                
+                img_data = profile_file.read()
+                imgbb_api_key = os.getenv("IMGBB_API_KEY")
+                
+                if imgbb_api_key and imgbb_api_key != "YOUR_IMGBB_API_KEY_HERE":
+                    base64_image = base64.b64encode(img_data).decode('utf-8')
+                    url = "https://api.imgbb.com/1/upload"
+                    payload = {
+                        "key": imgbb_api_key,
+                        "image": base64_image,
+                        "name": f"avatar_{current_user.username}"
+                    }
+                    response = requests.post(url, data=payload)
+                    data = response.json()
+                    if response.status_code == 200:
+                        current_user.profile = data["data"]["url"]
+                    else:
+                        raise Exception(data.get("error", {}).get("message", "Lỗi upload ImgBB"))
+                else:
+                    from shop import photos
+                    import secrets
+                    profile_file.seek(0)
+                    filename = secrets.token_hex(8) + "_" + profile_file.filename
+                    photos.save(profile_file, name=filename)
+                    current_user.profile = filename
             except Exception as e:
                 flash(f'Lỗi tải ảnh: {str(e)}', 'danger')
 
