@@ -540,19 +540,7 @@
 </section>
 {% endif %}
 
-{% if products.recently_viewed and products.recently_viewed|length > 0 %}
-<section class="detail-section">
-    <div class="container">
-        <div class="detail-box" style="background: #f8fafc; border-color: #cbd5e1;">
-            <h2 style="font-size: 24px; font-weight: 900; margin-bottom: 30px; display: flex; align-items: center; gap: 12px;">
-                <span style="width: 4px; height: 24px; background: #3b82f6; border-radius: 2px;"></span>
-                Sản phẩm bạn vừa xem
-            </h2>
-            {{ render_product_list(products.recently_viewed, 'Vừa xem', 'badge-blue') }}
-        </div>
-    </div>
-</section>
-{% endif %}
+
 
 <!-- SECTION 4: REVIEWS -->
 <section class="detail-section">

@@ -14,7 +14,14 @@
                             <img src="https://ui-avatars.com/api/?name={{ current_user.username }}&background=6366f1&color=fff&size=80&bold=true&font-size=0.4" alt="Avatar">
                         </div>
                         <h5 class="db-user-name">{{ current_user.username }}</h5>
-                        <span class="db-user-email">{{ current_user.email }}</span>
+                        <div style="margin-bottom: 10px;">
+                            <span class="db-user-email">{{ current_user.email }}</span>
+                        </div>
+                        {% set rank = current_user.get_rank() %}
+                        <div style="display: inline-flex; align-items: center; gap: 8px; background: rgba(255,255,255,0.2); backdrop-filter: blur(5px); -webkit-backdrop-filter: blur(5px); padding: 6px 16px; border-radius: 50px; border: 1px solid rgba(255,255,255,0.4); box-shadow: 0 4px 15px rgba(0,0,0,0.15); font-weight: 900; font-size: 13px; text-transform: uppercase; letter-spacing: 0.5px; transition: transform 0.3s ease; cursor: default;" onmouseover="this.style.transform='scale(1.05)'" onmouseout="this.style.transform='scale(1)'">
+                            <i class="fa {{ rank.icon }}" style="color: {{ rank.color }}; filter: drop-shadow(0 2px 4px rgba(0,0,0,0.3)); font-size: 16px;"></i>
+                            <span style="color: #fff; text-shadow: 0 2px 4px rgba(0,0,0,0.3);">{{ rank.name }}</span>
+                        </div>
                     </div>
 
                     <!-- Nav -->

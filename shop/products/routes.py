@@ -42,16 +42,27 @@ def categories():
     return cats
 
 def registers():
-    rated_users_ids = [rate.user_id for rate in Rate.objects().all()]
+    rated_users_ids = Rate.objects().distinct('user_id')
     return Register.objects(id__in=rated_users_ids).all()
 
 def medium():
     """Tính điểm trung bình + số lượng đánh giá cho từng sản phẩm + phân bổ sao và chỉ số chi tiết."""
     products = Addproduct.objects(stock__gt=0).all()
+    rates = Rate.objects().all()
+    
+    # Nhóm rate theo product_id (giải quyết N+1 query)
+    rate_map = {}
+    for rate in rates:
+        pid = str(rate.product.id) if hasattr(rate.product, 'id') else str(rate.product)
+        if pid not in rate_map:
+            rate_map[pid] = []
+        rate_map[pid].append(rate)
+        
     dst = {}
     for product in products:
-        rates = Rate.objects(product=product).all()
-        length = len(rates)
+        pid = str(product.id)
+        p_rates = rate_map.get(pid, [])
+        length = len(p_rates)
         
         star_dist = {5: 0, 4: 0, 3: 0, 2: 0, 1: 0}
         perf_sum, batt_sum, cam_sum = 0, 0, 0
@@ -61,7 +72,7 @@ def medium():
             perf_avg, batt_avg, cam_avg = 5.0, 5.0, 5.0
         else:
             sum_value = 0
-            for rate in rates:
+            for rate in p_rates:
                 sum_value += rate.rate_number
                 star_dist[rate.rate_number] = star_dist.get(rate.rate_number, 0) + 1
                 perf_sum += getattr(rate, 'performance_rate', 5)
