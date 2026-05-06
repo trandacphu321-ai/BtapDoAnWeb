@@ -31,8 +31,8 @@ def MagerDicts(dict1, dict2):
 def AddCart():
     try:
         product_id = request.form.get('product_id')
-        quantity = int(request.form.get('quantity'))
-        color = request.form.get('colors')
+        quantity = int(request.form.get('quantity', 1))
+        color = request.form.get('color') or request.form.get('colors', '')
         capacity = request.form.get('capacity', '') # Get capacity from form
         product = Addproduct.objects(id=product_id).first()
         brand = product.brand.name if product and product.brand else ''
@@ -47,12 +47,16 @@ def AddCart():
             caps = product.capacity.split(',')
             for c in caps:
                 parts = c.split(':')
-                if parts[0].strip() == capacity and len(parts) > 1:
-                    try:
-                        selected_price = float(parts[1].strip())
-                    except ValueError:
-                        pass
-                    break
+                        selected_cap_name = capacity.split(':')[0].strip() if ':' in capacity else capacity.strip()
+                        if parts[0].strip() == selected_cap_name and len(parts) > 1:
+                            import re
+                            clean_price = re.sub(r'[^\d.]', '', parts[1])
+                            if clean_price:
+                                try:
+                                    selected_price = float(clean_price)
+                                except ValueError:
+                                    pass
+                                break
 
         if request.method == "POST":
             # --- AI Tracking: Cart Product ---
@@ -167,11 +171,14 @@ def updatecart(code):
                         for c in caps:
                             parts = c.split(':')
                             if parts[0].strip() == selected_cap_name and len(parts) > 1:
-                                try:
-                                    new_price = float(parts[1].strip())
-                                except ValueError:
-                                    pass
-                                break
+                                import re
+                                clean_price = re.sub(r'[^\d.]', '', parts[1])
+                                if clean_price:
+                                    try:
+                                        new_price = float(clean_price)
+                                    except ValueError:
+                                        pass
+                                    break
                     item['price'] = new_price
                     if current_user.is_authenticated:
                         current_user.cart = session['Shoppingcart']
