@@ -1,46 +1,14 @@
 """
-MobileStore AI Chatbot - Backend dung Gemini REST API truc tiep.
-Khong phu thuoc vao google-generativeai SDK (tranh loi namespace conflict).
+MobileStore AI Chatbot - Sử dụng cơ sở tri thức cục bộ (Local Knowledge Base).
+Đã xóa hoàn toàn tích hợp Google Gemini API để tăng tính riêng tư, bảo mật và tránh phụ thuộc bên thứ ba.
 """
 
 import json
-import requests as http_requests
 from flask import request, jsonify
 from shop import app
 
 # =====================================================================
-#  CAU HINH
-# =====================================================================
-
-GEMINI_API_KEY = "AIzaSyBl6v-Y8DeSjOvaE-0zeMO33n4NqVQyPPw"
-GEMINI_URL = (
-    "https://generativelanguage.googleapis.com/v1beta/models/"
-    "gemini-2.0-flash:generateContent?key=" + GEMINI_API_KEY
-)
-
-SYSTEM_PROMPT = (
-    "Ban la tro ly AI ten 'MobileStore AI' cua hang ban dien thoai di dong online.\n\n"
-    "QUY TAC:\n"
-    "1. Luon tra loi bang tieng Viet, than thien, ngan gon (toi da 3-4 cau).\n"
-    "2. Dung emoji phu hop.\n"
-    "3. Chi tra loi ve mua sam, dien thoai, cua hang. Cau hoi ngoai linh vuc -> tu choi nhe nhang.\n"
-    "4. Khong bia gia hoac thong tin san pham cu the. Huong dan xem truc tiep tren web.\n\n"
-    "THONG TIN CUA HANG:\n"
-    "- Ten: MobileStore\n"
-    "- San pham: iPhone, Samsung, Xiaomi, OPPO va nhieu hang khac\n"
-    "- Thanh toan: COD, chuyen khoan, MoMo, ZaloPay\n"
-    "- Giao hang: HCM/HN 1-2 ngay, tinh thanh 3-5 ngay, free ship tren 2 trieu VND\n"
-    "- Doi tra: mien phi 7 ngay, bao hanh 12 thang chinh hang\n"
-    "- Hotline: 1900-xxxx (8h-22h) | Email: support@mobilestore.vn\n"
-    "- Mua hang: nhap san pham -> chon mau + so luong -> Them vao gio -> Thanh toan"
-)
-
-# Luu lich su hoi thoai theo session (toi da 40 phan tu ~ 20 luot)
-_sessions = {}
-
-
-# =====================================================================
-#  FALLBACK - KB cuc bo (khi API loi)
+#  FALLBACK - KB cục bộ
 # =====================================================================
 
 FALLBACK_KB = [
@@ -67,7 +35,7 @@ FALLBACK_KB = [
     (['dang nhap', 'login'],
      '🔐 Nhấn "Đăng nhập" trên menu, nhập email và mật khẩu đã đăng ký!'),
     (['xin chao', 'hello', 'chao ban'],
-     'Xin chào! 👋 Mình là trợ lý AI của MobileStore. Bạn cần mình hỗ trợ gì nào?'),
+     'Xin chào! 👋 Mình là trợ lý của MobileStore. Bạn cần mình hỗ trợ gì nào?'),
     (['cam on', 'thanks', 'cam on'], 'Không có gì ạ! 😊 Rất vui được hỗ trợ bạn!'),
     (['tam biet', 'bye'], 'Tạm biệt bạn nhé! 👋 Chúc mua sắm vui vẻ! 🛒'),
 ]
@@ -84,64 +52,6 @@ def _fallback_reply(msg):
 
 
 # =====================================================================
-#  GOI GEMINI REST API
-# =====================================================================
-
-def _gemini_reply(session_id, user_msg):
-    """Goi Gemini API, tra string reply. None neu loi."""
-    if session_id not in _sessions:
-        _sessions[session_id] = []
-    history = _sessions[session_id]
-
-    history.append({"role": "user", "parts": [{"text": user_msg}]})
-
-    if len(history) > 40:
-        history = history[-40:]
-        _sessions[session_id] = history
-
-    payload = {
-        "system_instruction": {"parts": [{"text": SYSTEM_PROMPT}]},
-        "contents": history,
-        "generationConfig": {
-            "maxOutputTokens": 512,
-            "temperature": 0.7
-        }
-    }
-
-    try:
-        resp = http_requests.post(
-            GEMINI_URL,
-            headers={"Content-Type": "application/json"},
-            data=json.dumps(payload),
-            timeout=10
-        )
-        if resp.status_code != 200:
-            print(f"[Gemini] HTTP {resp.status_code}: {resp.text[:200]}")
-            return None
-
-        data = resp.json()
-        reply_text = (
-            data.get("candidates", [{}])[0]
-            .get("content", {})
-            .get("parts", [{}])[0]
-            .get("text", "")
-            .strip()
-        )
-
-        if reply_text:
-            history.append({"role": "model", "parts": [{"text": reply_text}]})
-            if len(_sessions) > 200:
-                oldest = next(iter(_sessions))
-                del _sessions[oldest]
-
-        return reply_text or None
-
-    except Exception as e:
-        print(f"[Gemini Error] {e}")
-        return None
-
-
-# =====================================================================
 #  API ROUTE
 # =====================================================================
 
@@ -149,14 +59,9 @@ def _gemini_reply(session_id, user_msg):
 def api_chat():
     data = request.get_json(silent=True) or {}
     user_msg = (data.get('message') or '').strip()
-    session_id = data.get('session_id') or 'default'
 
     if not user_msg:
         return jsonify({'reply': 'Bạn chưa nhập tin nhắn! 😅'})
 
-    if GEMINI_API_KEY:
-        reply = _gemini_reply(session_id, user_msg)
-        if reply:
-            return jsonify({'reply': reply})
-
     return jsonify({'reply': _fallback_reply(user_msg)})
+
