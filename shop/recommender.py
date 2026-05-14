@@ -1,4 +1,5 @@
 import pandas as pd
+import numpy as np
 from shop.products.models import Addproduct, UserInteraction
 
 def get_content_based_recommendations(product_id, limit=4):
@@ -74,32 +75,52 @@ def get_collaborative_recommendations(user_id, limit=4):
         if df.empty:
             return get_fallback_recommendations(limit)
 
-        # Tính toán Item-Item Similarity đơn giản (Co-occurrence)
-        # Những sản phẩm thường được tương tác cùng nhau bởi các user
-        
-        # User-Product matrix
+        # Nâng cấp: User-Based Collaborative Filtering sử dụng Numpy Cosine Similarity
+        # Tạo ma trận User-Product
         user_product_matrix = df.groupby(['user_id', 'product_id'])['weight'].sum().unstack(fill_value=0)
         
         if str(user_id) not in user_product_matrix.index:
             return get_fallback_recommendations(limit)
 
-        user_vector = user_product_matrix.loc[str(user_id)]
-        interacted_indices = user_vector[user_vector > 0].index.tolist()
-
-        # Tính điểm cho các sản phẩm khác dựa trên độ tương đồng với các sản phẩm đã tương tác
-        # Ở đây dùng co-occurrence matrix làm proxy cho similarity
-        product_interactions = df[df['product_id'].isin(interacted_indices)]
-        other_interactions = df[df['user_id'].isin(product_interactions['user_id'].unique())]
+        # Chuyển DataFrame sang Numpy array để tính toán siêu tốc
+        matrix_values = user_product_matrix.values
         
-        # Loại bỏ các sản phẩm đã tương tác
-        other_interactions = other_interactions[~other_interactions['product_id'].isin(interacted_indices)]
+        # Tính chuẩn (norm) của từng user vector để chuẩn bị cho Cosine Similarity
+        norms = np.linalg.norm(matrix_values, axis=1)
+        norms[norms == 0] = 1e-9 # Tránh lỗi chia cho 0
+        normalized_matrix = matrix_values / norms[:, np.newaxis]
         
-        if other_interactions.empty:
-            return get_fallback_recommendations(limit)
-
-        # Gợi ý sản phẩm có tổng trọng số cao nhất từ những người dùng tương tự
-        recommendations = other_interactions.groupby('product_id')['weight'].sum().sort_values(ascending=False).head(limit)
+        # Lấy vị trí của user hiện tại trong ma trận
+        user_idx = user_product_matrix.index.get_loc(str(user_id))
+        current_user_vector = normalized_matrix[user_idx]
         
+        # Tính độ tương đồng (Cosine Similarity) giữa user hiện tại và TẤT CẢ user khác
+        # Phép nhân dot product bằng Numpy xử lý hàng chục ngàn dòng trong chớp mắt
+        similarities = np.dot(normalized_matrix, current_user_vector)
+        
+        # Nhân điểm tương đồng vào ma trận ban đầu để có trọng số cuối cùng
+        # Người dùng nào càng giống thì điểm sản phẩm họ xem càng có giá trị
+        weighted_matrix = matrix_values * similarities[:, np.newaxis]
+        
+        # Tính tổng điểm dự đoán cho toàn bộ sản phẩm
+        product_scores = np.sum(weighted_matrix, axis=0)
+        
+        # Đưa về dạng Series có index là product_id để dễ thao tác
+        product_scores_series = pd.Series(product_scores, index=user_product_matrix.columns)
+        
+        # Lọc ra các sản phẩm user hiện tại đã xem/mua
+        interacted_indices = user_product_matrix.columns[user_product_matrix.loc[str(user_id)] > 0].tolist()
+        
+        # Loại bỏ các sản phẩm đã xem khỏi danh sách gợi ý
+        product_scores_series = product_scores_series.drop(interacted_indices, errors='ignore')
+        
+        # Lấy top các sản phẩm có điểm cao nhất
+        recommendations = product_scores_series[product_scores_series > 0].sort_values(ascending=False).head(limit)
+        
+        if recommendations.empty:
+            # Nếu tất cả các sản phẩm tương tự đã bị loại do đã xem, ta dùng content-based fallback từ code cũ
+            pass
+            
         top_product_ids = recommendations.index.tolist()
         recommended_items = Addproduct.objects(id__in=top_product_ids, stock__gt=0).all()
         

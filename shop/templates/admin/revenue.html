@@ -150,6 +150,20 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.8.2/jspdf.plugin.autotable.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script type="application/json" id="ordersDataJson">
+[
+    {% for order in orders %}
+    {
+        "amount": {{ order.total_amount or 0 }},
+        "invoice": {{ order.invoice|tojson|safe }},
+        "date": {{ order.date_created.strftime('%d/%m/%Y')|tojson|safe }},
+        "customer_id": {{ order.customer_id|tojson|safe }},
+        "phone": {{ order.phone_number|tojson|safe }},
+        "total_vnd": {{ order.total_amount|vnd|tojson|safe }}
+    }{% if not loop.last %},{% endif %}
+    {% endfor %}
+]
+</script>
 <script>
     const rawData = JSON.parse('{{ monthly_stats|tojson|safe }}');
     const chartData = [...rawData].reverse();
@@ -196,18 +210,20 @@
         }
     });
 
+    // Parse orders data from JSON embedded in script tag
+    const ordersData = JSON.parse(document.getElementById('ordersDataJson').textContent || '[]');
+
     // BAR CHART
     const ranges = ['< 5tr', '5-10tr', '10-20tr', '> 20tr'];
     const rangeCounts = [0, 0, 0, 0];
-    {% for order in orders %}
-    (function() {
-        const v = {{ order.total_amount or 0 }};
+    ordersData.forEach(order => {
+        const v = order.amount;
         if (v < 5000000) rangeCounts[0]++;
         else if (v < 10000000) rangeCounts[1]++;
         else if (v < 20000000) rangeCounts[2]++;
         else rangeCounts[3]++;
-    })();
-    {% endfor %}
+    });
+
     new Chart(document.getElementById('barChart').getContext('2d'), {
         type: 'bar',
         data: {
@@ -229,10 +245,15 @@
         doc.text('Bao cao Doanh thu - MobileStore', 14, 15);
         doc.setFontSize(10);
         doc.text('Xuat ngay: ' + new Date().toLocaleDateString('vi-VN'), 14, 22);
-        const rows = [];
-        {% for order in orders %}
-        rows.push(['#{{ order.invoice }}', '{{ order.date_created.strftime("%d/%m/%Y") }}', '{{ order.customer_id }}', '{{ order.phone_number }}', '{{ order.total_amount|vnd }}']);
-        {% endfor %}
+        
+        const rows = ordersData.map(order => [
+            '#' + order.invoice,
+            order.date,
+            order.customer_id,
+            order.phone,
+            order.total_vnd
+        ]);
+
         doc.autoTable({
             head: [['Ma don', 'Ngay dat', 'Khach hang', 'SDT', 'Tong tien']],
             body: rows, startY: 28,
