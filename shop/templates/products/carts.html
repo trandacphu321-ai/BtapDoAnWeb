@@ -2,171 +2,625 @@
 {% block content %}
 {% include 'header.html' %}
 
-<div class="single-page">
-    <div class="container">
-        <div class="row">
-<div class="breadcrumb-wrapper">
-    <div class="container">
-        <ul class="breadcrumb">
-            <li><a href="{{ url_for('home') }}"><i class="fa fa-home"></i> Trang chủ</a></li>
-            <li class="active">Giỏ hàng</li>
-        </ul>
+<style>
+/* ============ CART PAGE STYLES ============ */
+.cart-page-wrapper {
+    min-height: 70vh;
+    background: var(--clr-bg);
+    padding: 0 0 60px 0;
+}
+
+/* Breadcrumb */
+.cart-breadcrumb-bar {
+    background: linear-gradient(135deg, #2563eb 0%, #7c3aed 100%);
+    padding: 18px 0 14px;
+    margin-bottom: 36px;
+}
+.cart-breadcrumb-bar .breadcrumb {
+    background: transparent !important;
+    margin: 0;
+    padding: 0;
+}
+.cart-breadcrumb-bar .breadcrumb li a {
+    color: rgba(255,255,255,0.8) !important;
+    font-size: 13px;
+    font-weight: 500;
+    text-decoration: none;
+    transition: color 0.2s;
+}
+.cart-breadcrumb-bar .breadcrumb li a:hover { color: #fff !important; }
+.cart-breadcrumb-bar .breadcrumb li.active { color: #fff; font-size: 13px; font-weight: 600; }
+.cart-breadcrumb-bar .breadcrumb > li + li::before { color: rgba(255,255,255,0.5); }
+.cart-breadcrumb-bar h1 {
+    color: #fff !important;
+    font-size: 26px;
+    font-weight: 800;
+    margin: 6px 0 0 0;
+    letter-spacing: -0.5px;
+}
+.cart-breadcrumb-bar .cart-count-pill {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    background: rgba(255,255,255,0.18);
+    border: 1px solid rgba(255,255,255,0.3);
+    border-radius: 20px;
+    padding: 4px 14px;
+    color: #fff;
+    font-size: 13px;
+    font-weight: 600;
+    margin-top: 8px;
+    backdrop-filter: blur(8px);
+}
+
+/* ======= EMPTY CART ======= */
+.empty-cart-box {
+    background: var(--clr-surface);
+    border: 1px solid var(--clr-border);
+    border-radius: 24px;
+    padding: 80px 40px;
+    text-align: center;
+    margin: 40px auto;
+    max-width: 500px;
+    box-shadow: 0 8px 40px rgba(37,99,235,0.07);
+    animation: fadeInUp 0.5s ease;
+}
+.empty-cart-icon {
+    width: 96px;
+    height: 96px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, rgba(37,99,235,0.1), rgba(124,58,237,0.1));
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin: 0 auto 24px;
+    font-size: 40px;
+    color: var(--clr-primary);
+}
+.empty-cart-box h3 {
+    font-size: 22px;
+    font-weight: 700;
+    color: var(--clr-text) !important;
+    margin-bottom: 10px;
+}
+.empty-cart-box p {
+    color: var(--clr-text-muted);
+    font-size: 15px;
+    margin-bottom: 28px;
+}
+.btn-shop-now {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    background: linear-gradient(135deg, var(--clr-primary), var(--clr-accent-violet));
+    color: #fff !important;
+    font-weight: 700;
+    font-size: 15px;
+    padding: 13px 32px;
+    border-radius: 14px;
+    text-decoration: none !important;
+    border: none;
+    box-shadow: 0 6px 20px var(--clr-primary-glow);
+    transition: all 0.3s !important;
+}
+.btn-shop-now:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 12px 30px var(--clr-primary-glow);
+    color: #fff !important;
+}
+
+/* ======= CART ITEMS ======= */
+.cart-item-card {
+    background: var(--clr-surface);
+    border: 1px solid var(--clr-border);
+    border-radius: 20px;
+    padding: 20px;
+    margin-bottom: 16px;
+    display: flex;
+    gap: 20px;
+    align-items: flex-start;
+    box-shadow: 0 2px 12px rgba(37,99,235,0.05);
+    transition: all 0.3s !important;
+    animation: fadeInUp 0.4s ease both;
+}
+.cart-item-card:hover {
+    box-shadow: 0 8px 32px rgba(37,99,235,0.12);
+    border-color: var(--clr-primary-glow);
+    transform: translateY(-2px);
+}
+@keyframes fadeInUp {
+    from { opacity: 0; transform: translateY(20px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+.cart-item-img-wrap {
+    flex-shrink: 0;
+    width: 120px;
+    height: 120px;
+    border-radius: 14px;
+    overflow: hidden;
+    background: var(--clr-surface-2);
+    border: 1px solid var(--clr-border);
+}
+.cart-item-img-wrap img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    transition: transform 0.4s !important;
+}
+.cart-item-card:hover .cart-item-img-wrap img {
+    transform: scale(1.06);
+}
+
+.cart-item-body { flex: 1; min-width: 0; }
+.cart-item-brand {
+    display: inline-block;
+    background: var(--clr-primary-glow);
+    color: var(--clr-primary);
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 0.5px;
+    text-transform: uppercase;
+    padding: 3px 10px;
+    border-radius: 20px;
+    margin-bottom: 8px;
+}
+.cart-item-name {
+    font-size: 16px;
+    font-weight: 700;
+    color: var(--clr-text) !important;
+    margin: 0 0 12px 0;
+    line-height: 1.35;
+}
+.cart-item-name a {
+    color: inherit !important;
+    text-decoration: none !important;
+}
+.cart-item-name a:hover { color: var(--clr-primary) !important; }
+
+.cart-item-selects {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+    margin-bottom: 14px;
+}
+.cart-select-group { display: flex; flex-direction: column; gap: 4px; }
+.cart-select-group label {
+    font-size: 11px;
+    font-weight: 600;
+    color: var(--clr-text-muted);
+    text-transform: uppercase;
+    letter-spacing: 0.4px;
+}
+.cart-select-group select {
+    border: 1.5px solid var(--clr-border);
+    border-radius: 10px;
+    padding: 6px 30px 6px 12px;
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--clr-text);
+    background: var(--clr-surface-2);
+    cursor: pointer;
+    outline: none;
+    appearance: none;
+    -webkit-appearance: none;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath d='M1 1l5 5 5-5' stroke='%2364748b' stroke-width='1.5' fill='none' stroke-linecap='round'/%3E%3C/svg%3E");
+    background-repeat: no-repeat;
+    background-position: right 10px center;
+    min-width: 120px;
+}
+.cart-select-group select:focus {
+    border-color: var(--clr-primary);
+    box-shadow: 0 0 0 3px var(--clr-primary-glow);
+}
+
+.cart-item-price-row {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    flex-wrap: wrap;
+    margin-bottom: 14px;
+}
+.cart-price-final {
+    font-size: 20px;
+    font-weight: 800;
+    color: var(--clr-primary);
+}
+.cart-price-original {
+    font-size: 14px;
+    color: var(--clr-text-light);
+    text-decoration: line-through;
+}
+.cart-discount-badge {
+    background: linear-gradient(135deg, #ef4444, #f97316);
+    color: #fff;
+    font-size: 11px;
+    font-weight: 700;
+    padding: 3px 8px;
+    border-radius: 6px;
+}
+
+.cart-item-actions {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    flex-wrap: wrap;
+}
+.qty-wrapper {
+    display: flex;
+    align-items: center;
+    border: 1.5px solid var(--clr-border);
+    border-radius: 10px;
+    overflow: hidden;
+    background: var(--clr-surface-2);
+}
+.qty-wrapper input[type="number"] {
+    width: 52px;
+    text-align: center;
+    border: none;
+    background: transparent;
+    color: var(--clr-text);
+    font-size: 15px;
+    font-weight: 700;
+    padding: 8px 0;
+    outline: none;
+    -moz-appearance: textfield;
+}
+.qty-wrapper input[type="number"]::-webkit-inner-spin-button,
+.qty-wrapper input[type="number"]::-webkit-outer-spin-button { -webkit-appearance: none; }
+.btn-update {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    background: var(--clr-primary);
+    color: #fff !important;
+    font-size: 13px;
+    font-weight: 700;
+    padding: 9px 18px;
+    border-radius: 10px;
+    border: none;
+    cursor: pointer;
+    text-decoration: none !important;
+    transition: all 0.25s !important;
+}
+.btn-update:hover {
+    background: var(--clr-primary-dark);
+    transform: translateY(-1px);
+    box-shadow: 0 4px 14px var(--clr-primary-glow);
+    color: #fff !important;
+}
+.btn-delete-item {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    background: transparent;
+    color: var(--clr-danger) !important;
+    font-size: 13px;
+    font-weight: 600;
+    padding: 9px 14px;
+    border-radius: 10px;
+    border: 1.5px solid rgba(239,68,68,0.25);
+    cursor: pointer;
+    text-decoration: none !important;
+    transition: all 0.25s !important;
+}
+.btn-delete-item:hover {
+    background: rgba(239,68,68,0.07);
+    border-color: var(--clr-danger);
+    color: var(--clr-danger) !important;
+}
+
+/* ======= SUMMARY PANEL ======= */
+.cart-summary-panel {
+    background: var(--clr-surface);
+    border: 1px solid var(--clr-border);
+    border-radius: 24px;
+    padding: 28px;
+    box-shadow: 0 4px 24px rgba(37,99,235,0.07);
+    position: sticky;
+    top: 100px;
+}
+.cart-summary-panel h4 {
+    font-size: 18px;
+    font-weight: 800;
+    color: var(--clr-text) !important;
+    margin: 0 0 22px 0;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+.cart-summary-panel h4 i {
+    color: var(--clr-primary);
+}
+.summary-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 11px 0;
+    border-bottom: 1px solid var(--clr-border);
+    font-size: 14px;
+}
+.summary-row:last-of-type { border-bottom: none; }
+.summary-row .label { color: var(--clr-text-muted); font-weight: 500; }
+.summary-row .value { font-weight: 700; color: var(--clr-text); }
+.summary-row.discount .value { color: var(--clr-accent-green); }
+.summary-divider {
+    border: none;
+    border-top: 2px dashed var(--clr-border);
+    margin: 14px 0;
+}
+.summary-total-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 4px 0 18px;
+}
+.summary-total-row .total-label {
+    font-size: 15px;
+    font-weight: 700;
+    color: var(--clr-text);
+}
+.summary-total-row .total-price {
+    font-size: 22px;
+    font-weight: 800;
+    color: var(--clr-primary);
+}
+.btn-checkout {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+    width: 100%;
+    background: linear-gradient(135deg, var(--clr-primary), var(--clr-accent-violet));
+    color: #fff !important;
+    font-size: 16px;
+    font-weight: 800;
+    padding: 16px;
+    border-radius: 14px;
+    text-decoration: none !important;
+    border: none;
+    box-shadow: 0 6px 24px var(--clr-primary-glow);
+    letter-spacing: 0.3px;
+    transition: all 0.3s !important;
+}
+.btn-checkout:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 14px 36px rgba(37,99,235,0.35);
+    color: #fff !important;
+}
+.btn-checkout i { font-size: 17px; }
+
+.btn-clear-cart {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 7px;
+    width: 100%;
+    background: transparent;
+    color: var(--clr-danger) !important;
+    font-size: 13px;
+    font-weight: 600;
+    padding: 11px;
+    border-radius: 12px;
+    border: 1.5px solid rgba(239,68,68,0.25);
+    margin-top: 10px;
+    text-decoration: none !important;
+    transition: all 0.25s !important;
+    cursor: pointer;
+}
+.btn-clear-cart:hover {
+    background: rgba(239,68,68,0.06);
+    border-color: var(--clr-danger);
+    color: var(--clr-danger) !important;
+}
+
+.secure-badge {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 7px;
+    color: var(--clr-accent-green);
+    font-size: 12px;
+    font-weight: 600;
+    margin-top: 16px;
+    padding: 10px;
+    background: rgba(16,185,129,0.06);
+    border-radius: 10px;
+    border: 1px solid rgba(16,185,129,0.15);
+}
+
+/* ======= DARK MODE OVERRIDES ======= */
+[data-theme="dark"] .cart-item-card,
+[data-theme="dark"] .cart-summary-panel,
+[data-theme="dark"] .empty-cart-box {
+    background: #1e293b !important;
+    border-color: rgba(255,255,255,0.08) !important;
+}
+[data-theme="dark"] .cart-item-img-wrap {
+    background: #0f172a;
+    border-color: rgba(255,255,255,0.08);
+}
+[data-theme="dark"] .cart-select-group select,
+[data-theme="dark"] .qty-wrapper {
+    background: #0f172a !important;
+    border-color: rgba(255,255,255,0.1) !important;
+    color: #e2e8f0 !important;
+}
+[data-theme="dark"] .summary-row { border-color: rgba(255,255,255,0.07); }
+[data-theme="dark"] .summary-divider { border-color: rgba(255,255,255,0.1); }
+
+/* Responsive */
+@media (max-width: 768px) {
+    .cart-item-card { flex-direction: column; }
+    .cart-item-img-wrap { width: 100%; height: 200px; }
+    .cart-summary-panel { position: static; margin-top: 24px; }
+}
+</style>
+
+<div class="cart-page-wrapper">
+
+    <!-- Breadcrumb Hero Bar -->
+    <div class="cart-breadcrumb-bar">
+        <div class="container">
+            <ul class="breadcrumb">
+                <li><a href="{{ url_for('home') }}"><i class="fa fa-home"></i> Trang chủ</a></li>
+                <li class="active">Giỏ hàng</li>
+            </ul>
+            <h1><i class="fa fa-shopping-cart" style="font-size:22px;margin-right:8px;"></i>Giỏ hàng của bạn</h1>
+            {% if not empty %}
+            <div class="cart-count-pill">
+                <i class="fa fa-cube"></i>
+                {{ session['Shoppingcart']|length }} sản phẩm
+            </div>
+            {% endif %}
+        </div>
     </div>
-</div>
+
+    <div class="container">
+
+        {# ===== EMPTY CART ===== #}
+        {% if empty %}
+        <div class="empty-cart-box">
+            <div class="empty-cart-icon">
+                <i class="fa fa-shopping-cart"></i>
+            </div>
+            <h3>Giỏ hàng trống</h3>
+            <p>Bạn chưa có sản phẩm nào trong giỏ hàng.<br>Hãy khám phá và thêm sản phẩm yêu thích!</p>
+            <a href="{{ url_for('home') }}" class="btn-shop-now">
+                <i class="fa fa-arrow-left"></i> Tiếp tục mua sắm
+            </a>
         </div>
 
-        {# ================= GIỎ HÀNG TRỐNG ================= #}
-        {% if empty %}
-            <div class="row">
-                <div class="product well">
-                    <div class="row">
-                        <h3 style="text-align: center; color: #7d8f8f;">Không có sản phẩm</h3>
-                        <div class="col text-center">
-                            <a href="{{ url_for('home') }}" class="btn btn-2" style="padding: 3px 26px;">
-                                Trang sản phẩm
-                            </a>
-                        </div>
-                    </div>
-                </div>
-            </div>
-
-        {# ================= CÓ SẢN PHẨM TRONG GIỎ ================= #}
+        {# ===== CART WITH ITEMS ===== #}
         {% else %}
-            <div class="row">
+        <div class="row">
+            <!-- Left: Cart Items -->
+            <div class="col-md-8">
                 {% for key, product in session['Shoppingcart'].items() %}
-                    {% set discount = (product.discount / 100) * product.price|float %}
-                    <div class="product well col-12">
-                        <div class="col-md-3">
-                            <div class="image">
-                                <img src="{{ product.image | firebase_image }}"
-                                     alt="{{ product.name }}"/>
+                {% set discount = (product.discount / 100) * product.price|float %}
+                <div class="cart-item-card" style="animation-delay: {{ loop.index0 * 0.07 }}s;">
+                    <!-- Product Image -->
+                    <div class="cart-item-img-wrap">
+                        <a href="{{ url_for('detail', id=key) }}">
+                            <img src="{{ product.image | firebase_image }}" alt="{{ product.name }}">
+                        </a>
+                    </div>
+
+                    <!-- Product Info -->
+                    <div class="cart-item-body">
+                        <span class="cart-item-brand">{{ product.brand }}</span>
+                        <h3 class="cart-item-name">
+                            <a href="{{ url_for('detail', id=key) }}">{{ product.name }}</a>
+                        </h3>
+
+                        <form action="{{ url_for('updatecart', code=key) }}" method="post">
+                            <!-- Selects: Color & Capacity -->
+                            <div class="cart-item-selects">
+                                <div class="cart-select-group">
+                                    <label>Màu sắc</label>
+                                    {% set colors = product.colors.split(',') %}
+                                    <select name="color" id="color-{{ key }}">
+                                        <option value="{{ product.color }}" style="display:none;">{{ product.color|capitalize }}</option>
+                                        {% for color in colors %}
+                                            {% set col = color.split(':') %}
+                                            <option value="{{ col[0] }}">{{ col[0]|capitalize }}</option>
+                                        {% endfor %}
+                                    </select>
+                                </div>
+
+                                {% if product.capacities %}
+                                <div class="cart-select-group">
+                                    <label>Phiên bản</label>
+                                    {% set capacities = product.capacities.split(',') %}
+                                    <select name="capacity" id="capacity-{{ key }}">
+                                        <option value="{{ product.capacity }}" style="display:none;">{{ product.capacity }}</option>
+                                        {% for cap in capacities %}
+                                            <option value="{{ cap.strip() }}">{{ cap.strip() }}</option>
+                                        {% endfor %}
+                                    </select>
+                                </div>
+                                {% endif %}
                             </div>
-                        </div>
 
-                        <div class="col-md-9">
-                            <div class="caption">
-                                <div class="name">
-                                    <h3>
-                                        <a href="{{ url_for('detail', id=key) }}">{{ product.name }}</a>
-                                    </h3>
-                                </div>
+                            <!-- Price -->
+                            <div class="cart-item-price-row">
+                                {% if product.discount %}
+                                    <span class="cart-price-final">{{ (product.price - discount) | vnd }}</span>
+                                    <span class="cart-price-original">{{ product.price | vnd }}</span>
+                                    <span class="cart-discount-badge">-{{ product.discount }}%</span>
+                                {% else %}
+                                    <span class="cart-price-final">{{ product.price | vnd }}</span>
+                                {% endif %}
+                            </div>
 
-                                <div class="info">
-                                    <ul>
-                                        <li>Brand: {{ product.brand }}</li>
-                                    </ul>
-                                </div>
-
-                                <form action="{{ url_for('updatecart', code=key) }}" method="post">
-                                    <div>
-                                        {% set colors = product.colors.split(',') %}
-                                        <label for="color">Màu sắc: </label>
-                                        <select name="color" id="color">
-                                            <option value="{{ product.color }}" style="display: none;">
-                                                {{ product.color|capitalize }}
-                                            </option>
-                                            {% for color in colors %}
-                                                {% set col = color.split(':') %}
-                                                <option value="{{ col[0] }}">{{ col[0]|capitalize }}</option>
-                                            {% endfor %}
-                                        </select>
-                                    </div>
-                                    
-                                    {% if product.capacities %}
-                                    <div style="margin-top: 5px;">
-                                        {% set capacities = product.capacities.split(',') %}
-                                        <label for="capacity">Phiên bản: </label>
-                                        <select name="capacity" id="capacity">
-                                            <option value="{{ product.capacity }}" style="display: none;">
-                                                {{ product.capacity }}
-                                            </option>
-                                            {% for cap in capacities %}
-                                                <option value="{{ cap.strip() }}">{{ cap.strip() }}</option>
-                                            {% endfor %}
-                                        </select>
-                                    </div>
-                                    {% endif %}
-
-                                    {% if product.discount %}
-                                        <div class="price">
-                                            {{ (product.price - discount) | vnd }}
-                                            <span>{{ product.price | vnd }}</span>
-                                        </div>
-                                    {% else %}
-                                        <div class="price">
-                                            {{ product.price | vnd }}
-                                        </div>
-                                    {% endif %}
-
-                                    <label>Số lượng: </label>
-                                    <input type="number"
-                                           name="quantity"
-                                           min="1"
-                                           max="10"
+                            <!-- Quantity + Buttons -->
+                            <div class="cart-item-actions">
+                                <div class="qty-wrapper">
+                                    <input type="number" name="quantity"
+                                           min="1" max="10"
                                            value="{{ product.quantity }}"
-                                           size="3">
-                                    <button class="btn btn-2" style="padding: 3px 26px;">Update</button>
-                                </form>
-
-                                <hr style="border-top: 1px solid #8f6d6d; margin-bottom: 8px; margin-top: 28px;">
-
-                                <a href="{{ url_for('deleteitem', id=key) }}"
-                                   class="btn btn-default pull-right"
-                                   style="padding: 4px 26px;">
-                                    Xóa
+                                           id="qty-{{ key }}">
+                                </div>
+                                <button type="submit" class="btn-update">
+                                    <i class="fa fa-refresh"></i> Cập nhật
+                                </button>
+                                <a href="{{ url_for('deleteitem', id=key) }}" class="btn-delete-item">
+                                    <i class="fa fa-trash"></i> Xóa
                                 </a>
                             </div>
-                        </div>
+                        </form>
                     </div>
+                </div>
                 {% endfor %}
+
+                <!-- Continue Shopping -->
+                <div style="margin-top: 8px;">
+                    <a href="{{ url_for('home') }}" style="display:inline-flex;align-items:center;gap:7px;color:var(--clr-text-muted);font-size:14px;font-weight:600;text-decoration:none;">
+                        <i class="fa fa-arrow-left"></i> Tiếp tục mua sắm
+                    </a>
+                </div>
             </div>
 
-            <div class="row">
-                <a href="{{ url_for('clearcart') }}"
-                   class="btn btn-default pull-right"
-                   style="margin-right: 40px; padding: 4px 7px; background: #D9534F">
-                    Xóa tất cả
-                </a>
-            </div>
+            <!-- Right: Summary Panel -->
+            <div class="col-md-4">
+                <div class="cart-summary-panel">
+                    <h4><i class="fa fa-file-text-o"></i> Tóm tắt đơn hàng</h4>
 
-            <hr style="border-top: 1px solid #8f6d6d; margin-bottom: 8px; margin-top: 28px;">
+                    <div class="summary-row">
+                        <span class="label">Giá gốc</span>
+                        <span class="value">{{ (subtotals|default(0)) | vnd }}</span>
+                    </div>
+                    <div class="summary-row discount">
+                        <span class="label">Tiết kiệm được</span>
+                        <span class="value">- {{ (discounttotal|default(0)) | vnd }}</span>
+                    </div>
+                    <div class="summary-row">
+                        <span class="label">Phí vận chuyển</span>
+                        <span class="value" style="color:var(--clr-accent-green);">Miễn phí</span>
+                    </div>
 
-            {# ==== CHỈ 1 KHỐI PRICE DETAILS DUY NHẤT ==== #}
-            <div class="row">
-                <div class="pricedetails">
-                    <div class="col-md-4 col-md-offset-8" style="margin-left: 74.666667%">
-                        <h6 style="font-size: 25px;">Price Details</h6>
-                        <table style="margin-top: 20px;margin-bottom: 12px;">
-                            <tr>
-                                <td>Giá gốc</td>
-                                <td style="text-align:right">
-                                    {{ (subtotals|default(0)) | vnd }}
-                                </td>
-                            </tr>
-                            <tr>
-                                <td>Giảm giá</td>
-                                <td style="text-align:right">
-                                    {{ (discounttotal|default(0)) | vnd }}
-                                </td>
-                            </tr>
-                            <tr style="border-top: 1px solid #333">
-                                <td>Tổng cộng</td>
-                                <td style="text-align:right">
-                                    {{ ((subtotals|default(0)) - (discounttotal|default(0))) | vnd }}
-                                </td>
-                            </tr>
-                        </table>
+                    <hr class="summary-divider">
 
-                        <center>
-                            <a href="{{ url_for('checkout') }}" 
-                               class="btn btn-2" 
-                               style="padding: 10px 40px; margin-bottom: 20px; display: inline-block; text-decoration: none;">
-                                THANH TOÁN
-                            </a>
-                        </center>
+                    <div class="summary-total-row">
+                        <span class="total-label">Tổng cộng</span>
+                        <span class="total-price">{{ ((subtotals|default(0)) - (discounttotal|default(0))) | vnd }}</span>
+                    </div>
+
+                    <a href="{{ url_for('checkout') }}" class="btn-checkout">
+                        <i class="fa fa-lock"></i> Thanh toán ngay
+                    </a>
+
+                    <a href="{{ url_for('clearcart') }}" class="btn-clear-cart">
+                        <i class="fa fa-trash-o"></i> Xóa toàn bộ giỏ hàng
+                    </a>
+
+                    <div class="secure-badge">
+                        <i class="fa fa-shield"></i>
+                        Thanh toán bảo mật SSL 256-bit
                     </div>
                 </div>
             </div>
+        </div>
         {% endif %}
     </div>
 </div>
